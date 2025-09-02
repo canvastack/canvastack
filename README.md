@@ -312,7 +312,7 @@ Migration tips:
 ## 14) Changelog
 [Back to top](#table-of-contents)
 
-See [CHANGELOG.md](CHANGELOG.md) for notable changes and migration notes.
+See [CHANGELOG.md](CHANGELOG.md) for notable changes and migration notes. For curated highlights, see [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 ---
 
