@@ -5,9 +5,12 @@
 ![Laravel](https://img.shields.io/badge/Laravel-10-orange?style=flat-square)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
-A modular Laravel toolkit for rapidly building back-office applications with consistent UI patterns. CanvaStack provides a cohesive set of builders for Forms and Tables (DataTables integration), utilities (facade: Canvatility), CLI tools, and publishable assets to bootstrap admin systems quickly and safely.
+<p>
+  <img src="https://avatars.githubusercontent.com/u/218853734?v=4" alt="CanvaStack" width="64" height="64" style="border-radius:50%; vertical-align:middle; margin-right:12px;" />
+  A modular Laravel toolkit for rapidly building back-office applications with consistent UI patterns. CanvaStack provides a cohesive set of builders for Forms and Tables (DataTables integration), utilities (facade: Canvatility), CLI tools, and publishable assets to bootstrap admin systems quickly and safely.
+</p>
 
-- Maintained package: canvastack/canvastack
+- Maintained package: [canvastack/canvastack](https://packagist.org/packages/canvastack/canvastack)
 - Namespace: `Canvastack\Canvastack`
 - Facade: `CanvaStack`
 - Status: Actively refactored and modernized (rebranded from Incodiy/CODIY)
@@ -190,11 +193,11 @@ Short form example (see docs for more):
 
 ## 7) Documentation Links
 
-- Forms: packages/canvastack/canvastack/docs/form/README.md
-- Tables: packages/canvastack/canvastack/docs/table/README.md
-- Utility (Canvatility): packages/canvastack/canvastack/docs/utility/README.md
-- Template Engine: packages/canvastack/canvastack/docs/template/README.md
-- User & Role Management: packages/canvastack/canvastack/docs/auth/README.md
+- Forms: [docs/form/README.md](docs/form/README.md)
+- Tables: [docs/table/README.md](docs/table/README.md)
+- Utility (Canvatility): [docs/utility/README.md](docs/utility/README.md)
+- Template Engine: [docs/template/README.md](docs/template/README.md)
+- User & Role Management: [docs/auth/README.md](docs/auth/README.md)
 
 ---
 
@@ -228,7 +231,7 @@ Artisan commands are registered by the service provider. Explore available comma
 php artisan list | findstr /i canvastack
 ```
 
-See detailed docs: `src/docs/CANVASTACK_CLI.md`
+See detailed docs: [src/docs/CANVASTACK_CLI.md](src/docs/CANVASTACK_CLI.md)
 
 Common tools include (names may vary by version):
 - canvastack:test
@@ -295,7 +298,7 @@ Migration tips:
 
 ## 14) Changelog
 
-See CHANGELOG.md for notable changes and migration notes.
+See [CHANGELOG.md](CHANGELOG.md) for notable changes and migration notes.
 
 ---
 
