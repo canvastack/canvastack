@@ -16,7 +16,7 @@
 
 ---
 
-## Table of Contents
+## [Table of Contents](#table-of-contents)
 
 - [Table of Contents](#table-of-contents)
 - [1) Features](#1-features)
@@ -40,6 +40,7 @@
 ---
 
 ## 1) Features
+[Back to top](#table-of-contents)
 
 - Form Builder: server-rendered form components with consistent layout and validation hooks.
 - Table Builder: DataTables-powered listing with action buttons, column renderers, server-side integration, and flexible mapping.
@@ -52,6 +53,7 @@
 ---
 
 ## 2) Requirements
+[Back to top](#table-of-contents)
 
 - PHP 8.1+
 - Laravel 10 (tested)
@@ -65,6 +67,7 @@
 ---
 
 ## 3) Installation
+[Back to top](#table-of-contents)
 
 ```bash
 # Create Laravel project (example)
@@ -92,6 +95,7 @@ If you install from a VCS repository, add to composer.json:
 ---
 
 ## 4) Publishing & Setup
+[Back to top](#table-of-contents)
 
 1) Publish package resources:
 ```bash
@@ -118,6 +122,7 @@ php artisan migrate --seed
 ---
 
 ## 5) Quick Start
+[Back to top](#table-of-contents)
 
 Example: render a simple table using Canvatility.
 
@@ -176,6 +181,7 @@ Short form example (see docs for more):
 ---
 
 ## 6) Components Overview
+[Back to top](#table-of-contents)
 
 - Form System
   - Declarative form generation, helpers under `Library/Helpers/FormObject.php` and components under `Library/Components/Form`.
@@ -192,6 +198,7 @@ Short form example (see docs for more):
 ---
 
 ## 7) Documentation Links
+[Back to top](#table-of-contents)
 
 - Forms: [docs/form/README.md](docs/form/README.md)
 - Tables: [docs/table/README.md](docs/table/README.md)
@@ -202,6 +209,7 @@ Short form example (see docs for more):
 ---
 
 ## 8) Support Matrix
+[Back to top](#table-of-contents)
 
 | CanvaStack | PHP   | Laravel | yajra/laravel-datatables | laravelcollective/html |
 |-----------:|:-----:|:------:|:-------------------------:|:----------------------:|
@@ -210,6 +218,7 @@ Short form example (see docs for more):
 ---
 
 ## 9) DataTables & Performance Notes
+[Back to top](#table-of-contents)
 
 - Preview tables now initialize with:
   - `processing: true` for better UX while loading
@@ -225,6 +234,7 @@ Short form example (see docs for more):
 ---
 
 ## 10) CLI Tools
+[Back to top](#table-of-contents)
 
 Artisan commands are registered by the service provider. Explore available commands with:
 ```bash
@@ -246,6 +256,7 @@ Common tools include (names may vary by version):
 ---
 
 ## 11) Configuration
+[Back to top](#table-of-contents)
 
 Published config files (examples):
 - `config/canvastack.php`
@@ -261,6 +272,7 @@ Tune base URLs, templates, DataTables defaults, route mounting, and feature flag
 ---
 
 ## 12) Directory Structure (package)
+[Back to top](#table-of-contents)
 
 ```
 packages/canvastack/canvastack/
@@ -282,6 +294,7 @@ packages/canvastack/canvastack/
 ---
 
 ## 13) Upgrading from Incodiy
+[Back to top](#table-of-contents)
 
 - Package renamed to `canvastack/canvastack`.
 - Namespace standardized: `Canvastack\Canvastack`.
@@ -297,12 +310,14 @@ Migration tips:
 ---
 
 ## 14) Changelog
+[Back to top](#table-of-contents)
 
 See [CHANGELOG.md](CHANGELOG.md) for notable changes and migration notes.
 
 ---
 
 ## 15) Roadmap
+[Back to top](#table-of-contents)
 
 - Authz Module (RBAC): dedicated role/permission system with facade and middleware, backward-compatible with legacy privilege mapping.
 - Performance: continued optimization for DataTables orchestration and server-side pipelines.
@@ -311,6 +326,7 @@ See [CHANGELOG.md](CHANGELOG.md) for notable changes and migration notes.
 ---
 
 ## 16) Contributing
+[Back to top](#table-of-contents)
 
 Pull requests and issues are welcome. Please:
 - Keep changes focused and covered by tests where practical.
@@ -319,5 +335,6 @@ Pull requests and issues are welcome. Please:
 ---
 
 ## 17) License
+[Back to top](#table-of-contents)
 
-MIT License. See the `LICENSE` file for details.
+MIT License. See the [LICENSE](LICENSE) file for details.
