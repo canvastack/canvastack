@@ -8,9 +8,9 @@
  *
  * @author      wisnuwidi@gmail.com - 2023
  * @copyright   wisnuwidi@gmail.com,
- *              incodiy@gmail.com
+ *              canvastack@gmail.com
  * @email       wisnuwidi@gmail.com,
- *              incodiy@gmail.com
+ *              canvastack@gmail.com
  */
 ?>
 <!DOCTYPE html>
@@ -23,3 +23,5 @@
 	    <p>{{ $mailData['body'] }}</p>
 	</body>
 </html>
+
+

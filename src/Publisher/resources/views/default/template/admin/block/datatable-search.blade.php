@@ -5,12 +5,14 @@
  *
  * @filesource	datatable-search.blade.php
  *
- * @author		wisnuwidi@incodiy.com - 2021
+ * @author		wisnuwidi@canvastack.com - 2021
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ * @email		wisnuwidi@canvastack.com
  */
 ?>
 
 @if (!empty($components->table->filter_contents)) 
-	{!! diy_modal_content_box($components->table->filter_contents) !!}
+	{!! canvastack_modal_content_box($components->table->filter_contents) !!}
 @endif
+
+

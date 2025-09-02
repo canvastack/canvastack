@@ -5,14 +5,15 @@
  *
  * @filesource	header.blade.php
  *
- * @author		wisnuwidi@incodiy.com - 2021
+ * @author		wisnuwidi@canvastack.com - 2021
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ * @email		wisnuwidi@canvastack.com
  */
-$baseUrl      = diy_config('baseURL');
-$baseTemplate = diy_config('base_template');
-$template     = diy_config('template');
-$assetURL     = "{$baseUrl}/{$baseTemplate}/{$template}";
+$baseUrl      = function_exists('canvastack_config') ? canvastack_config('baseURL') : url('');
+$baseTemplate = function_exists('canvastack_config') ? canvastack_config('base_template') : 'assets/templates/default';
+$template     = function_exists('canvastack_config') ? canvastack_config('template') : 'admin';
+$assetURL     = rtrim("{$baseUrl}/{$baseTemplate}/{$template}", '/');
+$breadcrumbs  = is_string($breadcrumbs ?? null) ? $breadcrumbs : '';
 ?>
 			
 				<!-- HEADER BLOCK OPEN  -->
@@ -83,3 +84,5 @@ $assetURL     = "{$baseUrl}/{$baseTemplate}/{$template}";
 				</div>
 				{!! $breadcrumbs !!}
 				<!-- HEADER BLOCK CLOSE  -->
+
+

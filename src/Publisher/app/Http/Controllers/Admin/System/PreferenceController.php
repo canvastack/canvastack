@@ -1,7 +1,8 @@
 <?php
+
 namespace App\Http\Controllers\Admin\System;
 
-use Incodiy\Codiy\Controllers\Admin\System\PreferenceController as Preference;
+use Canvastack\Canvastack\Controllers\Admin\System\PreferenceController as Preference;
 
 /**
  * Created on Mar 7, 2018
@@ -10,8 +11,11 @@ use Incodiy\Codiy\Controllers\Admin\System\PreferenceController as Preference;
  *
  * @filesource	PreferenceController.php
  *
- * @author		wisnuwidi@incodiy.com - 2018
+ * @author		wisnuwidi@canvastack.com - 2018
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
-class PreferenceController extends Preference {}
+class PreferenceController extends Preference
+{
+}

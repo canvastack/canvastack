@@ -1,7 +1,8 @@
 <?php
+
 namespace App\Models\Admin\System;
 
-use Incodiy\Codiy\Models\Admin\System\Usergroup as UserGroupModel;
+use Canvastack\Canvastack\Models\Admin\System\Usergroup as UserGroupModel;
 
 /**
  * Created on Jan 14, 2018
@@ -12,6 +13,9 @@ use Incodiy\Codiy\Models\Admin\System\Usergroup as UserGroupModel;
  *
  * @author		wisnuwidi@IncoDIY - 2018
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
-class Usergroup extends UserGroupModel {}
+class Usergroup extends UserGroupModel
+{
+}

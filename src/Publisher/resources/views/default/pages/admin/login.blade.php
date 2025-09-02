@@ -8,7 +8,7 @@
  *
  * @author		wisnuwidi @gmail.com - 2017
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ * @email		wisnuwidi@canvastack.com
  */
 $config               = [];
 $config['title']      = __('Admin Login');
@@ -44,7 +44,7 @@ if ($errors->has('username')) {
 		<div{!! $background !!}>
 			<div class="container">
 				<div class="login-box ptb--40">
-					{!! Form::open(['route' => 'login_processor', 'class' => 'sign-in form-horizontal shadow rounded no-overflow', 'style' => $formStyle]) !!}
+					{!! \Canvastack\Canvastack\Library\Components\Utility\Canvatility::formOpen(['route' => 'login_processor', 'class' => 'sign-in form-horizontal shadow rounded no-overflow', 'style' => $formStyle]) !!}
 						<div class="login-form-head">
 							<div class="logo"><img src="{{ $config['logo'] }}" /></div>
 							<h4>{{ $config['title'] }}</h4>
@@ -52,7 +52,7 @@ if ($errors->has('username')) {
 						<div class="login-form-body">
 							<div class="form-gp">
 								<label class="IncoDIY-input-login" for="IncoDIY-input-login-key">{{ __('Username') }}</label>
-								{!! Form::text('username', old('username'), ['id' => 'IncoDIY-input-login-key', 'required', 'autofocus']) !!}
+								{!! \Canvastack\Canvastack\Library\Components\Utility\Canvatility::formText('username', old('username'), ['id' => 'IncoDIY-input-login-key', 'required', 'autofocus']) !!}
 								<i id="info-login" class="ti-user"></i>
 								
 								@if ($errors->has('username')) 
@@ -69,7 +69,7 @@ if ($errors->has('username')) {
 							</div>
 							<div class="form-gp">
 								<label for="IncoDIY-input-login-password">{{ __('Password') }}</label>
-								{!! Form::password('password', ['id' => 'IncoDIY-input-login-password', 'required']) !!}
+								{!! \Canvastack\Canvastack\Library\Components\Utility\Canvatility::formPassword('password', ['id' => 'IncoDIY-input-login-password', 'required']) !!}
 								<i class="ti-lock"></i>
 								
 								@if ($errors->has('password'))
@@ -117,15 +117,17 @@ if ($errors->has('username')) {
 								</div>
 							</div>
 							<div class="submit-btn-area">
-								{!! Form::submit('Submit', ['class' => 'btn btn-primary btn-lg btn-block no-margin rounded', 'id' => 'login-btn']) !!}
+								{!! \Canvastack\Canvastack\Library\Components\Utility\Canvatility::formSubmit('Submit', ['class' => 'btn btn-primary btn-lg btn-block no-margin rounded', 'id' => 'login-btn']) !!}
 							</div>
 							<div class="form-footer text-center mt-5">
 								<p class="text-muted">IncoDIY Application Dashboard<a href="#">{{ __('IncoDIY') }}</a></p>
 							</div>
 						</div>
-					{!! Form::close() !!}
+					{!! \Canvastack\Canvastack\Library\Components\Utility\Canvatility::formClose() !!}
 				</div>
 			</div>
 		</div>
 		
 @endsection
+
+

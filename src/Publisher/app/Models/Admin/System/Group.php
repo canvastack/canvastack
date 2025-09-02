@@ -1,7 +1,8 @@
 <?php
+
 namespace App\Models\Admin\System;
 
-use Incodiy\Codiy\Models\Admin\System\Group as GroupModel;
+use Canvastack\Canvastack\Models\Admin\System\Group as GroupModel;
 
 /**
  * Created on Jan 14, 2018
@@ -12,6 +13,9 @@ use Incodiy\Codiy\Models\Admin\System\Group as GroupModel;
  *
  * @author		wisnuwidi@IncoDIY - 2018
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
-class Group extends GroupModel {}
+class Group extends GroupModel
+{
+}

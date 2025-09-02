@@ -1,5 +1,6 @@
 <?php
-use Incodiy\Codiy\Database\Migrations\Process;
+
+use Canvastack\Canvastack\Database\Migrations\Process;
 
 /**
  * Created on Mar 3, 2017
@@ -8,8 +9,10 @@ use Incodiy\Codiy\Database\Migrations\Process;
  *
  * @author		wisnuwidi @IncoDIY - 2017
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
-class CreateBaseTable extends Process {
-	public $exclude = ['platforms', 'shop'];
+class CreateBaseTable extends Process
+{
+    public $exclude = ['platforms', 'shop'];
 }

@@ -1,63 +1,66 @@
 <?php
-namespace Incodiy\Codiy\Library\Components\Chart\Canvas\Line;
+
+namespace Canvastack\Canvastack\Library\Components\Chart\Canvas\Line;
 
 /**
  * Created on Oct 11, 2022
- * 
+ *
  * Time Created : 10:12:56 AM
  *
  * @filesource	Script.php
  *
- * @author     wisnuwidi@incodiy.com - 2022
+ * @author     wisnuwidi@canvastack.com - 2022
  * @copyright  wisnuwidi
- * @email      wisnuwidi@incodiy.com
+ *
+ * @email      wisnuwidi@canvastack.com
  */
-trait Script {
-    
-	private function line_script($identity, $data = []) {
-		$chartData = $data['data'];
-				
-		$series = null;
-		if (!empty($chartData['series'])) {
-			$series = static::drawJSON('series', $chartData);
-		}
-		
-		$title = null;
-		if (!empty($chartData['title'])) {
-			$title = static::drawJSON('title', $chartData);
-		}
-		
-		$subtitle = null;
-		if (!empty($chartData['subtitle'])) {
-			$subtitle = static::drawJSON('subtitle', $chartData);
-		}
-		
-		$legends  = null;
-		if (!empty($chartData['legend'])) {
-			$legends = static::drawJSON('legend', $chartData);
-		}
-		
-		$tooltips = null;
-		if (!empty($chartData['tooltip'])) {
-			$tooltips = static::drawJSON('tooltip', $chartData);
-		}
-		
-		$axisCat      = [];
-		
-		$xAxisData    = self::axisData('x', $chartData);
-		$xAxis        = $xAxisData['data'];
-		$axisCat['x'] = $xAxisData['category'];
-		
-		$yAxisData    = self::axisData('y', $chartData);
-		$yAxis        = $yAxisData['data'];
-		$axisCat['y'] = $yAxisData['category'];
-		
-		$axisCategory = in_array(true, $axisCat);
-		if (false === $axisCategory) {
-			$chartData['xAxis']['categories'] = $chartData['category'];
-			$xAxis = static::drawJSON('xAxis', $chartData);
-		}
-		
-		$this->elements[$identity] .= self::scriptChart('line', $identity, $title, $subtitle, $xAxis, $yAxis, $tooltips, $legends, $series);
-	}
+trait Script
+{
+    private function line_script($identity, $data = [])
+    {
+        $chartData = $data['data'];
+
+        $series = null;
+        if (! empty($chartData['series'])) {
+            $series = static::drawJSON('series', $chartData);
+        }
+
+        $title = null;
+        if (! empty($chartData['title'])) {
+            $title = static::drawJSON('title', $chartData);
+        }
+
+        $subtitle = null;
+        if (! empty($chartData['subtitle'])) {
+            $subtitle = static::drawJSON('subtitle', $chartData);
+        }
+
+        $legends = null;
+        if (! empty($chartData['legend'])) {
+            $legends = static::drawJSON('legend', $chartData);
+        }
+
+        $tooltips = null;
+        if (! empty($chartData['tooltip'])) {
+            $tooltips = static::drawJSON('tooltip', $chartData);
+        }
+
+        $axisCat = [];
+
+        $xAxisData = self::axisData('x', $chartData);
+        $xAxis = $xAxisData['data'];
+        $axisCat['x'] = $xAxisData['category'];
+
+        $yAxisData = self::axisData('y', $chartData);
+        $yAxis = $yAxisData['data'];
+        $axisCat['y'] = $yAxisData['category'];
+
+        $axisCategory = in_array(true, $axisCat);
+        if (false === $axisCategory) {
+            $chartData['xAxis']['categories'] = $chartData['category'];
+            $xAxis = static::drawJSON('xAxis', $chartData);
+        }
+
+        $this->elements[$identity] .= self::scriptChart('line', $identity, $title, $subtitle, $xAxis, $yAxis, $tooltips, $legends, $series);
+    }
 }

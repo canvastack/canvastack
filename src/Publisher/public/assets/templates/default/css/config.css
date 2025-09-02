@@ -76,7 +76,7 @@ div.dataTables_processing > div:last-child {
 	border-right: 1px solid rgba(232, 119, 119, 1) !important;
 }
 
-.diy-wrapper-table .codiy-datatable {
+.diy-wrapper-table .canvastack-datatable {
 	margin-top: 0 !important;
 }
 
@@ -445,7 +445,7 @@ table td .rdio.text-left label {
 	left: -1px !important;
 }
 
-table.codiy-datatable .diy-column-action {
+table.canvastack-datatable .diy-column-action {
 	min-width: 86px;
 }
 
@@ -552,7 +552,7 @@ label:active:after {
 
 
 .show-hidden-on-hover:hover + .hide,
-.codiy-datatable>tbody>tr>td>div.show-hidden-on-hover:hover + div.hide {
+.canvastack-datatable>tbody>tr>td>div.show-hidden-on-hover:hover + div.hide {
  	display: block !important;
 	left: calc(100% - 5px);
 	transform: translateX(-100%);
@@ -1109,7 +1109,7 @@ table.dataTable tr td .action-buttons-box .action-buttons .btn {
 	line-height: 1.6;
 	border-radius: 2px !important;
 }
-table.codiy-datatable thead>tr>th {
+table.canvastack-datatable thead>tr>th {
 	text-align: center;
 }
 table.dataTable tr td .action-buttons-box .action-buttons .btn i::before {
