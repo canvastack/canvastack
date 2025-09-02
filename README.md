@@ -1,4 +1,4 @@
-# CanvaStack
+# <img src="https://avatars.githubusercontent.com/u/218853734?v=4" alt="CanvaStack" width="64" height="64" style="border-radius:50%; vertical-align:middle; margin-right:12px;" /> CanvaStack
 
 [![Packagist](https://img.shields.io/packagist/v/canvastack/canvastack?style=flat-square)](https://packagist.org/packages/canvastack/canvastack)
 ![PHP](https://img.shields.io/badge/PHP-8.1%2B-blue?style=flat-square)
@@ -6,36 +6,37 @@
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
 <p>
-  <img src="https://avatars.githubusercontent.com/u/218853734?v=4" alt="CanvaStack" width="64" height="64" style="border-radius:50%; vertical-align:middle; margin-right:12px;" />
   A modular Laravel toolkit for rapidly building back-office applications with consistent UI patterns. CanvaStack provides a cohesive set of builders for Forms and Tables (DataTables integration), utilities (facade: Canvatility), CLI tools, and publishable assets to bootstrap admin systems quickly and safely.
 </p>
 
 - Maintained package: [canvastack/canvastack](https://packagist.org/packages/canvastack/canvastack)
 - Namespace: `Canvastack\Canvastack`
 - Facade: `CanvaStack`
-- Status: Actively refactored and modernized (rebranded from Incodiy/CODIY)
+- Status: Actively refactored and modernized (rebranded from **[Incodiy/CODIY](https://github.com/incodiy/codiy.git)**)
 
 ---
 
 ## Table of Contents
 
-1. Features
-2. Requirements
-3. Installation
-4. Publishing & Setup
-5. Quick Start
-6. Components Overview
-7. Documentation Links
-8. Support Matrix
-9. DataTables & Performance Notes
-10. CLI Tools
-11. Configuration
-12. Directory Structure
-13. Upgrading from Incodiy
-14. Changelog
-15. Roadmap
-16. Contributing
-17. License
+- [ CanvaStack](#-canvastack)
+  - [Table of Contents](#table-of-contents)
+  - [1) Features](#1-features)
+  - [2) Requirements](#2-requirements)
+  - [3) Installation](#3-installation)
+  - [4) Publishing \& Setup](#4-publishing--setup)
+  - [5) Quick Start](#5-quick-start)
+  - [6) Components Overview](#6-components-overview)
+  - [7) Documentation Links](#7-documentation-links)
+  - [8) Support Matrix](#8-support-matrix)
+  - [9) DataTables \& Performance Notes](#9-datatables--performance-notes)
+  - [10) CLI Tools](#10-cli-tools)
+  - [11) Configuration](#11-configuration)
+  - [12) Directory Structure (package)](#12-directory-structure-package)
+  - [13) Upgrading from Incodiy](#13-upgrading-from-incodiy)
+  - [14) Changelog](#14-changelog)
+  - [15) Roadmap](#15-roadmap)
+  - [16) Contributing](#16-contributing)
+  - [17) License](#17-license)
 
 ---
 
