@@ -1,8 +1,8 @@
 <?php
 
-namespace Incodiy\Codiy\Controllers\Auth;
+namespace Canvastack\Canvastack\Controllers\Auth;
 
-use Incodiy\Codiy\Controllers\Core\Controller;
+use Canvastack\Canvastack\Controllers\Core\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 class LoginController extends Controller

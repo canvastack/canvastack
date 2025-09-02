@@ -1,7 +1,8 @@
 <?php
+
 namespace App\Http\Controllers\Admin\System;
 
-use Incodiy\Codiy\Controllers\Admin\System\UserController as User;
+use Canvastack\Canvastack\Controllers\Admin\System\UserController as User;
 
 /**
  * Created on Jul 26, 2017
@@ -12,6 +13,9 @@ use Incodiy\Codiy\Controllers\Admin\System\UserController as User;
  *
  * @author		wisnuwidi @IncoDIY - 2017
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
-class UserController extends User {}
+class UserController extends User
+{
+}

@@ -5,9 +5,9 @@
  *
  * @filesource	index.blade.php
  *
- * @author		wisnuwidi@incodiy.com - 2021
+ * @author		wisnuwidi@canvastack.com - 2021
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ * @email		wisnuwidi@canvastack.com
  */
 ?>
 <!DOCTYPE html>
@@ -34,7 +34,7 @@
 						
 						@if (!empty($route_info))
 						<!-- START ACTION BUTTON BLOCK -->
-						{!! diy_action_buttons($route_info) !!}
+						{!! canvastack_action_buttons($route_info) !!}
 						<!-- END ACTION BUTTON BLOCK -->
 						@endif
 						
@@ -66,3 +66,5 @@
 		@include('default.template.admin.block.downscripts')
 	</body>
 </html>
+
+

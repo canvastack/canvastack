@@ -1,8 +1,10 @@
 <?php
-namespace Incodiy\Codiy\Models\Admin\System;
+
+namespace Canvastack\Canvastack\Models\Admin\System;
+
 /**
  * Created on Dec 31, 2022
- * 
+ *
  * Time Created : 4:57:15 AM
  * Filename     : ImportAccounts.php
  *
@@ -10,6 +12,9 @@ namespace Incodiy\Codiy\Models\Admin\System;
  *
  * @author     wisnuwidi @Incodiy - 2022
  * @copyright  wisnuwidi
- * @email      wisnuwidi@incodiy.com
+ *
+ * @email      wisnuwidi@canvastack.com
  */
-class ImportAccounts extends User {}
+class ImportAccounts extends User
+{
+}

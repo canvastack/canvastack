@@ -78,6 +78,9 @@ nav>.main-menu>li>ul, nav>.main-menu>li>ul.colapse.in {
 	background-color: rgba(240, 32, 62, 0.68);
 }
 
+/* Ensure slimScroll bar positioning without JS !important hacks */
+.slimScrollBar { right: unset !important; left: 0; }
+
 .table-default thead tr th {
 	background-color: #e65772 !important;
 	border-color: #f17d7d #e87777 #E87878 !important;

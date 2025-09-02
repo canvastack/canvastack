@@ -4,7 +4,7 @@ function ajaxSelectionProcess(object, id, target_id, url, data = [], method = 'P
 	if (typeof dataInfo.labels   != 'undefined') var lURL = 'l=' + dataInfo.labels;
 	if (typeof dataInfo.values   != 'undefined') var vURL = 'v=' + dataInfo.values;
 	if (typeof dataInfo.selected != 'undefined') var sURL = 's=' + dataInfo.selected;
-	if (typeof dataInfo.query    != 'undefined') var qURL = diy_random() + '=' + dataInfo.query;
+	if (typeof dataInfo.query    != 'undefined') var qURL = canvastack_random() + '=' + dataInfo.query;
 	
 	if (typeof dataInfo.labels != 'undefined' && typeof dataInfo.values != 'undefined' && typeof dataInfo.selected != 'undefined' && typeof dataInfo.query != 'undefined') {
 		var urls = url + '&' + lURL + '&' + vURL + '&' + sURL + '&' + qURL;
@@ -91,7 +91,7 @@ function exportFromModal(modalID, exportID, filterID, token, url, link, filter =
 		
 		$.ajax ({
 			type    : 'POST',
-			data    : diy_array_to_object(inputData),
+			data    : canvastack_array_to_object(inputData),
 			dataType: 'JSON',
 			url     : url,
 			success : function(n) {

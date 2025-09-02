@@ -1,7 +1,8 @@
 <?php
+
 namespace App\Http\Controllers\Admin\System;
 
-use Incodiy\Codiy\Controllers\Admin\System\DashboardController as Dashboard;
+use Canvastack\Canvastack\Controllers\Admin\System\DashboardController as Dashboard;
 
 /**
  * Created on May 17, 2018
@@ -10,8 +11,11 @@ use Incodiy\Codiy\Controllers\Admin\System\DashboardController as Dashboard;
  *
  * @filesource	DashboardController.php
  *
- * @author		wisnuwidi@incodiy.com - 2018
+ * @author		wisnuwidi@canvastack.com - 2018
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
-class DashboardController extends Dashboard {}
+class DashboardController extends Dashboard
+{
+}

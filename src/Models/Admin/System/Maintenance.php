@@ -1,7 +1,8 @@
 <?php
-namespace Incodiy\Codiy\Models\Admin\System;
 
-use Incodiy\Codiy\Models\Core\Model;
+namespace Canvastack\Canvastack\Models\Admin\System;
+
+use Canvastack\Canvastack\Models\Core\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -11,15 +12,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @filesource	Maintenance.php
  *
- * @author		wisnuwidi@incodiy.com - 2018
+ * @author		wisnuwidi@canvastack.com - 2018
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
- 
-class Maintenance extends Model {
-	use SoftDeletes;
-	
-	protected $table   = 'base_maintenance';
-	protected $guarded = [];
-	protected $dates   = ['deleted_at'];
+class Maintenance extends Model
+{
+    use SoftDeletes;
+
+    protected $table = 'base_maintenance';
+
+    protected $guarded = [];
+
+    protected $dates = ['deleted_at'];
 }

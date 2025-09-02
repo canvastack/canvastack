@@ -1,7 +1,8 @@
 <?php
+
 namespace App\Http\Controllers\Admin\System;
 
-use Incodiy\Codiy\Controllers\Admin\System\AuthController as Auth;
+use Canvastack\Canvastack\Controllers\Admin\System\AuthController as Auth;
 
 /**
  * Created on Mar 6, 2017
@@ -12,6 +13,9 @@ use Incodiy\Codiy\Controllers\Admin\System\AuthController as Auth;
  *
  * @author		wisnuwidi @IncoDIY - 2017
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
-class AuthController extends Auth {}
+class AuthController extends Auth
+{
+}

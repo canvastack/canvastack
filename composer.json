@@ -1,46 +1,52 @@
 {
-	"name" : "incodiy/codiy",
-	"type" : "library",
-	"description" : "Laravel Library Code from DIY",
-	"keywords" : [
-		"incodiy",
-		"library"
-	],
-	"license" : "MIT",
-	"require" : {
-		"laravel/ui" : "~4.0",
-		"laravelcollective/html" : "~6.4",
-		"doctrine/dbal" : "~3.4",
-		"intervention/image" : "~3.9",
-		"yajra/laravel-datatables" : "~9.0",
-		"jlawrence/eos" : "~3.2"
-	},
-	"authors" : [{
-			"name" : "wisnuwidi",
-			"email" : "wisnuwidi@gmail.com"
-		}
-	],
-	"autoload" : {
-		"psr-4" : {
-			"Incodiy\\Codiy\\" : "src/"
-		},
-		"files" : [
-			"src/Library/Helpers/App.php",
-			"src/Library/Helpers/MetaTags.php",
-			"src/Library/Helpers/Scripts.php",
-			"src/Library/Helpers/Template.php",
-			"src/Library/Helpers/FormObject.php",
-			"src/Library/Helpers/Table.php",
-			"src/Library/Helpers/Chart.php"
-		]
-	},
-	"extra" : {
-		"laravel" : {
-			"providers" : [
-				"Incodiy\\Codiy\\IncodiyServiceProvider"
-			]
-		}
-	},
-	"minimum-stability" : "dev",
-	"prefer-stable": true
+  "name": "canvastack/canvastack",
+  "type": "library",
+  "description": "Laravel library (rebranded from incodiy/codiy)",
+  "keywords": ["canvastack", "library"],
+  "license": "MIT",
+  "require": {
+    "laravel/ui": "~4.0",
+    "laravelcollective/html": "~6.4",
+    "doctrine/dbal": "~3.4",
+    "intervention/image": "~3.9",
+    "yajra/laravel-datatables": "~9.0",
+    "jlawrence/eos": "~3.2"
+  },
+  "authors": [
+    {"name": "wisnuwidi", "email": "wisnuwidi@gmail.com"}
+  ],
+  "autoload": {
+    "psr-4": {
+      "Canvastack\\Canvastack\\": "src/",
+      "Canvastack\\Table\\Tests\\": "src/Library/Components/Table/tests/"
+    },
+    "files": [
+      "src/Library/Helpers/App.php",
+      "src/Library/Helpers/Runtime.php",
+      "src/Library/Helpers/MetaTags.php",
+      "src/Library/Helpers/Scripts.php",
+      "src/Library/Helpers/Template.php",
+      "src/Library/Helpers/FormObject.php",
+      "src/Library/Helpers/Table.php",
+      "src/Library/Helpers/Chart.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Canvastack\\Table\\Tests\\": "src/Library/Components/Table/tests/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Canvastack\\Canvastack\\CanvastackServiceProvider"
+      ]
+    },
+    "branch-alias": {
+      "dev-master": "1.x-dev",
+      "dev-v2": "2.x-dev"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }

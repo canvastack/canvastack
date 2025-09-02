@@ -1,6 +1,9 @@
 <?php
+
 namespace App\Models\Admin\System;
 
-use Incodiy\Codiy\Models\Admin\System\User as UserModel;
+use Canvastack\Canvastack\Models\Admin\System\User as UserModel;
 
-class User extends UserModel {}
+class User extends UserModel
+{
+}

@@ -1,10 +1,12 @@
 <?php
+
 namespace App\Http\Controllers\Admin\System;
-use Incodiy\Codiy\Controllers\Admin\System\ExtransloadController as ETL;
+
+use Canvastack\Canvastack\Controllers\Admin\System\ExtransloadController as ETL;
 
 /**
  * Created on Dec 10, 2022
- * 
+ *
  * Time Created : 1:15:44 AM
  * Filename     : ExtransloadController.php
  *
@@ -12,7 +14,9 @@ use Incodiy\Codiy\Controllers\Admin\System\ExtransloadController as ETL;
  *
  * @author     wisnuwidi @Incodiy - 2022
  * @copyright  wisnuwidi
- * @email      incodiy@gmail.com
+ *
+ * @email      canvastack@gmail.com
  */
- 
-class ExtransloadController extends ETL {}
+class ExtransloadController extends ETL
+{
+}

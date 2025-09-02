@@ -1,7 +1,8 @@
 <?php
+
 namespace App\Models\Admin\System;
 
-use Incodiy\Codiy\Models\Admin\System\DynamicTables as DynamicDataTables;
+use Canvastack\Canvastack\Models\Admin\System\DynamicTables as DynamicDataTables;
 
 /**
  * Created on 2 Jun 2021
@@ -9,8 +10,11 @@ use Incodiy\Codiy\Models\Admin\System\DynamicTables as DynamicDataTables;
  *
  * @filesource	DynamicTables.php
  *
- * @author		wisnuwidi@incodiy.com - 2021
+ * @author		wisnuwidi@canvastack.com - 2021
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
-class DynamicTables extends DynamicDataTables {}
+class DynamicTables extends DynamicDataTables
+{
+}

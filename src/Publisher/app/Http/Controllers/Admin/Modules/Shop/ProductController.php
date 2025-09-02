@@ -1,11 +1,12 @@
 <?php
+
 namespace App\Http\Controllers\Admin\Modules\Shop;
 
-use Incodiy\Codiy\Controllers\Admin\Modules\Shop\ProductController as Products;
+use Canvastack\Canvastack\Controllers\Admin\Modules\Shop\ProductController as Products;
 
 /**
  * Created on Dec 17, 2022
- * 
+ *
  * Time Created : 6:02:23 PM
  * Filename     : ProductController.php
  *
@@ -13,6 +14,9 @@ use Incodiy\Codiy\Controllers\Admin\Modules\Shop\ProductController as Products;
  *
  * @author     wisnuwidi @Incodiy - 2022
  * @copyright  wisnuwidi
- * @email      wisnuwidi@incodiy.com
+ *
+ * @email      wisnuwidi@canvastack.com
  */
-class ProductController extends Products {}
+class ProductController extends Products
+{
+}

@@ -1,7 +1,8 @@
 <?php
+
 namespace App\Http\Controllers\Admin\System;
 
-use Incodiy\Codiy\Controllers\Admin\System\ModulesController as Modules;
+use Canvastack\Canvastack\Controllers\Admin\System\ModulesController as Modules;
 
 /**
  * Created on Jan 11, 2018
@@ -12,6 +13,9 @@ use Incodiy\Codiy\Controllers\Admin\System\ModulesController as Modules;
  *
  * @author		wisnuwidi@IncoDIY - 2018
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
-class ModulesController extends Modules {}
+class ModulesController extends Modules
+{
+}

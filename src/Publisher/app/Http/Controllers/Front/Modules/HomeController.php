@@ -1,7 +1,8 @@
 <?php
+
 namespace App\Http\Controllers\Front\Modules;
 
-use Incodiy\Codiy\Controllers\Front\Modules\HomeController as Home;
+use Canvastack\Canvastack\Controllers\Front\Modules\HomeController as Home;
 
 /**
  * Created on 10 Mar 2021
@@ -9,9 +10,11 @@ use Incodiy\Codiy\Controllers\Front\Modules\HomeController as Home;
  *
  * @filesource	HomeController.php
  *
- * @author		wisnuwidi@incodiy.com - 2021
+ * @author		wisnuwidi@canvastack.com - 2021
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
- 
-class HomeController extends Home {}
+class HomeController extends Home
+{
+}
