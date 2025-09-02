@@ -2,3 +2,7 @@
 /.project
 .settings
 *.phpx
+/.analytics
+*.zip
+/.node_modules
+*cache

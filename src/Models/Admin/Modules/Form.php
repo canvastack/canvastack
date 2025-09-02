@@ -1,7 +1,8 @@
 <?php
-namespace Incodiy\Codiy\Models\Admin\Modules;
 
-use Incodiy\Codiy\Models\Core\Model;
+namespace Canvastack\Canvastack\Models\Admin\Modules;
+
+use Canvastack\Canvastack\Models\Core\Model;
 
 /**
  * Created on 24 Mar 2021
@@ -9,14 +10,16 @@ use Incodiy\Codiy\Models\Core\Model;
  *
  * @filesource	Form.php
  *
- * @author		wisnuwidi@incodiy.com - 2021
+ * @author		wisnuwidi@canvastack.com - 2021
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
- 
-class Form extends Model {
-	protected $connection = 'mysql_mantra_etl';
-	
-	protected $table	 = 'report_data_summary_ho_program_keren_merapi';//'test_inputform';
-	protected $guarded = [];
+class Form extends Model
+{
+    protected $connection = 'mysql_mantra_etl';
+
+    protected $table = 'report_data_summary_ho_program_keren_merapi'; //'test_inputform';
+
+    protected $guarded = [];
 }

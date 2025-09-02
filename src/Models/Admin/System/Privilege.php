@@ -1,7 +1,8 @@
 <?php
-namespace Incodiy\Codiy\Models\Admin\System;
 
-use Incodiy\Codiy\Models\Core\Model;
+namespace Canvastack\Canvastack\Models\Admin\System;
+
+use Canvastack\Canvastack\Models\Core\Model;
 
 /**
  * Created on Jan 14, 2018
@@ -12,12 +13,14 @@ use Incodiy\Codiy\Models\Core\Model;
  *
  * @author		wisnuwidi@IncoDIY - 2018
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
- 
-class Privilege extends Model {
-	protected $table		= 'base_group_privilege';
-	protected $guarded	= [];
-	
-	public $timestamps	= false;
+class Privilege extends Model
+{
+    protected $table = 'base_group_privilege';
+
+    protected $guarded = [];
+
+    public $timestamps = false;
 }

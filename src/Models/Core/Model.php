@@ -1,10 +1,12 @@
 <?php
-namespace Incodiy\Codiy\Models\Core;
+
+namespace Canvastack\Canvastack\Models\Core;
 
 use Illuminate\Database\Eloquent\Model as BaseModel;
+
 /**
  * Created on Dec 16, 2022
- * 
+ *
  * Time Created : 12:27:59 AM
  * Filename     : Model.php
  *
@@ -12,7 +14,9 @@ use Illuminate\Database\Eloquent\Model as BaseModel;
  *
  * @author     wisnuwidi @Incodiy - 2022
  * @copyright  wisnuwidi
- * @email      wisnuwidi@incodiy.com
+ *
+ * @email      wisnuwidi@canvastack.com
  */
- 
-class Model extends BaseModel {}
+class Model extends BaseModel
+{
+}

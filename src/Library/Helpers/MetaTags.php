@@ -1,5 +1,6 @@
 <?php
-use Incodiy\Codiy\Library\Components\MetaTags;
+
+use Canvastack\Canvastack\Library\Components\MetaTags;
 
 /**
  * Created on 14 Mar 2021
@@ -7,21 +8,22 @@ use Incodiy\Codiy\Library\Components\MetaTags;
  *
  * @filesource	MetaTags.php
  *
- * @author		wisnuwidi@incodiy.com - 2021
+ * @author		wisnuwidi@canvastack.com - 2021
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
- 
-if (!function_exists('diy_meta_tags')) {
-    
+if (! function_exists('canvastack_meta_tags')) {
+
     /**
      * Get Asset Path
      *
      * @return string
      */
-    function diy_meta_tags($as = 'html') {
+    function canvastack_meta_tags($as = 'html')
+    {
         $metaTags = new MetaTags();
-        
+
         return $metaTags->tags($as);
     }
 }

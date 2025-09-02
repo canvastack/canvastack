@@ -6,14 +6,15 @@
  *
  * @filesource	Icon.php
  *
- * @author		wisnuwidi@incodiy.com - 2018
+ * @author		wisnuwidi@canvastack.com - 2018
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
- 
-namespace Incodiy\Codiy\Models\Admin\System;
 
-use Incodiy\Codiy\Models\Core\Model;
+namespace Canvastack\Canvastack\Models\Admin\System;
+
+use Canvastack\Canvastack\Models\Core\Model;
 
 /**
  * Created on Jan 14, 2018
@@ -24,11 +25,14 @@ use Incodiy\Codiy\Models\Core\Model;
  *
  * @author		wisnuwidi@IncoDIY - 2018
  * @copyright	wisnuwidi
- * @email		wisnuwidi@incodiy.com
+ *
+ * @email		wisnuwidi@canvastack.com
  */
-class Icon extends Model {
-	protected $table   = 'base_icon';
-	protected $guarded = [];
-	
-	public $timestamps = false;
+class Icon extends Model
+{
+    protected $table = 'base_icon';
+
+    protected $guarded = [];
+
+    public $timestamps = false;
 }
