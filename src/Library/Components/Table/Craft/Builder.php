@@ -526,13 +526,17 @@ class Builder
 
         $column_id = [];
         if (false !== $server_side) {
-            $firstField = 'id';
+            // CRITICAL: Always use 'id' for column_id, regardless of whether it's in visible columns
+            // This ensures the hidden ID column always contains actual ID data, not other field data
+            $column_id['data'] = 'id';
+            $column_id['name'] = 'id';
+            
+            // Mark as hidden column if ID is not in the visible columns list
             if (! in_array('id', $columns)) {
-                $firstField = $columns[1];
+                $column_id['visible'] = false;
+                $column_id['searchable'] = false;
+                $column_id['className'] = 'control hidden-column';
             }
-
-            $column_id['data'] = $firstField;
-            $column_id['name'] = $firstField;
         }
 
         $formula_fields = [];
@@ -622,6 +626,17 @@ class Builder
         $dt_info = [];
         $dt_info['searchable'] = [];
         $dt_info['name'] = $name;
+        
+        // Add model data for POST method
+        if (!empty($this->model[$name])) {
+            $dt_info['model'] = [$name => $this->model[$name]];
+        }
+        
+        // Add columns data for POST method
+        if (!empty($data['columns'])) {
+            $dt_info['columns'] = [$name => $data['columns']];
+        }
+        
         if (! empty($data['columns']['sortable'])) {
             $dt_info['sortable'] = $data['columns']['sortable'];
         }
@@ -716,10 +731,10 @@ class Builder
 
         if ('GET' === $this->method) {
             $datatable = $this->datatables($tableID, $dt_columns, $dt_info, true, $filter_data);
-        } else {/*
-            $post      = new Post($tableID, $dt_columns, $dt_info, true, $filter_data);
-            $datatable = $post->script(); */
-            $datatable = $this->datatables($tableID, $dt_columns, $dt_info, true, $filter_data);
+        } else {
+            // Use POST method for datatables
+            $post = new Post($tableID, $dt_columns, $dt_info, true, $filter_data);
+            $datatable = $post->script();
         }
 
         return $datatable;

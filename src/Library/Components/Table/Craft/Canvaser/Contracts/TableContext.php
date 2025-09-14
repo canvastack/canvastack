@@ -24,6 +24,8 @@ final class TableContext
     /** @var string[] */
     public array $blacklists = ['password', 'action', 'no'];
 
+    public ?string $routePath = null;
+
     /** @param  array<string,mixed>|object  $method */
     public static function fromLegacy($method, $data, array $request): self
     {
@@ -43,6 +45,10 @@ final class TableContext
             // fallback: biarkan 'unknown'
         }
         $self->indexLists = (bool) ($data->datatables->records['index_lists'] ?? false);
+        
+        // Extract route path from data if available
+        $self->routePath = $data->datatables->route_path ?? null;
+        
         // blacklists bisa disesuaikan dari $data bila diperlukan nanti
         return $self;
     }

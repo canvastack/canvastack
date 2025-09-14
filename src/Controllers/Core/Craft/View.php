@@ -48,15 +48,81 @@ trait View
         }
     }
 
+    /**
+     * Render the view with components, datatables, and merged data.
+     *
+     * @param mixed $data Optional data to merge into content_page
+     * @return \Illuminate\View\View
+     * @throws \InvalidArgumentException If component render fails
+     */
     public function render($data = false)
+    {
+        try {
+            $this->configViewIfNeeded();
+
+            $this->setBasicData();
+
+            $components = $this->renderComponents();
+
+            $this->addScriptsFromElements();
+
+            if ($result = $this->handleDatatables(request())) {
+                return $result;
+            }
+
+            if ($result = $this->handleSpecialCases(request())) {
+                return $result;
+            }
+
+            $this->setupLayout();
+
+            if ($this->is_module_granted) {
+                $this->data['breadcrumbs'] = $this->template->breadcrumbs ?? [];
+                $this->data['content_page'] = $this->mergeContent($data, $components);
+            } else {
+                $this->data['breadcrumbs'] = null;
+                $this->data['route_info'] = null;
+            }
+
+            if (empty($this->session['id'] ?? '')) {
+                $this->data['content_page'] = $this->loginPage();
+            }
+
+            $this->checkIfAnyButtonRemoved();
+
+            return view($this->pageView, $this->data, $this->dataOptions);
+        } catch (\Throwable $e) {
+            \Log::error('Render error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            throw new \InvalidArgumentException('Failed to render view: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Configure view if not already set.
+     */
+    private function configViewIfNeeded()
     {
         if (empty($this->pageView)) {
             $this->configView();
         }
+    }
 
+    /**
+     * Set basic data like app name and logo.
+     */
+    private function setBasicData()
+    {
         $this->data['appName'] = canvastack_config('app_name');
         $this->data['logo'] = $this->logo_path();
+    }
 
+    /**
+     * Render form, table, and chart components.
+     *
+     * @return array Rendered elements
+     */
+    private function renderComponents()
+    {
         $formElements = [];
         if (! empty($this->data['components']->form->elements)) {
             $this->form->setValidations($this->validations);
@@ -68,107 +134,118 @@ trait View
             $tableElements = $this->table->render($this->data['components']->table->elements);
         }
 
-        // CoDIY Development Chart
         $chartElements = [];
         if (! empty($this->data['components']->chart->elements)) {
             $chartElements = $this->chart->render($this->data['components']->chart->elements);
         }
 
-        $this->addScriptsFromElements();
+        return [
+            'form' => $formElements,
+            'table' => $tableElements,
+            'chart' => $chartElements,
+        ];
+    }
 
-        // RENDER DATATABLES
+    /**
+     * Handle datatables rendering for POST and GET.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return mixed Return early if datatables rendered
+     */
+    private function handleDatatables(\Illuminate\Http\Request $request)
+    {
+        $validated = $request->validate([
+            'renderDataTables' => 'nullable|in:true,false,1,0',
+        ]);
+
         if (! empty($this->data['components']->table->method) && 'post' === strtolower($this->data['components']->table->method)) {
-            // RENDER DATATABLES WITH METHOD POST
-            $filter_datatables = [];
-            if (! empty($this->model_filters)) {
-                $filter_datatables = $this->model_filters;
+            // Handle POST method datatables - SAME PIPELINE AS GET METHOD
+            if ($request->isMethod('post') && !empty($request->get('renderDataTables'))) {
+                // Use the SAME pipeline as GET method to ensure consistent DT_RowAttr generation
+                $filter_datatables = $this->model_filters ?? [];
+                $method = $request->all();
+                
+                // Ensure difta key exists for POST requests
+                if (!isset($method['difta'])) {
+                    $method['difta'] = ['name' => array_keys($this->data['components']->table->model)[0] ?? '', 'source' => 'dynamics'];
+                }
+                
+                return $this->initRenderDatatables($method, $this->data['components']->table, $filter_datatables);
             }
-
+            
+            $filter_datatables = $this->model_filters ?? [];
             $method = [
                 'method' => 'post',
                 'renderDataTables' => true,
-                'difta' => ['name' => array_keys($this->data['components']->table->model)[0], 'source' => 'dynamics'],
+                'difta' => ['name' => array_keys($this->data['components']->table->model)[0] ?? '', 'source' => 'dynamics'],
             ];
 
             $this->initRenderDatatables($method, $this->data['components']->table, $filter_datatables);
 
-        } else {
-            if (! empty($_GET['renderDataTables']) && 'false' != $_GET['renderDataTables']) {
-                // RENDER DATATABLES WITH METHOD GET
-                $filter_datatables = [];
-                if (! empty($this->model_filters)) {
-                    $filter_datatables = $this->model_filters;
-                }
+            return null;
+        }
 
-                return $this->initRenderDatatables($_GET, $this->data['components']->table, $filter_datatables);
+        if (! empty($validated['renderDataTables']) && 'false' != $validated['renderDataTables']) {
+            $filter_datatables = $this->model_filters ?? [];
+            $method = $request->all();
+            
+            // Ensure difta key exists for GET requests
+            if (!isset($method['difta'])) {
+                $method['difta'] = ['name' => array_keys($this->data['components']->table->model)[0] ?? '', 'source' => 'dynamics'];
             }
+            
+            return $this->initRenderDatatables($method, $this->data['components']->table, $filter_datatables);
         }
-        /*
-        // RENDER CHARTS
-        if (!empty($this->data['components']->chart)) {
-            if (!empty($_GET['renderCharts']) && 'false' != $_GET['renderCharts']) {
-                $filter_charts = [];
-                return $this->initRenderCharts($_GET, $this->data['components']->chart, $filter_charts);
-            }
-        }
-         */
-        if (! empty($_GET['ajaxfproc'])) {
+
+        return null;
+    }
+
+    /**
+     * Handle special cases like AJAX.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return mixed Return early if special case handled
+     */
+    private function handleSpecialCases(\Illuminate\Http\Request $request)
+    {
+        $validated = $request->validate([
+            'ajaxfproc' => 'nullable|in:true,false,1,0',
+        ]);
+
+        if (! empty($validated['ajaxfproc'])) {
             return $this->form->ajaxProcessing();
         }
 
-        $this->template->render_sidebar_menu($this->menu);
-        $this->data['menu_sidebar'] = [];
-        if (! is_null($this->template->menu_sidebar)) {
-            $this->data['menu_sidebar'] = $this->template->menu_sidebar;
-        }
+        return null;
+    }
+
+    /**
+     * Setup layout elements like sidebar and breadcrumbs.
+     */
+    private function setupLayout()
+    {
+        $this->template->render_sidebar_menu($this->menu ?? []);
+        $this->data['menu_sidebar'] = $this->template->menu_sidebar ?? [];
 
         $this->template->render_sidebar_content();
-        $this->data['sidebar_content'] = [];
-        if (! is_null($this->template->sidebar_content)) {
-            $this->data['sidebar_content'] = $this->template->sidebar_content;
-        }
+        $this->data['sidebar_content'] = $this->template->sidebar_content ?? [];
+    }
 
-        // CHECK ROLE MODULE
-        if (true === $this->is_module_granted) {
-
-            $this->data['breadcrumbs'] = [];
-            if (! is_null($this->template->breadcrumbs)) {
-                $this->data['breadcrumbs'] = $this->template->breadcrumbs;
-            }
-
-            if (false !== $data) {
-                if (! is_array($data)) {
-                    // if $data variable not array
-                    $data_contents = [$data];
-                    $merge_data = array_merge($this->data['content_page'], $data_contents);
-                } else {
-                    // if $data variable is an array
-                    if (canvastack_is_empty($data)) {
-                        // if array    = []
-                        $merge_data = $this->data['content_page'];
-                    } else {
-                        $data_contents = $data;
-                        $merge_data = array_merge($this->data['content_page'], $data_contents);
-                    }
-                }
-                $dataContent = array_merge($merge_data, $formElements, $tableElements, $chartElements);
-
-                $this->data['content_page'] = $dataContent;
-            } else {
-                $this->data['content_page'] = array_merge($formElements, $tableElements, $chartElements);
-            }
-        } else {
-            $this->data['breadcrumbs'] = null;
-            $this->data['route_info'] = null;
-        }
-
-        if (empty($this->session['id'])) {
-            $this->data['content_page'] = $this->loginPage();
-        }
-
-        $this->checkIfAnyButtonRemoved();
-
-        return view($this->pageView, $this->data, $this->dataOptions);
+    /**
+     * Merge content data with components.
+     *
+     * @param mixed $data
+     * @param array $components
+     * @return array Merged content
+     */
+    private function mergeContent($data, array $components)
+    {
+        return collect($this->data['content_page'] ?? [])
+            ->merge($data ?? [])
+            ->merge($components['form'])
+            ->merge($components['table'])
+            ->merge($components['chart'])
+            ->toArray();
     }
 
     public function initRenderCharts($method, $data = [], $model_filters = [])
@@ -206,21 +283,8 @@ trait View
                 }
             }
 
-            $DataTables = new Datatables();
-            if (! empty($method['method']) && 'post' === $method['method']) {
-                $initRenderDatatablePost['datatables'] = [
-                    'method' => $method['method'],
-                    'renderDataTables' => $method['renderDataTables'],
-                    'difta' => $method['difta'],
-                    'datatables' => $datatables,
-                    'filters' => $filters,
-                    'model_filters' => $model_filters,
-                ];
-
-                return $this->setObjectInjection($initRenderDatatablePost);
-            }
-
             // Hybrid-compare: run pipeline preflight + legacy, return legacy result
+            // CRITICAL FIX: Check hybrid mode BEFORE POST method handling to ensure POST also uses hybrid mode
             if (function_exists('config') && config('canvastack.datatables.mode') === 'hybrid') {
                 try {
                     $result = \Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Support\HybridCompare::run($method, $datatables, $filters, $model_filters);
@@ -235,6 +299,23 @@ trait View
                     }
                     // fall through to legacy
                 }
+            }
+
+            $DataTables = new Datatables();
+            if (! empty($method['method']) && 'post' === $method['method']) {
+                // CRITICAL FIX: Use the SAME pipeline as GET method for POST requests
+                // This ensures DataTables parameters (draw, start, length, order, columns, search) are properly processed
+                
+                \Log::info('View::initRenderDatatables - POST method using GET pipeline', [
+                    'method_keys' => array_keys($method),
+                    'has_draw' => isset($method['draw']),
+                    'has_order' => isset($method['order']),
+                    'has_columns' => isset($method['columns']),
+                    'has_search' => isset($method['search'])
+                ]);
+                
+                // Use the SAME process() method as GET - this is the key fix!
+                return $DataTables->process($method, $datatables, $filters, $model_filters);
             }
 
             return $DataTables->process($method, $datatables, $filters, $model_filters);
@@ -330,12 +411,12 @@ trait View
     {
         $this->page_name = $page;
         $this->set_session();
-        if (! empty($this->session['user_group'])) {
+        if (! empty($this->session['user_group'] ?? '')) {
             $this->is_root = str_contains($this->session['user_group'], 'root');
         }
         $this->routeInfo();
 
-        if (! empty($this->session['id'])) {
+        if (! empty($this->session['id'] ?? '')) {
             $this->filter_page = canvastack_mapping_page(intval($this->session['id']));
         }
         if (! empty($this->model_class)) {

@@ -4,7 +4,9 @@ namespace Canvastack\Canvastack\Controllers\Core\Craft;
 
 use Canvastack\Canvastack\Library\Components\Charts\Objects as Chart;
 use Canvastack\Canvastack\Models\Admin\System\DynamicTables;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -18,33 +20,32 @@ use Illuminate\Support\Facades\Validator;
  *
  * @email     wisnuwidi@canvastack.com
  */
+/**
+ * Trait untuk operasi Action di CanvaStack.
+ * Menangani CRUD, validasi, dan integrasi komponen.
+ */
 trait Action
 {
     public $model = [];
-
     public $model_path = null;
-
     public $model_table = null;
-
     public $model_id;
-
     public $model_data;
-
     public $model_original;
-
     public $softDeletedModel = false;
-
     public $is_softdeleted = false;
-
     public $validations = [];
-
     public $uploadTrack;
-
     public $stored_id;
-
     public $store_routeback = true;
-
     public $filter_datatables_string = null;
+
+    /**
+     * Service untuk Action logic.
+     *
+     * @var \Canvastack\Canvastack\Services\ActionService
+     */
+    public $service;
 
     public function index()
     {
@@ -107,15 +108,34 @@ trait Action
         }
     }
 
-    public function insert_data(Request $request, $routeback = true)
+    public function insert_data(\Illuminate\Http\Request $request, $routeback = true)
     {
-        $this->validation($request, 'edit');
+        Log::info('Insert data called with type: ' . get_class($request));
 
-        return $this->INSERT_DATA_PROCESSOR($request, $routeback);
+        // Always validate the request, regardless of type
+        $validator = Validator::make($request->all(), $this->validations);
+        if ($validator->fails()) {
+            Log::warning('Validation failed during insert', ['errors' => $validator->errors(), 'data' => $request->all()]);
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $result = $this->INSERT_DATA_PROCESSOR($request, $routeback);
+        
+        // Ensure stored_id is set and redirect properly
+        if ($routeback && !empty($this->stored_id)) {
+            return $this->routeBackAfterAction('store', $this->stored_id);
+        }
+        
+        return $result;
     }
 
     private function exportDatatables()
     {
+        // Auth check untuk keamanan export
+        if (!auth()->check()) {
+            abort(403, 'Unauthorized access to export data.');
+        }
+
         if (! empty($_GET['exportDataTables'])) {
             if (true == $_GET['exportDataTables']) {
                 $data = [];
@@ -128,12 +148,16 @@ trait Action
                     $model->setTable($table_source);
                     $data[$table_source]['model'] = get_class($model);
 
-                    foreach ($model->get() as $i => $mod) {
-                        foreach ($mod->getAttributes() as $fieldname => $fieldvalue) {
-                            $data[$table_source]['export']['head'][$fieldname] = $fieldname;
-                            $data[$table_source]['export']['values'][$i][$fieldname] = $fieldvalue;
+                    $i = 0;
+                    $model->chunk(1000, function ($rows) use (&$data, &$i, $table_source) {
+                        foreach ($rows as $mod) {
+                            foreach ($mod->getAttributes() as $fieldname => $fieldvalue) {
+                                $data[$table_source]['export']['head'][$fieldname] = $fieldname;
+                                $data[$table_source]['export']['values'][$i][$fieldname] = $fieldvalue;
+                            }
+                            $i++;
                         }
-                    }
+                    });
                 }
             }
         }
@@ -141,21 +165,37 @@ trait Action
 
     private $objectInjection = [];
 
+    /**
+     * Set object injection untuk debugging.
+     *
+     * @param mixed $object
+     */
     public function setObjectInjection($object)
     {
         $this->objectInjection = $object;
-        dd($object);
+        Log::debug('Object injection set', ['object' => $object]);
     }
 
+    /**
+     * Check access untuk datatables processing.
+     */
     private function CHECK_DATATABLES_ACCESS_PROCESSOR()
     {
         if (! empty($_POST['draw']) && ! empty($_POST['columns'][0]['data']) && ! empty($_POST['length'])) {
-            dd($this->objectInjection);
+            Log::debug('Datatables access check', ['injection' => $this->objectInjection]);
         }
     }
 
-    private function INSERT_DATA_PROCESSOR(Request $request, $routeback = true)
+    private function INSERT_DATA_PROCESSOR(\Illuminate\Http\Request $request, $routeback = true)
     {
+        Log::info('INSERT_DATA_PROCESSOR called with type: ' . get_class($request));
+
+        if ($request instanceof \Canvastack\Canvastack\Http\Requests\ActionFormRequest) {
+            Log::info('Request is ActionFormRequest, setting rules', ['validations' => $this->validations]);
+            $request->setRules($this->validations);
+        }
+
+        // Rest of the method remains the same
 
         // RENDER CHARTS
         if (! empty($this->data['components']->chart)) {
@@ -176,13 +216,19 @@ trait Action
         $this->store_routeback = $routeback;
 
         $req = $request->all();
-        if (isset($req['filters']) && ! empty($req['filters'])) {
-            if ('true' === $req['filters']) {
-                $this->filterDataTable($request);
-            }
-        } else {
-            $request->validate($this->validations);
+        // Check if this is a filter request specifically
+        if (isset($req['filters']) && ! empty($req['filters']) && 'true' === $req['filters']) {
+            $this->filterDataTable($request);
+            return null;
+        }
+        
+        // Process normal insert/store operations
+        // Set dynamic rules untuk FormRequest
+        if ($request instanceof \Canvastack\Canvastack\Http\Requests\ActionFormRequest) {
+            $request->setRules($this->validations);
+        }
 
+        try {
             if (empty($model)) {
                 $model = $this->getModel();
             }
@@ -193,12 +239,42 @@ trait Action
             // check if any input file type submited
             $data = $this->checkFileInputSubmited($request);
             $this->stored_id = canvastack_insert($model, $data, true);
+            
+            // Ensure proper redirect after successful insert
+            if ($this->store_routeback && !empty($this->stored_id)) {
+                return $this->routeBackAfterAction('store', $this->stored_id);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error during insert: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->back()->with('error', 'Failed to insert data. Please try again.');
         }
     }
 
-    protected function store(Request $request)
+    /**
+     * Handle store operation dengan service.
+     *
+     * @param ActionFormRequest $request
+     * @return mixed
+     */
+    protected function store(\Illuminate\Http\Request $request)
     {
-        $this->INSERT_DATA_PROCESSOR($request);
+        if ($this->service === null) {
+            // Get the original model instance, not the builder
+            $modelInstance = $this->getModel();
+            if ('Builder' === class_basename($modelInstance)) {
+                $modelInstance = new $this->model_path();
+            }
+            $this->service = new \Canvastack\Canvastack\Services\ActionService($modelInstance, $this->validations, $this->softDeletedModel);
+        }
+        if (!$request instanceof \Canvastack\Canvastack\Http\Requests\ActionFormRequest) {
+            $request->validate($this->validations);
+        }
+        // Auth check untuk keamanan
+        if (!auth()->check()) {
+            abort(403, 'Unauthorized access to store action.');
+        }
+
+        $this->stored_id = $this->service->handleStore($request);
 
         if (true === $this->store_routeback) {
             return $this->routeBackAfterAction(__FUNCTION__, $this->stored_id);
@@ -207,9 +283,16 @@ trait Action
         }
     }
 
-    public function update_data(Request $request, $id, $routeback = true)
+    public function update_data(\Illuminate\Http\Request $request, $id, $routeback = true)
     {
-        $this->validation($request, 'edit');
+        Log::info('Update data called with type: ' . get_class($request));
+
+        if (!$request instanceof \Canvastack\Canvastack\Http\Requests\ActionFormRequest) {
+            $validator = Validator::make($request->all(), $this->validations);
+            if ($validator->fails()) {
+                return self::redirect('edit', $validator->errors(), 'failed');
+            }
+        }
 
         return $this->UPDATE_DATA_PROCESSOR($request, $id, $routeback);
     }
@@ -234,17 +317,7 @@ trait Action
 
     private static $validation_rules = [];
 
-    protected function validation(Request $request, $current_page = null)
-    {
-        $validator = Validator::make($request->all(), $this->validations);
-        self::$validation_rules = $validator->getRules();
-        if (true === $validator->fails()) {
-            self::$validation_messages['status'] = 'failed';
-            self::$validation_messages['messages'] = $validator->getMessageBag()->messages();
-
-            return self::redirect($current_page, self::$validation_messages['messages'], self::$validation_messages['status']);
-        }
-    }
+    // Method validation manual dihapus; gunakan FormRequest untuk auto-validasi
 
     public static function redirect($to, $message_data = [], $status_info = true)
     {
@@ -292,21 +365,66 @@ trait Action
         return canvastack_redirect($to, $compact['message'], $compact['status']);
     }
 
-    private function UPDATE_DATA_PROCESSOR(Request $request, $id, $routeback = true)
+    private function UPDATE_DATA_PROCESSOR(\Illuminate\Http\Request $request, $id, $routeback = true)
     {
-        $request->validate($this->validations);
+        Log::info('UPDATE_DATA_PROCESSOR called with type: ' . get_class($request));
+
+        if ($request instanceof \Canvastack\Canvastack\Http\Requests\ActionFormRequest) {
+            Log::info('Request is ActionFormRequest in update, setting rules', ['validations' => $this->validations]);
+            $request->setRules($this->validations);
+        }
+
+        // Rest of the method remains the same
+        // Set dynamic rules untuk FormRequest
+        if ($request instanceof \Canvastack\Canvastack\Http\Requests\ActionFormRequest) {
+            $request->setRules($this->validations);
+        }
+
         $model = $this->getModel($id);
 
-        // check if any input file type submited
-        $data = $this->checkFileInputSubmited($request);
+        try {
+            // check if any input file type submited
+            $data = $this->checkFileInputSubmited($request);
 
-        canvastack_update($model, $data);
-        $this->stored_id = intval($id);
+            canvastack_update($model, $data);
+            $this->stored_id = intval($id);
+        } catch (\Exception $e) {
+            Log::error('Error during update: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->back()->with('error', 'Failed to update data. Please try again.');
+        }
     }
 
-    protected function update(Request $request, $id)
+    /**
+     * Handle update operation dengan service.
+     *
+     * @param ActionFormRequest $request
+     * @param int $id
+     * @return mixed
+     */
+    protected function update(\Illuminate\Http\Request $request, $id)
     {
-        $this->UPDATE_DATA_PROCESSOR($request, $id);
+        if ($this->service === null) {
+            // Get the original model instance, not the builder
+            $modelInstance = $this->getModel();
+            if ('Builder' === class_basename($modelInstance)) {
+                $modelInstance = new $this->model_path();
+            }
+            $this->service = new \Canvastack\Canvastack\Services\ActionService($modelInstance, $this->validations, $this->softDeletedModel);
+        }
+        Log::info('Update called with type: ' . get_class($request));
+
+        if (!$request instanceof \Canvastack\Canvastack\Http\Requests\ActionFormRequest) {
+            $validator = Validator::make($request->all(), $this->validations);
+            if ($validator->fails()) {
+                return self::redirect('edit', $validator->errors(), 'failed');
+            }
+        }
+        // Auth check untuk keamanan
+        if (!auth()->check()) {
+            abort(403, 'Unauthorized access to update action.');
+        }
+
+        $this->stored_id = $this->service->handleUpdate($request, $id);
 
         if (true === $this->store_routeback) {
             return $this->routeBackAfterAction(__FUNCTION__, $id);
@@ -315,17 +433,36 @@ trait Action
         }
     }
 
+    /**
+     * Handle destroy operation dengan service.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return mixed
+     */
     protected function destroy(Request $request, $id)
     {
-        $model = $this->getModel($id);
-        canvastack_delete($request, $model, $id);
+        if ($this->service === null) {
+            // Get the original model instance, not the builder
+            $modelInstance = $this->getModel();
+            if ('Builder' === class_basename($modelInstance)) {
+                $modelInstance = new $this->model_path();
+            }
+            $this->service = new \Canvastack\Canvastack\Services\ActionService($modelInstance, $this->validations, $this->softDeletedModel);
+        }
+        $this->service->handleDestroy($request, $id);
 
         return $this->routeBackAfterAction(__FUNCTION__);
     }
 
     public function model_find($id)
     {
-        $this->model_data = $this->model->find($id);
+        try {
+            $this->model_data = $this->model->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            $this->model_data = null;
+            Log::warning('Model not found in model_find for ID: ' . $id, ['trace' => $e->getTraceAsString()]);
+        }
 
         if (true === $this->softDeletedModel) {
             if (! is_null($this->model_data->deleted_at)) {
@@ -445,16 +582,28 @@ trait Action
 
         if (true === $this->softDeletedModel) {
             if (false !== $find) {
-                if (! empty($model->find($find))) {
-                    return $model->find($find);
-                } else {
-                    return $model::withTrashed()->find($find);
+                try {
+                    return $model->findOrFail($find);
+                } catch (ModelNotFoundException $e) {
+                    try {
+                        return $model::withTrashed()->findOrFail($find);
+                    } catch (ModelNotFoundException $e2) {
+                        Log::error('Model not found with ID: ' . $find, ['trace' => $e2->getTraceAsString()]);
+                        abort(404, 'Resource not found.');
+                    }
                 }
-
             } else {
                 return canvastack_get_model($model, $find);
             }
         } else {
+            if (false !== $find) {
+                try {
+                    return $model->findOrFail($find);
+                } catch (ModelNotFoundException $e) {
+                    Log::error('Model not found with ID: ' . $find, ['trace' => $e->getTraceAsString()]);
+                    abort(404, 'Resource not found.');
+                }
+            }
             return canvastack_get_model($model, $find);
         }
     }
@@ -479,12 +628,25 @@ trait Action
      */
     private function routeBackAfterAction($function_name, $id = false)
     {
+        $currentRoute = current_route();
+        Log::info('Route back after action', ['current_route' => $currentRoute, 'function' => $function_name, 'id' => $id]);
+        
         if (! empty($id)) {
-            $routeBack = str_replace('.', '/', str_replace($function_name, "{$id}.edit", current_route()));
+            // For store operations, replace 'store' with '{id}/edit'
+            if ($function_name === 'store') {
+                $routeBack = str_replace('.store', ".{$id}.edit", $currentRoute);
+            } else {
+                $routeBack = str_replace(".{$function_name}", ".{$id}.edit", $currentRoute);
+            }
         } else {
-            $routeBack = str_replace('.', '/', str_replace($function_name, '', current_route()));
+            // Remove function name from route
+            $routeBack = str_replace(".{$function_name}", '', $currentRoute);
         }
-
+        
+        // Convert dots to slashes for URL
+        $routeBack = str_replace('.', '/', $routeBack);
+        
+        Log::info('Redirect to', ['route' => $routeBack]);
         return redirect($routeBack);
     }
 

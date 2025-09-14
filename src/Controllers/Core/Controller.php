@@ -13,6 +13,7 @@ use Canvastack\Canvastack\Controllers\Core\Craft\Includes\RouteInfo;
 use Canvastack\Canvastack\Controllers\Core\Craft\Scripts;
 use Canvastack\Canvastack\Controllers\Core\Craft\Session;
 use Canvastack\Canvastack\Controllers\Core\Craft\View;
+#use Canvastack\Canvastack\Controllers\Core\Craft\ViewEnhanced as View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -50,19 +51,12 @@ class Controller extends BaseController
     use Email;
 
     public $data = [];
-
     public $session_auth = [];
-
     public $getLogin = true;
-
     public $rootPage = 'home';
-
     public $adminPage = 'dashboard';
-
     public $connection;
-
     private $plugins = [];
-
     private $model_class = null;
 
     /**

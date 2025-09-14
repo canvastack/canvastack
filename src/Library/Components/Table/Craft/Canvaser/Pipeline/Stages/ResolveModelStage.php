@@ -179,6 +179,33 @@ class ResolveModelStage implements PipelineStageInterface
 
             // Map legacy foreign_keys (joins) and select joined fields
             try {
+                // DEBUG: Log foreign_keys availability
+                if (function_exists('logger')) {
+                    try {
+                        $foreignKeysExists = isset($context->datatables->columns[$table]['foreign_keys']);
+                        $foreignKeysData = $foreignKeysExists ? $context->datatables->columns[$table]['foreign_keys'] : null;
+                        
+                        // Debug full columns structure
+                        $allColumns = [];
+                        if (isset($context->datatables->columns) && is_array($context->datatables->columns)) {
+                            foreach ($context->datatables->columns as $tbl => $cols) {
+                                $allColumns[$tbl] = is_array($cols) ? array_keys($cols) : 'not_array';
+                            }
+                        }
+                        
+                        logger()->debug('[DT Pipeline] Foreign keys debug', [
+                            'table' => $table,
+                            'foreign_keys_exists' => $foreignKeysExists,
+                            'foreign_keys_data' => $foreignKeysData,
+                            'columns_structure' => isset($context->datatables->columns[$table]) ? array_keys($context->datatables->columns[$table]) : null,
+                            'all_columns_keys' => array_keys($context->datatables->columns ?? []),
+                            'all_columns_structure' => $allColumns
+                        ]);
+                    } catch (\Throwable $e) {
+                        // ignore logging errors
+                    }
+                }
+                
                 if (isset($context->datatables->columns[$table]['foreign_keys']) && is_array($context->datatables->columns[$table]['foreign_keys'])) {
                     $selects = ["{$table}.*"];
                     foreach ($context->datatables->columns[$table]['foreign_keys'] as $fkey1 => $fkey2) {
@@ -394,7 +421,8 @@ class ResolveModelStage implements PipelineStageInterface
                     } catch (\Throwable $e) {
                         $schemaCols = [];
                     }
-                    $reservedPseudo = ['DT_RowIndex', 'action', 'no'];
+                    // FIXED: Remove 'group_info' from reserved pseudo - it's a REAL database column from JOIN query
+                    $reservedPseudo = ['DT_RowIndex', 'action', 'no', 'number_lists'];
                     foreach ($orderReqs as $o) {
                         if (! is_array($o)) {
                             continue;
@@ -440,7 +468,8 @@ class ResolveModelStage implements PipelineStageInterface
                         } catch (\Throwable $e) {
                             $schemaCols = [];
                         }
-                        $reservedPseudo = ['DT_RowIndex', 'action', 'no'];
+                        // FIXED: Remove 'group_info' from reserved pseudo - it's a REAL database column from JOIN query
+                    $reservedPseudo = ['DT_RowIndex', 'action', 'no', 'number_lists'];
                         foreach ($reqCols as $cdef) {
                             $cname = is_array($cdef) ? ($cdef['data'] ?? null) : null;
                             if (! $cname || in_array($cname, $reservedPseudo, true) || ! preg_match('/^[A-Za-z0-9_\.]+$/', (string) $cname)) {

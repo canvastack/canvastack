@@ -69,7 +69,7 @@ class Datatables
     public function process($method, $data, $filters = [], $filter_page = [])
     {
 
-        $__resolved = \Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query\ModelQueryBridge::resolve($data, $method['difta']['name']);
+        $__resolved = \Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query\ModelQueryBridge::resolve($data, $method['difta']['name'], $method);
         $model_data = $__resolved['model_data'] ?? $model_data ?? null;
         $table_name = $__resolved['table_name'] ?? $table_name ?? '';
         $order_by = $__resolved['order_by'] ?? $order_by ?? [];
@@ -80,31 +80,83 @@ class Datatables
         }
 
         // Bridge resolution (non-destructive): re-resolve model/table/order_by to centralize logic
-        $__resolved = \Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query\ModelQueryBridge::resolve($data, $method['difta']['name']);
+        $__resolved = \Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query\ModelQueryBridge::resolve($data, $method['difta']['name'], $method);
         $model_data = $__resolved['model_data'] ?? $model_data ?? null;
         $table_name = $__resolved['table_name'] ?? $table_name ?? '';
         $order_by = $__resolved['order_by'] ?? $order_by ?? [];
 
         $privileges = $this->set_module_privileges();
-        $index_lists = $data->datatables->records['index_lists'];
+        $index_lists = $data->datatables->records['index_lists'] ?? true; // Default to true if not set
         $column_data = $data->datatables->columns;
         $action_list = [];
         $_action_lists = [];
         $removed_privileges = [];
 
-        $buttonsRemoval = [];
-        if (! empty($data->datatables->columns[$table_name]['button_removed'])) {
-            $buttonsRemoval = $data->datatables->columns[$table_name]['button_removed'];
-        }
+        // DEBUG: Log the structure of datatables columns for troubleshooting
+        \Log::debug('Datatables::process - Columns structure', [
+            'table_name' => $table_name,
+            'has_table_key' => isset($column_data[$table_name]),
+            'column_data_type' => gettype($column_data),
+        ]);
 
         $firstField = 'id';
         $blacklists = ['password', 'action', 'no'];
-        if (! in_array('id', $data->datatables->columns[$table_name]['lists'])) {
-            $firstField = $data->datatables->columns[$table_name]['lists'][0];
-            $blacklists = ['password', 'action', 'no', 'id'];
+
+        // CRITICAL FIX: If columns configuration is missing for this table, create a basic fallback
+        if (!empty($table_name) && (empty($column_data) || !isset($column_data[$table_name]))) {
+            \Log::warning("Datatables::process - Missing columns configuration for table: {$table_name}. Creating fallback configuration.");
+            
+            // Initialize column_data if it's empty
+            if (empty($column_data)) {
+                $column_data = [];
+            }
+            
+            // Create comprehensive fallback configuration based on common table structures
+            $fallbackLists = [$firstField]; // Start with primary key
+            
+            // For users table, add common user fields (use actual column names, not display labels)
+            if ($table_name === 'users') {
+                $fallbackLists = ['username', 'email', 'photo', 'group_info', 'address', 'phone', 'expire_date', 'active'];
+            }
+            
+            // Create basic configuration for the table
+            $column_data[$table_name] = [
+                'lists' => $fallbackLists,
+                'actions' => true, // Enable default actions
+                'clickable' => true, // Enable row clickable functionality
+            ];
+            
+            // Update the data object to include our fallback
+            $data->datatables->columns = $column_data;
+        }
+        
+        // CRITICAL: Update blacklist logic AFTER configuration is set (whether fallback or controller)
+        // This ensures ID is blacklisted when not in lists, regardless of configuration source
+        if (!empty($table_name) && isset($data->datatables->columns[$table_name]['lists']) && !empty($data->datatables->columns[$table_name]['lists'])) {
+            if (!in_array('id', $data->datatables->columns[$table_name]['lists'])) {
+                $firstField = $data->datatables->columns[$table_name]['lists'][0];
+                $blacklists = ['password', 'action', 'no', 'id'];
+                
+                \Log::info('Datatables::process - ID blacklisted (not in lists)', [
+                    'table_name' => $table_name,
+                    'lists' => $data->datatables->columns[$table_name]['lists'],
+                    'blacklists' => $blacklists,
+                    'first_field' => $firstField
+                ]);
+            } else {
+                \Log::info('Datatables::process - ID not blacklisted (in lists)', [
+                    'table_name' => $table_name,
+                    'lists' => $data->datatables->columns[$table_name]['lists']
+                ]);
+            }
         }
 
-        if (isset($column_data[$table_name]['actions']) && ($column_data[$table_name]['actions'] === true || is_array($column_data[$table_name]['actions']))) {
+        $buttonsRemoval = [];
+        if (!empty($table_name) && isset($data->datatables->columns[$table_name]['button_removed']) && ! empty($data->datatables->columns[$table_name]['button_removed'])) {
+            $buttonsRemoval = $data->datatables->columns[$table_name]['button_removed'];
+        }
+
+        if (!empty($table_name) && isset($column_data[$table_name]['actions']) && ($column_data[$table_name]['actions'] === true || is_array($column_data[$table_name]['actions']))) {
 
             $action_default = ['view', 'insert', 'edit', 'delete'];
             if (true === $column_data[$table_name]['actions']) {
@@ -170,8 +222,44 @@ class Datatables
         $datatables = DataTable::of($model)
             ->setTotalRecords($limit['total'])
             ->setFilteredRecords($limit['total'])
-            ->blacklist($blacklists)
             ->smart(true);
+            
+        // CRITICAL: Use only() instead of blacklist() for better column control
+        // This ensures only columns in lists configuration are displayed
+        if (!empty($table_name) && isset($data->datatables->columns[$table_name]['lists']) && !empty($data->datatables->columns[$table_name]['lists'])) {
+            $allowedColumns = $data->datatables->columns[$table_name]['lists'];
+            
+            // Always add ID column for ordering and clickable functionality (will be hidden in frontend)
+            if (!in_array('id', $allowedColumns)) {
+                array_unshift($allowedColumns, 'id'); // Add ID as first column
+            }
+            
+            // Always add action column if it exists
+            if (!in_array('action', $allowedColumns)) {
+                $allowedColumns[] = 'action';
+            }
+            
+            $datatables->only($allowedColumns);
+            
+            \Log::info('Datatables::process - Using only() for column control', [
+                'table_name' => $table_name,
+                'allowed_columns' => $allowedColumns
+            ]);
+        } else {
+            // Fallback to blacklist if no lists configuration
+            $datatables->blacklist($blacklists);
+            
+            \Log::info('Datatables::process - Using blacklist() fallback', [
+                'table_name' => $table_name,
+                'blacklists' => $blacklists
+            ]);
+        }
+            
+        // CRITICAL: Disable Yajra's automatic ordering since we handle it in QueryFactory
+        // This prevents empty column names from being processed by Yajra
+        if (method_exists($datatables, 'skipOrdering')) {
+            $datatables->skipOrdering();
+        }
 
         // Always enforce raw HTML columns consistently across all pages
         $defaultRaw = ['action', 'flag_status'];
@@ -179,10 +267,10 @@ class Datatables
         $explicitImage = [];
         $legacyImage = [];
 
-        if (! empty($column_data[$table_name]['raw_columns_forced'])) {
+        if (!empty($table_name) && ! empty($column_data[$table_name]['raw_columns_forced'])) {
             $forcedRaw = (array) $column_data[$table_name]['raw_columns_forced'];
         }
-        if (! empty($column_data[$table_name]['image_fields'])) {
+        if (!empty($table_name) && ! empty($column_data[$table_name]['image_fields'])) {
             $explicitImage = (array) $column_data[$table_name]['image_fields'];
         }
         if (! empty($this->form->imageTagFieldsDatatable)) {
@@ -192,6 +280,19 @@ class Datatables
         $allRaw = array_values(array_unique(array_merge($defaultRaw, $forcedRaw, $explicitImage, $legacyImage)));
         if (! empty($allRaw)) {
             $datatables->rawColumns($allRaw);
+        }
+        
+        // CRITICAL: Mark ID column as hidden but keep the value for ordering
+        // Frontend should handle hiding this column in the display
+        // Only mark as hidden if ID is not explicitly included in lists configuration
+        if (!empty($table_name) && isset($data->datatables->columns[$table_name]['lists'])) {
+            $allowedColumns = $data->datatables->columns[$table_name]['lists'];
+            if (!in_array('id', $allowedColumns)) {
+                // Add metadata to indicate this column should be hidden in frontend
+                $datatables->addColumn('DT_ColumnHidden', function ($row) {
+                    return 'id'; // Mark ID column as hidden
+                });
+            }
         }
 
         // Force image rendering for any explicitly-configured image fields
@@ -255,11 +356,78 @@ class Datatables
 
         if (! empty($order_by)) {
             $orderBy = $order_by;
-            $datatables->order(function ($query) use ($orderBy) {
-                $query->orderBy($orderBy['column'], $orderBy['order']);
-            });
+            // CRITICAL: Skip ordering for number_lists column as it doesn't exist in database
+            if ($orderBy['column'] !== 'number_lists') {
+                $datatables->order(function ($query) use ($orderBy, $table_name) {
+                    // CRITICAL: Handle ambiguous columns by prefixing with main table name
+                    $orderColumn = $orderBy['column'];
+                    
+                    // Check if column needs table prefix to avoid ambiguity
+                    if (!empty($table_name) && !str_contains($orderColumn, '.')) {
+                        // List of columns that commonly exist in multiple tables and cause ambiguity
+                        $ambiguousColumns = ['id', 'active', 'status', 'created_at', 'updated_at', 'deleted_at', 'name'];
+                        
+                        if (in_array($orderColumn, $ambiguousColumns)) {
+                            $orderColumn = "{$table_name}.{$orderColumn}";
+                        }
+                    }
+                    
+                    $query->orderBy($orderColumn, $orderBy['order']);
+                });
+            }
         } else {
-            $orderBy = ['column' => $data->datatables->columns[$table_name]['lists'][0], 'order' => 'desc'];
+            // CRITICAL: Check if columns configuration exists for this table
+            if (!empty($table_name) && isset($data->datatables->columns[$table_name]['lists']) && !empty($data->datatables->columns[$table_name]['lists'])) {
+                $firstColumn = $data->datatables->columns[$table_name]['lists'][0];
+                // CRITICAL: Skip number_lists column and use next available column or fallback to id
+                if ($firstColumn === 'number_lists') {
+                    // Find next valid column or use 'id' as fallback
+                    $validColumn = 'id'; // Default fallback
+                    if (count($data->datatables->columns[$table_name]['lists']) > 1) {
+                        $validColumn = $data->datatables->columns[$table_name]['lists'][1];
+                    }
+                    $orderBy = ['column' => $validColumn, 'order' => 'desc'];
+                } else {
+                    $orderBy = ['column' => $firstColumn, 'order' => 'desc'];
+                }
+                
+                $datatables->order(function ($query) use ($orderBy, $table_name) {
+                    // CRITICAL: Handle ambiguous columns by prefixing with main table name
+                    $orderColumn = $orderBy['column'];
+                    
+                    // Check if column needs table prefix to avoid ambiguity
+                    if (!empty($table_name) && !str_contains($orderColumn, '.')) {
+                        // List of columns that commonly exist in multiple tables and cause ambiguity
+                        $ambiguousColumns = ['id', 'active', 'status', 'created_at', 'updated_at', 'deleted_at', 'name'];
+                        
+                        if (in_array($orderColumn, $ambiguousColumns)) {
+                            $orderColumn = "{$table_name}.{$orderColumn}";
+                        }
+                    }
+                    
+                    $query->orderBy($orderColumn, $orderBy['order']);
+                });
+            } else {
+                // Fallback to default ordering if no columns configuration exists
+                \Log::warning("Datatables::process - No columns configuration found for table: {$table_name}. Using default ordering.");
+                $orderBy = ['column' => $firstField, 'order' => 'desc'];
+                $datatables->order(function ($query) use ($orderBy, $table_name) {
+                    // CRITICAL: Handle ambiguous columns by prefixing with main table name
+                    $orderColumn = $orderBy['column'];
+                    
+                    // Check if column needs table prefix to avoid ambiguity
+                    if (!empty($table_name) && !str_contains($orderColumn, '.')) {
+                        // List of columns that commonly exist in multiple tables and cause ambiguity
+                        $ambiguousColumns = ['id', 'active', 'status', 'created_at', 'updated_at', 'deleted_at', 'name'];
+                        
+                        if (in_array($orderColumn, $ambiguousColumns)) {
+                            $orderColumn = "{$table_name}.{$orderColumn}";
+                        }
+                    }
+                    
+                    $query->orderBy($orderColumn, $orderBy['order']);
+                });
+            }
         }
 
         $object_called = get_object_called_name($model);
@@ -280,7 +448,13 @@ class Datatables
 
         foreach ($sampleRows as $modelData) {
             if ('builder' === $object_called) {
-                $rowModel = (object) $modelData->getAttributes();
+                // For Query Builder, $modelData is already a stdClass object
+                if (is_object($modelData) && method_exists($modelData, 'getAttributes')) {
+                    $rowModel = (object) $modelData->getAttributes();
+                } else {
+                    // $modelData is already a stdClass from Query Builder
+                    $rowModel = $modelData;
+                }
             } else {
                 $rowModel = $modelData;
             }
@@ -289,7 +463,7 @@ class Datatables
 
             // Data Relational
             if (empty($joinFields)) {
-                if (! empty($column_data[$table_name]['relations'])) {
+                if (!empty($table_name) && ! empty($column_data[$table_name]['relations'])) {
                     foreach ($column_data[$table_name]['relations'] as $relField => $relData) {
                         $dataRelations = $relData['relation_data'];
                         $datatables->editColumn($relField, function ($data) use ($dataRelations) {

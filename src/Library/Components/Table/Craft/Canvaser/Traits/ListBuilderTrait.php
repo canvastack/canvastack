@@ -109,6 +109,14 @@ trait ListBuilderTrait
                 $columnsMeta,
                 $labelsRef
             );
+            
+            // Debug: Check if foreign_keys are stored in columns
+            \Log::info("ListBuilderTrait: After RelationsAndMetaShaper", [
+                'table' => $table_name,
+                'has_foreign_keys' => isset($columnsMeta['foreign_keys']),
+                'foreign_keys' => $columnsMeta['foreign_keys'] ?? null,
+                'columns_keys' => array_keys($columnsMeta)
+            ]);
         }
 
         $search_columns = false;

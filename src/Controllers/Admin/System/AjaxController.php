@@ -77,6 +77,8 @@ class AjaxController extends Controller
                 return $this->initFilterDatatables($_GET, $_POST);
             } elseif (! empty($_GET['filterCharts'])) {
                 return $this->initFilterCharts($_GET, $_POST);
+            } elseif (! empty($_GET['renderDataTables'])) {
+                return $this->initRenderDatatables($_GET, $_POST);
             }
         }
     }
@@ -252,6 +254,28 @@ class AjaxController extends Controller
 
             return $this->charts->init_filter_charts($_GET, $_POST, $this->ajaxConnection);
         }
+    }
+
+    /**
+     * Initialize Render Datatables for POST Method
+     * 
+     * Handles POST requests for datatables rendering to overcome URL length limitations
+     * and improve security by avoiding sensitive data in query strings.
+     * 
+     * @param array $get GET parameters
+     * @param array $post POST parameters containing datatables data
+     * @return mixed JSON response for datatables
+     */
+    private function initRenderDatatables($get = [], $post = [])
+    {
+        // Ensure datatables class is initialized
+        $this->datatableClass();
+        
+        // Create service instance for handling POST datatables requests
+        $service = new \Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query\DatatablesPostService();
+        
+        // Process the POST datatables request with connection support
+        return $service->handle($get, $post, $this->ajaxConnection);
     }
 
     public function export()

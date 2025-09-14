@@ -20,15 +20,10 @@ trait RouteInfo
     use Privileges;
 
     public $pageInfo;
-
     public $routeInfo;
-
     public $route_page;
-
     public $controllerName;
-
     public $currentRoute;
-
     public $actionButton = ['index', 'index', 'edit', 'show'];
 
     /**

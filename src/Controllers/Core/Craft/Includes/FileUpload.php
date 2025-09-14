@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Controllers\Core\Craft\Includes;
 
+use Illuminate\Support\Facades\Storage;
+
 /**
  * Created on 27 Mar 2021
  * Time Created	: 01:43:45
@@ -169,52 +171,81 @@ trait FileUpload
      */
     public function uploadFiles($upload_path, $request, $file_data = [])
     {
-        // Upload file to asset resources folder
-        $this->form->fileUpload($upload_path, $request, $file_data);
+        // Sanitasi upload path untuk cegah directory traversal
+        $baseUploadDir = 'uploads'; // Base directory upload di storage
+        $uploadDisk = 'public'; // Disk config di config/filesystems.php
 
-        if (empty($this->form->getFileUploads)) {
+        // Cek traversal: Tidak boleh mengandung '../' atau '..'
+        if (strpos($upload_path, '../') !== false || strpos($upload_path, '..\\') !== false) {
+            throw new \Illuminate\Validation\ValidationException(
+                \Illuminate\Validation\Factory::make([], [])->errors()->add('upload_path', 'Path traversal tidak diizinkan.')
+            );
+        }
+
+        $upload_path = trim($upload_path, '/\\'); // Clean path
+
+        $this->getFileUploads = []; // Reset
+
+        if (is_array($file_data)) {
+            foreach ($file_data as $file_name => $config) {
+                if ($request->hasFile($file_name)) {
+                    $file = $request->file($file_name);
+
+                    // Validasi file berdasarkan config
+                    if (isset($config['file_validation'])) {
+                        $request->validate([
+                            $file_name => $config['file_validation']
+                        ]);
+                    }
+
+                    // Generate unique filename
+                    $filename = $file->getClientOriginalName();
+                    $extension = $file->getClientOriginalExtension();
+                    $uniqueName = time() . '_' . str_replace('.' . $extension, '', $filename) . '.' . $extension;
+
+                    // Store file menggunakan Laravel Storage
+                    $path = $file->storeAs($baseUploadDir . '/' . $upload_path, $uniqueName, $uploadDisk);
+
+                    $storedPath = Storage::disk($uploadDisk)->url($path);
+
+                    $this->getFileUploads[$file_name] = ['file' => $storedPath];
+
+                    // Handle thumbnail jika diperlukan
+                    if (isset($config['thumb_name']) && $config['file_type'] === 'image') {
+                        // Asumsikan menggunakan Intervention Image; install jika belum
+                        $image = \Image::make($file);
+                        $thumbName = $config['thumb_name'] . '.' . $extension;
+                        $thumbPath = $image->fit($config['thumb_size'][0], $config['thumb_size'][1])->save();
+                        $thumbFullPath = $thumbPath->storeAs($baseUploadDir . '/' . $upload_path, $thumbName, $uploadDisk);
+                        $this->getFileUploads[$file_name]['thumbnail'] = Storage::disk($uploadDisk)->url($thumbFullPath);
+                    }
+                }
+            }
+        }
+
+        if (empty($this->getFileUploads)) {
             $routeBack = str_replace('.', '/', str_replace('store', 'create', current_route()));
 
             return redirect($routeBack);
         }
 
         // Data Insert Collection
-        if (is_array($file_data)) {
-            foreach ($this->form->getFileUploads as $file_name => $file_data) {
-                $dataExceptions[] = $file_name;
-                if (! empty($file_data['thumbnail'])) {
-
-                    // Check if any drop filename setted
-                    $checkDropField = false;
-                    if (isset($this->dropDbThumbnail[$file_name])) {
-                        $checkDropField = $this->dropDbThumbnail[$file_name];
-                    }
-
-                    if ($file_name === $checkDropField) {
-                        // check for unset image thumbnail
-                        $dataFile[$file_name] = [
-                            $file_name => $file_data['file'],
-                        ];
-                    } else {
-                        // insert image file with thumbnail
-                        $dataFile[$file_name] = [
-                            $file_name => $file_data['file'],
-                            "{$file_name}_thumb" => $file_data['thumbnail'],
-                        ];
-                    }
+        $dataExceptions = array_keys($this->getFileUploads);
+        $dataFiles = [];
+        foreach ($this->getFileUploads as $file_name => $file_data) {
+            if (! empty($file_data['thumbnail'])) {
+                $checkDropField = isset($this->dropDbThumbnail[$file_name]) ? $this->dropDbThumbnail[$file_name] : false;
+                if ($file_name === $checkDropField) {
+                    $dataFiles[$file_name] = $file_data['file'];
                 } else {
-                    $dataFile[$file_name] = [$file_name => $file_data['file']];
+                    $dataFiles[$file_name] = $file_data['file'];
+                    $dataFiles[$file_name . '_thumb'] = $file_data['thumbnail'];
                 }
+            } else {
+                $dataFiles[$file_name] = $file_data['file'];
             }
-
-            $dataFiles = [];
-            foreach ($dataFile as $datafile) {
-                foreach ($datafile as $dataname => $datapath) {
-                    $dataFiles[$dataname] = $datapath;
-                }
-            }
-
-            return array_merge_recursive($request->except($dataExceptions), $dataFiles);
         }
+
+        return array_merge_recursive($request->except($dataExceptions), $dataFiles);
     }
 }

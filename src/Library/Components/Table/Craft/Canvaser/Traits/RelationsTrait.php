@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Traits;
 
+use Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Utils\RelationshipIntrospector;
+
 /**
  * RelationsTrait
  *
@@ -83,6 +85,27 @@ trait RelationsTrait
 
     public function relations($model, $relation_function, $field_display, $filter_foreign_keys = [], $label = null)
     {
+        // Auto-detect foreign keys if not provided
+        if (empty($filter_foreign_keys)) {
+            $analysis = RelationshipIntrospector::analyzeRelationship($model, $relation_function);
+            
+            if ($analysis['success']) {
+                $filter_foreign_keys = $analysis['foreign_keys'];
+                
+                // Log the auto-detected foreign keys for debugging
+                \Log::info("RelationsTrait: Auto-detected foreign keys for {$relation_function}", [
+                    'relation_type' => $analysis['relation_type'],
+                    'foreign_keys' => $filter_foreign_keys,
+                    'tables' => $analysis['tables'],
+                    'pivot_table' => $analysis['pivot_table'] ?? null
+                ]);
+            } else {
+                \Log::warning("RelationsTrait: Failed to auto-detect foreign keys for {$relation_function}", [
+                    'error' => $analysis['error']
+                ]);
+            }
+        }
+        
         return $this->relationship($model, $relation_function, $field_display, $filter_foreign_keys, $label, null);
     }
 

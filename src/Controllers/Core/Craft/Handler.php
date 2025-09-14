@@ -78,11 +78,11 @@ trait Handler
         $user_group_session_field = canvastack_config('user.group_alias_field');
         $user_session_alias = canvastack_config('user.alias_session_name');
 
-        if (! empty($this->session[$user_group_session_field])) {
+        if (! empty($this->session[$user_group_session_field] ?? '')) {
             $this->filterPage([$user_group_session_key => $this->session[$user_group_session_field]], '=');
         }
 
-        if (! empty($this->session[$user_session_alias])) {
+        if (! empty($this->session[$user_session_alias] ?? [])) {
             foreach ($this->session[$user_session_alias] as $fieldset => $fieldvalues) {
                 $this->filterPage([$fieldset => $fieldvalues], '=');
             }

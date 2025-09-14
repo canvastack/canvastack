@@ -109,6 +109,12 @@ trait Scripts
         $js = '<script type="text/javascript">jQuery(function($) {';
         if (false !== $server_side) {
             $diftaURI = "&difta[name]={$data_info['name']}&difta[source]=dynamics";
+            
+            // Add route_path to difta for POST requests to determine correct action URLs
+            if (isset($this->route_page) && !empty($this->route_page)) {
+                $diftaURI .= "&difta[route_path]={$this->route_page}";
+            }
+            
             $link_url = "renderDataTables=true{$diftaURI}";
 
             if (false !== $custom_link) {
@@ -122,7 +128,14 @@ trait Scripts
             $scriptURI = "{$current_url}?{$link_url}";
             $colDefs = ",columnDefs:[{target:[1],visible:false,searchable:false,className:'control hidden-column'}";
             $orderColumn = ",order:[[1,'desc']]{$colDefs}]";
-            $columns = ",columns:{$columns}{$orderColumn}";
+            
+            // Handle columns configuration differently for POST method
+            if ('POST' === $this->datatablesMode) {
+                $columns = ",columns:{$columns}{$orderColumn}";
+            } else {
+                $columns = ",columns:{$columns}{$orderColumn}";
+            }
+            
             $url_path = url(canvastack_current_route()->uri);
             $hash = hash_code_id();
             $clickAction = ".on('click','td.clickable', function(){ var getRLP = $(this).parent('tr').attr('rlp'); if(getRLP != false) { var _rlp = parseInt(getRLP.replace('{$hash}','')-8*800/80); window.location='{$url_path}/'+_rlp+'/edit'; } });";
@@ -156,7 +169,44 @@ trait Scripts
             }
             if ('POST' === $this->datatablesMode) {
                 $token = csrf_token();
-                $ajax = "ajax:{url:'{$scriptURI}{$filters}',type:'POST',headers:{'X-CSRF-TOKEN': '{$token}'} }";
+                $idString = str_replace('-', '', $attr_id);
+                
+                // Build difta object for JavaScript
+                $diftaJS = json_encode([
+                    'name' => $data_info['name'] ?? '',
+                    'source' => 'dynamics'
+                ]);
+                
+                // Build POST data function that includes all necessary parameters
+                $postDataFunction = "data: function (data) {
+                    // Standard datatables parameters
+                    var postData = {
+                        draw: data.draw,
+                        start: data.start,
+                        length: data.length,
+                        search: data.search,
+                        order: data.order,
+                        columns: data.columns,
+                        _token: '{$token}'
+                    };
+                    
+                    // Add difta parameters
+                    postData.difta = {$diftaJS};
+                    
+                    // Add datatables configuration data if available
+                    if (typeof window.canvastack_datatables_config !== 'undefined' && window.canvastack_datatables_config['{$attr_id}']) {
+                        postData.datatables_data = window.canvastack_datatables_config['{$attr_id}'];
+                    }
+                    
+                    // Clean unnecessary components if strict mode enabled
+                    if ({$this->strictColumns}) {
+                        deleteUnnecessaryDatatableComponents(postData, {$this->strictColumns});
+                    }
+                    
+                    return postData;
+                }";
+                
+                $ajax = "ajax:{url:'{$scriptURI}',type:'POST',headers:{'X-CSRF-TOKEN': '{$token}'},{$postDataFunction} }";
             } else {
                 // FIX THE UNNECESARY @https://stackoverflow.com/a/46805503/20802728
                 $idString = str_replace('-', '', $attr_id);
@@ -172,9 +222,349 @@ trait Scripts
         } else {
             $js .= "cody_{$varTableID}_dt = $('#{$attr_id}').DataTable({ {$default_set}columns:{$columns} });";
         }
-        $js .= '});'.$documentLoad.'</script>';
+        
+        // Add configuration storage for POST method
+        if ('POST' === $this->datatablesMode && false !== $server_side) {
+            $configData = json_encode([
+                'columns' => $data_info['columns'] ?? [],
+                'records' => $data_info['records'] ?? [],
+                'modelProcessing' => $data_info['modelProcessing'] ?? [],
+                'labels' => $data_info['labels'] ?? [],
+                'relations' => $data_info['relations'] ?? [],
+                'tableID' => $data_info['tableID'] ?? [],
+                'model' => $data_info['model'] ?? []
+            ]);
+            
+            $js .= "
+            // Store datatables configuration for POST requests
+            if (typeof window.canvastack_datatables_config === 'undefined') {
+                window.canvastack_datatables_config = {};
+            }
+            window.canvastack_datatables_config['{$attr_id}'] = {$configData};
+            ";
+        }
+        
+        
+        // Add Delete Confirmation Modal JavaScript - SIMPLIFIED VERSION
+        $js .= "
+        // Simple Delete Confirmation Modal Handler
+        $(document).on('click', '.btn_delete_modal', function(e) {
+            e.preventDefault();
+            var \$btn = $(this);
+            var modalTarget = \$btn.data('target');
+            
+            console.log('Delete button clicked, target modal:', modalTarget);
+            
+            // Show the modal that was already appended to body
+            if ($(modalTarget).length > 0) {
+                $(modalTarget).modal('show');
+                console.log('Modal shown:', modalTarget);
+            } else {
+                console.error('Modal not found:', modalTarget);
+                // Fallback: show browser confirm dialog
+                var recordId = \$btn.data('record-id');
+                var tableName = \$btn.data('table-name');
+                if (confirm('Anda akan menghapus data dari tabel ' + tableName + ' dengan ID ' + recordId + '. Apakah Anda yakin?')) {
+                    var formId = \$btn.data('form-id');
+                    var form = document.getElementById(formId);
+                    if (form) {
+                        form.submit();
+                    }
+                }
+            }
+        });
+        
+        // Handle modal cleanup on hide
+        $(document).on('hidden.bs.modal', '[id^=\"deleteModal_\"]', function() {
+            console.log('Delete modal hidden:', $(this).attr('id'));
+        });
+        ";
+        
+        $js .= '});'.$documentLoad;
+        
+        // Add POST method filter integration for datatables
+        if ('POST' === $this->datatablesMode && false !== $server_side) {
+            $js .= "
+            // POST Method Filter Integration
+            $(document).ready(function() {
+                // Define filter functions if not already defined
+                if (typeof window.initializePostFilters === 'undefined') {
+                    " . $this->getPostFilterJavaScript() . "
+                }
+                
+                // Hook into DataTables AJAX success to check for filter configuration
+                $('#{$attr_id}').on('xhr.dt', function(e, settings, json, xhr) {
+                    if (json && json.filterConfig && json.filterConfig.hasFilters) {
+                        // Initialize filter functionality
+                        setTimeout(function() {
+                            initializePostFilters('{$attr_id}', json.filterConfig);
+                        }, 100);
+                    }
+                });
+            });
+            ";
+        }
+        
+        $js .= '</script>';
 
         return $js;
+    }
+
+    /**
+     * Get POST method filter JavaScript code
+     * 
+     * @return string
+     */
+    private function getPostFilterJavaScript()
+    {
+        return "
+        // Global storage for filter configurations
+        window.postDatatableFilters = window.postDatatableFilters || {};
+
+        /**
+         * Initialize filter functionality for a datatable
+         */
+        window.initializePostFilters = function(tableId, filterConfig) {
+            console.log('Initializing POST filters for table:', tableId, filterConfig);
+            
+            // Store filter config globally
+            window.postDatatableFilters[tableId] = filterConfig;
+            
+            // Add filter button to toolbar
+            addFilterButton(tableId, filterConfig);
+            
+            // Create filter modal
+            createFilterModal(tableId, filterConfig);
+            
+            // Bind events
+            bindFilterEvents(tableId, filterConfig);
+        };
+
+        /**
+         * Add filter button to DataTables toolbar
+         */
+        function addFilterButton(tableId, filterConfig) {
+            var wrapper = $('#' + tableId + '_wrapper');
+            var buttonsContainer = wrapper.find('.dt-buttons');
+            
+            if (buttonsContainer.length === 0) {
+                console.warn('DataTables buttons container not found for table:', tableId);
+                return;
+            }
+
+            // Create filter button HTML
+            var filterButtonHtml = '<button type=\"button\" class=\"btn btn-default btn-sm\" ' +
+                    'id=\"' + tableId + '_filterButton\" ' +
+                    'data-toggle=\"modal\" ' +
+                    'data-target=\"#' + tableId + '_filterModal\" ' +
+                    'title=\"Filter Data\">' +
+                    '<i class=\"fa fa-filter\"></i> Filter' +
+                    '</button>';
+
+            // Add button to toolbar
+            buttonsContainer.append(filterButtonHtml);
+            
+            console.log('Filter button added for table:', tableId);
+        }
+
+        /**
+         * Create filter modal HTML
+         */
+        function createFilterModal(tableId, filterConfig) {
+            var modalId = tableId + '_filterModal';
+            var formId = tableId + '_filterForm';
+            
+            // Generate filter fields HTML
+            var filterFieldsHtml = '';
+            
+            if (filterConfig.filterGroups && Array.isArray(filterConfig.filterGroups)) {
+                filterConfig.filterGroups.forEach(function(group, index) {
+                    var fieldName = group.column || 'field_' + index;
+                    var fieldLabel = fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace('_', ' ');
+                    
+                    if (group.type === 'selectbox') {
+                        filterFieldsHtml += '<div class=\"form-group row\">' +
+                                '<label for=\"' + fieldName + '\" class=\"col-sm-3 control-label\">' + fieldLabel + '</label>' +
+                                '<div class=\"input-group col-sm-9\">' +
+                                    '<select id=\"' + fieldName + '\" ' +
+                                            'class=\"form-control chosen-select-deselect\" ' +
+                                            'name=\"' + fieldName + '\">' +
+                                        '<option value=\"\" selected=\"selected\">Select ' + fieldLabel + '</option>' +
+                                    '</select>' +
+                                '</div>' +
+                            '</div>';
+                    }
+                });
+            }
+
+            // Create modal HTML
+            var modalHtml = '<div id=\"' + modalId + '\" class=\"modal fade\" role=\"dialog\" tabindex=\"-1\" ' +
+                     'aria-hidden=\"true\" data-backdrop=\"static\" data-keyboard=\"true\">' +
+                    '<div class=\"modal-dialog modal-lg\" role=\"document\">' +
+                        '<form action=\"' + filterConfig.baseUrl + '?renderDataTables=true&filters=true\" ' +
+                              'method=\"GET\" id=\"' + formId + '\" role=\"form\">' +
+                            '<div class=\"modal-content\">' +
+                                '<div class=\"modal-header\">' +
+                                    '<h5 class=\"modal-title\">' +
+                                        '<i class=\"fa fa-filter\"></i> &nbsp; Filter Data ' + filterConfig.tableName +
+                                    '</h5>' +
+                                    '<button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\">' +
+                                        '<span aria-hidden=\"true\">×</span>' +
+                                    '</button>' +
+                                '</div>' +
+                                '<input type=\"hidden\" name=\"_token\" value=\"' + filterConfig.token + '\">' +
+                                '<div class=\"modal-body\">' +
+                                    '<div id=\"' + modalId + '_modalBOX\">' +
+                                        filterFieldsHtml +
+                                    '</div>' +
+                                '</div>' +
+                                '<div class=\"modal-footer\">' +
+                                    '<button type=\"button\" class=\"btn btn-secondary\" data-dismiss=\"modal\">Cancel</button>' +
+                                    '<button type=\"submit\" class=\"btn btn-primary\">Apply Filter</button>' +
+                                    '<button type=\"button\" class=\"btn btn-warning\" id=\"' + tableId + '_clearFilter\">Clear Filter</button>' +
+                                '</div>' +
+                            '</div>' +
+                        '</form>' +
+                    '</div>' +
+                '</div>';
+
+            // Add modal to page
+            $('body').append(modalHtml);
+            
+            console.log('Filter modal created for table:', tableId);
+            
+            // Load filter options
+            loadFilterOptions(tableId, filterConfig);
+        }
+
+        /**
+         * Load filter options for selectbox fields
+         */
+        function loadFilterOptions(tableId, filterConfig) {
+            if (!filterConfig.filterGroups || !Array.isArray(filterConfig.filterGroups)) {
+                return;
+            }
+
+            filterConfig.filterGroups.forEach(function(group, index) {
+                if (group.type === 'selectbox' && group.relate) {
+                    var fieldName = group.column;
+                    var selectElement = $('#' + fieldName);
+                    
+                    if (selectElement.length === 0) {
+                        return;
+                    }
+
+                    // Make AJAX request to get filter options
+                    var optionsUrl = filterConfig.baseUrl + '?renderDataTables=true&filters=true&getFilterOptions=' + fieldName;
+                    
+                    $.ajax({
+                        url: optionsUrl,
+                        method: 'GET',
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response && response.options && Array.isArray(response.options)) {
+                                // Clear existing options except the first one
+                                selectElement.find('option:not(:first)').remove();
+                                
+                                // Add new options
+                                response.options.forEach(function(option) {
+                                    var optionValue = option.value || option;
+                                    var optionText = option.text || option.label || option;
+                                    selectElement.append('<option value=\"' + optionValue + '\">' + optionText + '</option>');
+                                });
+                                
+                                // Refresh chosen if it's initialized
+                                if (selectElement.hasClass('chosen-select-deselect')) {
+                                    selectElement.trigger('chosen:updated');
+                                }
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.warn('Failed to load filter options for', fieldName, ':', error);
+                        }
+                    });
+                }
+            });
+        }
+
+        /**
+         * Bind filter events
+         */
+        function bindFilterEvents(tableId, filterConfig) {
+            var modalId = tableId + '_filterModal';
+            var formId = tableId + '_filterForm';
+            
+            // Handle form submission
+            $('#' + formId).on('submit', function(e) {
+                e.preventDefault();
+                
+                var formData = $(this).serializeArray();
+                var filters = {};
+                
+                formData.forEach(function(field) {
+                    if (field.value && field.name !== '_token') {
+                        filters[field.name] = field.value;
+                    }
+                });
+                
+                // Apply filters to datatable
+                applyFiltersToDataTable(tableId, filters);
+                
+                // Close modal
+                $('#' + modalId).modal('hide');
+            });
+            
+            // Handle clear filter
+            $('#' + tableId + '_clearFilter').on('click', function() {
+                // Clear form
+                $('#' + formId)[0].reset();
+                
+                // Clear datatable filters
+                applyFiltersToDataTable(tableId, {});
+                
+                // Close modal
+                $('#' + modalId).modal('hide');
+            });
+        }
+
+        /**
+         * Apply filters to DataTable
+         */
+        function applyFiltersToDataTable(tableId, filters) {
+            var table = $('#' + tableId).DataTable();
+            
+            if (!table) {
+                console.warn('DataTable not found for ID:', tableId);
+                return;
+            }
+
+            // Store filters for next AJAX request
+            var settings = table.settings()[0];
+            if (settings && settings.ajax && typeof settings.ajax === 'object') {
+                // Modify ajax data function to include filters
+                var originalData = settings.ajax.data;
+                
+                settings.ajax.data = function(data) {
+                    // Call original data function if it exists
+                    if (typeof originalData === 'function') {
+                        originalData.call(this, data);
+                    }
+                    
+                    // Add filters to request
+                    if (filters && Object.keys(filters).length > 0) {
+                        data.filters = filters;
+                    }
+                    
+                    return data;
+                };
+            }
+            
+            // Reload table
+            table.ajax.reload();
+            
+            console.log('Filters applied to table:', tableId, filters);
+        }
+        ";
     }
 
     private function getJsContainMatch($data, $match_contained = null)
@@ -403,7 +793,8 @@ trait Scripts
 
     protected function filterModalbox(array $data)
     {
-        $current_url = url(canvastack_current_route()->uri);
+        $current_route = canvastack_current_route();
+        $current_url = $current_route ? url($current_route->uri) : url()->current();
         if (! empty($data['searchable'])) {
             if (! empty($data['searchable']['all::columns'])) {
                 if (false === $data['searchable']['all::columns']) {

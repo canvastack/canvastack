@@ -55,7 +55,13 @@ class UserController extends Controller
         );
     }
 
-
+    private static function key_relations()
+    {
+        return [
+            'base_user_group.user_id' => 'users.id',
+            'base_group.id' => 'base_user_group.group_id',
+        ];
+    }
 
     public function index()
     {
@@ -65,8 +71,6 @@ class UserController extends Controller
             return self::redirect("{$this->session['id']}/edit");
         }
 
-        $this->table->method('POST');
-
         $this->table->searchable();
         $this->table->clickable();
         $this->table->sortable();
@@ -74,8 +78,7 @@ class UserController extends Controller
         // Add GROUP BY to prevent duplicate users with multiple groups
         $this->table->conditions['groupBy'] = ['users.id'];
         
-        // Use auto-detection instead of hard-coded foreign keys
-        $this->table->relations($this->model, 'group', 'group_info');
+        $this->table->relations($this->model, 'group', 'group_info', self::key_relations());
 
         $this->table->filterGroups('username', 'selectbox', true);
         $this->table->filterGroups('group_info', 'selectbox', true);
@@ -129,16 +132,19 @@ class UserController extends Controller
     private function sendEmail($to, $subject, $title, $message, $cc = [])
     {
         if (! empty(canvastack_config('email.from.address'))) {
-            $this->email->to($to);
-            $this->email->subject($subject);
-            $this->email->title($title);
-            $this->email->message($message);
-            if (! empty($cc)) {
-                $ccMail = array_merge_recursive($cc, [canvastack_config('email.cc.address')]);
-                $this->email->cc($ccMail);
+            try {
+                // Gunakan Mail facade jika email service tidak tersedia
+                \Illuminate\Support\Facades\Mail::raw($message, function ($mail) use ($to, $subject, $cc) {
+                    $mail->to($to)
+                         ->subject($subject);
+                    if (! empty($cc)) {
+                        $mail->cc($cc);
+                    }
+                });
+            } catch (\Exception $e) {
+                \Log::error('Gagal mengirim email: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+                // Skip, lanjutkan tanpa email
             }
-
-            $this->email->send();
         }
     }
 
@@ -175,10 +181,6 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $this->get_session();
-        
-        // CRITICAL: Validate request BEFORE processing
-        $request->validate($this->validations);
-        
         if (! empty($request->diyImportProcess)) {
             return $this->storeFromImports($request);
         }
@@ -193,18 +195,12 @@ class UserController extends Controller
         $email['credential_user'] = $reqData['username'];
         $email['credential_pwd'] = $reqData['password'];
         $email['credential_name'] = $reqData['fullname'];
-        $email['credential_info'] = '';
+        $email['credential_info'] = ''; // Default empty jika alias kosong
         if (! empty($reqData['alias'])) {
             $email['credential_info'] = $this->credential_info($reqData['alias']);
         }
 
         $this->insert_data($request, false);
-        
-        // Check if insert was successful
-        if (empty($this->stored_id)) {
-            return redirect()->back()->withErrors(['error' => 'Failed to create user'])->withInput();
-        }
-        
         $this->set_data_after_post($this->group_id);
 
         if (! empty($this->group_id)) {
@@ -225,7 +221,8 @@ class UserController extends Controller
 
         $this->sendEmail($email['credential_email'], 'Mantra User Registration', "Hi, {$email['credential_name']}", $message, [$email['created_by_email']]);
 
-        return redirect("system/accounts/user/{$this->stored_id}/edit")->with('success', 'User created successfully');
+        return self::redirect("{$this->stored_id}/edit", $request);
+
     }
 
     public function storeFromImports($request)
@@ -303,37 +300,18 @@ class UserController extends Controller
         $this->get_session();
 
         $this->model_find($id);
-        
-        if (!$this->model_data) {
-            return redirect('system/accounts/user')->withErrors(['error' => 'User not found']);
-        }
 
-        // Adjust validation for updates
-        $updateValidations = $this->validations;
-        
-        // Remove password requirement if not provided
-        if (null === $request->password || empty($request->password)) {
-            unset($updateValidations['password']);
+        if (null === $request->password) {
+            unset($this->validations['password']);
             $request->offsetUnset('password');
         }
-        
-        // Allow same email for current user
-        if ($this->model_data->email === $request->email) {
-            $updateValidations['email'] = 'required|email';
-        }
-        
-        // Allow same username for current user
-        if ($this->model_data->username === $request->username) {
-            $updateValidations['username'] = 'required';
-        }
-        
-        $request->validate($updateValidations);
+        $request->validate($this->validations);
 
         $this->set_data_before_post($request, __FUNCTION__);
         $this->update_data($request, $id, false);
         $this->set_data_after_post($this->group_id, $id);
 
-        return redirect("system/accounts/user/{$id}/edit")->with('success', 'User updated successfully');
+        return self::redirect('edit', $request);
     }
 
     public function updateX(Request $request, $id)
@@ -369,34 +347,6 @@ class UserController extends Controller
         $route_back = str_replace('.', '/', $this->route_page);
 
         return redirect("{$route_back}/{$id}/edit");
-    }
-
-    /**
-     * Add missing destroy method for delete functionality
-     */
-    public function destroy(Request $request, $id)
-    {
-        $this->get_session();
-        
-        try {
-            $this->model_find($id);
-            
-            if (!$this->model_data) {
-                return redirect('system/accounts/user')->withErrors(['error' => 'User not found']);
-            }
-            
-            // Delete user-group relationships first
-            Usergroup::where('user_id', $id)->delete();
-            
-            // Delete the user
-            $this->model_data->delete();
-            
-            return redirect('system/accounts/user')->with('success', 'User deleted successfully');
-            
-        } catch (\Exception $e) {
-            \Log::error('Error deleting user: ' . $e->getMessage());
-            return redirect('system/accounts/user')->withErrors(['error' => 'Failed to delete user']);
-        }
     }
 
     private function input_group()
@@ -472,7 +422,7 @@ class UserController extends Controller
             $user_group = new Usergroup();
             
             if (false !== $id) {
-                // Update case - find existing relationship and update, or create new
+                // Update case - check if relationship exists
                 $existingGroup = $user_group->where('user_id', intval($id))
                                           ->where('group_id', $new_array['group_id'])
                                           ->first();
@@ -481,8 +431,6 @@ class UserController extends Controller
                     // Update existing relationship
                     canvastack_update($existingGroup, $request, true);
                 } else {
-                    // Delete old relationships for this user to avoid duplicates
-                    $user_group->where('user_id', intval($id))->delete();
                     // Create new relationship
                     canvastack_insert($user_group, $request, true);
                 }

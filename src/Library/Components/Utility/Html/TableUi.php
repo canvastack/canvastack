@@ -102,6 +102,7 @@ final class TableUi
             ]);
             $iconDeleteAttribute = 'fa fa-times';
             $currentRoute = function_exists('canvastack_current_route') ? \canvastack_current_route() : null;
+            $deleteURL = null;
             if (! empty($currentRoute)) {
                 $deleteURL = str_replace('@index', '@destroy', $currentRoute->getActionName());
             }
@@ -117,8 +118,29 @@ final class TableUi
                 $iconDeleteAttribute = 'fa fa-recycle';
             }
 
-            $delete_action = '<form action="'.action($deleteURL, $delete_id).'" method="post" class="btn btn_delete" style="padding:0 !important">'.csrf_field().'<input name="_method" type="hidden" value="DELETE">';
-            $buttonDelete = $delete_action.'<button '.$buttonDeleteAttribute.' type="submit"><i class="'.$iconDeleteAttribute.'"></i></button></form>';
+            if (!empty($deleteURL)) {
+                // Generate unique modal ID for this delete action
+                $modalId = 'deleteModal_' . md5($deleteURL . $delete_id);
+                $formId = 'deleteForm_' . md5($deleteURL . $delete_id);
+                
+                // Create hidden form for actual deletion
+                $delete_action = '<form id="'.$formId.'" action="'.action($deleteURL, $delete_id).'" method="post" style="display:none;">'.csrf_field().'<input name="_method" type="hidden" value="DELETE"></form>';
+                
+                // Create button that triggers modal instead of direct submission
+                $buttonDeleteAttribute = \Canvastack\Canvastack\Library\Components\Utility\Canvatility::attributesToString([
+                    'class' => 'btn btn-danger btn-xs btn_delete_modal',
+                    'data-toggle' => 'modal',
+                    'data-target' => '#'.$modalId,
+                    'data-form-id' => $formId,
+                    'data-record-id' => $delete_id,
+                    'data-table-name' => $table ?? 'record',
+                    'title' => $restoreDeleted ? 'Restore' : 'Delete',
+                ]);
+                
+                $buttonDelete = $delete_action.'<button '.$buttonDeleteAttribute.' type="button"><i class="'.$iconDeleteAttribute.'"></i></button>';
+            } else {
+                $buttonDelete = '<button '.$buttonDeleteAttribute.' type="button" disabled><i class="'.$iconDeleteAttribute.'"></i></button>';
+            }
             $buttonDeleteMobile = '<li><a href="'.$delete.'" class="tooltip-error btn_delete" data-rel="tooltip" title="Delete"><span class="red"><i class="fa fa-trash-o bigger-120"></i></span></a></li>';
         }
 
@@ -226,8 +248,31 @@ final class TableUi
         $buttons = $buttonView.$buttonEdit.$buttonDelete.$buttonNew;
         $buttonsMobile = $buttonViewMobile.$buttonEditMobile.$buttonDeleteMobile.$buttonNewMobile;
 
-        // Follow legacy wrapper exactly
-        return '<div class="action-buttons-box"><div class="hidden-sm hidden-xs action-buttons">'.$buttons.'</div><div class="hidden-md hidden-lg"><div class="inline pos-rel"><button class="btn btn-minier btn-yellow dropdown-toggle" data-toggle="dropdown" data-position="auto"><i class="fa fa-caret-down icon-only bigger-120"></i></button><ul class="dropdown-menu dropdown-only-icon dropdown-yellow dropdown-menu-right dropdown-caret dropdown-close">'.$buttonsMobile.'</ul></div></div></div>';
+        // Generate delete confirmation modal if delete button exists
+        $modalHtml = '';
+        if ($buttonDelete && !empty($deleteURL) && $delete_id) {
+            $modalId = 'deleteModal_' . md5($deleteURL . $delete_id);
+            $formId = 'deleteForm_' . md5($deleteURL . $delete_id);
+            
+            // Try to get table name from current route or use default
+            $tableName = 'record';
+            try {
+                $currentRoute = function_exists('canvastack_current_route') ? \canvastack_current_route() : null;
+                if ($currentRoute && isset($currentRoute->uri)) {
+                    $pathParts = explode('/', trim($currentRoute->uri, '/'));
+                    if (count($pathParts) >= 2) {
+                        $tableName = end($pathParts) === 'index' ? prev($pathParts) : end($pathParts);
+                    }
+                }
+            } catch (\Throwable $e) {
+                $tableName = 'record';
+            }
+            
+            $modalHtml = self::generateDeleteConfirmationModal($modalId, $formId, $tableName, (string)$delete_id, $restoreDeleted);
+        }
+
+        // Follow legacy wrapper exactly + append modal
+        return '<div class="action-buttons-box"><div class="hidden-sm hidden-xs action-buttons">'.$buttons.'</div><div class="hidden-md hidden-lg"><div class="inline pos-rel"><button class="btn btn-minier btn-yellow dropdown-toggle" data-toggle="dropdown" data-position="auto"><i class="fa fa-caret-down icon-only bigger-120"></i></button><ul class="dropdown-menu dropdown-only-icon dropdown-yellow dropdown-menu-right dropdown-caret dropdown-close">'.$buttonsMobile.'</ul></div></div></div>' . $modalHtml;
     }
 
     /**
@@ -418,5 +463,66 @@ final class TableUi
         }
 
         return '<table'.$attrString.'>'.$_header.$_body.'</table>';
+    }
+
+    /**
+     * Generate Delete Confirmation Modal HTML
+     * FIXED: Direct HTML approach with proper z-index and body append via JavaScript
+     */
+    public static function generateDeleteConfirmationModal(string $modalId, string $formId, string $tableName, string $recordId, bool $isRestore = false): string
+    {
+        $action = $isRestore ? 'restore' : 'delete';
+        $actionText = $isRestore ? 'Restore' : 'Delete';
+        $actionIcon = $isRestore ? 'fa-recycle' : 'fa-trash-o';
+        $actionColor = $isRestore ? 'btn-warning' : 'btn-danger';
+        $actionMessage = $isRestore 
+            ? "Anda akan memulihkan data dari tabel <strong>{$tableName}</strong> dengan ID <strong>{$recordId}</strong>. Apakah Anda yakin ingin memulihkannya?"
+            : "Anda akan menghapus data dari tabel <strong>{$tableName}</strong> dengan ID <strong>{$recordId}</strong>. Apakah Anda yakin ingin menghapusnya?";
+
+        // CRITICAL FIX: Generate modal HTML but append to body via JavaScript to fix z-index
+        $modalHtml = '<div id="' . $modalId . '" class="modal fade" role="dialog" tabindex="-1" ' .
+                'aria-hidden="true" data-backdrop="static" data-keyboard="true" style="z-index: 1060;">' .
+                '<div class="modal-dialog modal-md" role="document">' .
+                    '<div class="modal-content">' .
+                        '<div class="modal-header">' .
+                            '<h5 class="modal-title">' .
+                                '<i class="fa ' . $actionIcon . '"></i> &nbsp; Confirm ' . $actionText .
+                            '</h5>' .
+                            '<button type="button" class="close" data-dismiss="modal" aria-label="Close">' .
+                                '<span aria-hidden="true">×</span>' .
+                            '</button>' .
+                        '</div>' .
+                        '<div class="modal-body">' .
+                            '<div class="alert alert-warning">' .
+                                '<i class="fa fa-exclamation-triangle"></i> ' .
+                                $actionMessage .
+                            '</div>' .
+                        '</div>' .
+                        '<div class="modal-footer">' .
+                            '<button type="button" class="btn btn-secondary" data-dismiss="modal">' .
+                                '<i class="fa fa-times"></i> No, Cancel' .
+                            '</button>' .
+                            '<button type="button" class="btn ' . $actionColor . '" onclick="document.getElementById(\'' . $formId . '\').submit(); $(\'#' . $modalId . '\').modal(\'hide\');">' .
+                                '<i class="fa ' . $actionIcon . '"></i> Yes, ' . $actionText .
+                            '</button>' .
+                        '</div>' .
+                    '</div>' .
+                '</div>' .
+            '</div>';
+
+        // JavaScript to append modal to body and handle z-index properly
+        $script = '<script type="text/javascript">
+            $(document).ready(function() {
+                // Remove existing modal if exists
+                $("#' . $modalId . '").remove();
+                
+                // Append modal to body to fix z-index issues
+                $("body").append(\'' . addslashes($modalHtml) . '\');
+                
+                console.log("Delete modal appended to body: ' . $modalId . '");
+            });
+        </script>';
+
+        return $script;
     }
 }

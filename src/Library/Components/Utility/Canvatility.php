@@ -618,7 +618,9 @@ class Canvatility
         $group_ex = ['root']; if (!empty($cfg['exceptions']['groups'])) $group_ex = array_merge(['root'], $cfg['exceptions']['groups']);
         if ($cfg['run_status'] === 'unexceptions') $group_ex = [];
         if (in_array($sessions['user_group'], $group_ex)) return;
-        $current_controller = empty($routeInfo) ? explode('@', $routes->action['controller']) : explode('@', $routeInfo['controller']);
+        $current_controller = empty($routeInfo) ? 
+            (isset($routes->action['controller']) ? explode('@', $routes->action['controller']) : ['']) : 
+            explode('@', $routeInfo['controller']);
         if (in_array($current_controller[0], $cfg['exceptions']['controllers'])) return;
         $logs = [
             'user_id' => $sessions['id'],

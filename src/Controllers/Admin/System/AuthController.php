@@ -36,16 +36,24 @@ class AuthController extends Controller
     {
         parent::__construct();
 
-        $this->authRouteInfo['current_path'] = Route::getCurrentRoute()->getName();
-        if ('login_processor' === strtolower(Route::getCurrentRoute()->getName())) {
-            $this->authRouteInfo['module_name'] = 'Login';
+        // Check if we have a current route (not available during artisan commands)
+        $currentRoute = Route::getCurrentRoute();
+        if ($currentRoute && $currentRoute->getName()) {
+            $this->authRouteInfo['current_path'] = $currentRoute->getName();
+            if ('login_processor' === strtolower($currentRoute->getName())) {
+                $this->authRouteInfo['module_name'] = 'Login';
+            } else {
+                $this->authRouteInfo['module_name'] = ucwords($currentRoute->getName());
+            }
+            $this->authRouteInfo['page_info'] = strtolower($currentRoute->getName());
         } else {
-            $this->authRouteInfo['module_name'] = ucwords(Route::getCurrentRoute()->getName());
+            // Fallback for when no route is available (e.g., during artisan commands)
+            $this->authRouteInfo['current_path'] = 'unknown';
+            $this->authRouteInfo['module_name'] = 'Unknown';
+            $this->authRouteInfo['page_info'] = 'unknown';
         }
-
-        $this->authRouteInfo['page_info'] = strtolower(Route::getCurrentRoute()->getName());
+        
         $this->authRouteInfo['controller'] = 'AuthController';
-
     }
 
     public function login()

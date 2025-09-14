@@ -1,5 +1,6 @@
 {
   "name": "canvastack/canvastack",
+  "version": "2.0.1",
   "type": "library",
   "description": "Laravel library (rebranded from incodiy/codiy)",
   "keywords": ["canvastack", "library"],
