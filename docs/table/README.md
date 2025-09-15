@@ -1,189 +1,122 @@
-# CanvaStack Table System (DataTables)
+# CanvaStack Table Documentation
 
-Server-rendered table builder integrated with Yajra DataTables for powerful listings, action buttons, dynamic columns (including formula columns), and optional server-side processing. You can use the Facade (`Canvatility`) or the controller plugin `$this->table` for full lifecycle integration.
+Welcome to the comprehensive documentation for CanvaStack Table System - a powerful, secure, and highly configurable DataTables implementation for Laravel applications.
 
-- Namespace: `Canvastack\\Canvastack\\Library\\Components\\Utility\\Html\\TableUi`
-- Facade: `Canvatility::*`
-- Controller plugin: `$this->table` (instance of `Library\\Components\\Table\\Objects`)
-- Related modules: `Utility\\Table\\{Actions, Filters, FormulaColumns}`
+## 📚 Table of Contents
 
-## Key Features
+### Getting Started
+- [Installation & Setup](installation.md)
+- [Quick Start Guide](quick-start.md)
+- [Configuration](configuration.md)
+- [Basic Usage](basic-usage.md)
 
-- Controller-first orchestration with `$this->table->lists()` that wires model, columns, actions, filters, and rendering through `$this->render()`.
-- Quick generation of HTML table markup with optional container wrappers via Facade.
-- Standard action buttons (view/edit/delete) and custom buttons via string or array.
-- Modal content helpers for inline dialogs.
-- Server-side DataTables with optimized defaults: processing, deferRender, fixedHeader.
-- Filters and formula columns for computed output.
+### Core Concepts
+- [Architecture Overview](architecture.md)
+- [Data Sources](data-sources.md)
+- [Column Management](columns.md)
+- [Server-Side Processing](server-side.md)
 
-## Controller Integration: Using $this->table
+### API Reference
+- [Objects Class](api/objects.md) - Main entry point and orchestrator
+- [Builder Class](api/builder.md) - HTML and configuration builder
+- [Datatables Class](api/datatables.md) - Server-side processing engine
+- [Search & Filtering](api/search.md) - Advanced filtering system
 
-The base controller installs a table plugin via trait `Components\Table`. Typical pattern:
+### Features
+- [Actions & Buttons](features/actions.md)
+- [Filtering & Search](features/filtering.md)
+- [Sorting & Ordering](features/sorting.md)
+- [Export Functionality](features/export.md)
+- [Fixed Columns](features/fixed-columns.md)
+- [Image Handling](features/images.md)
+- [Relationships](features/relationships.md)
+
+### Advanced Topics
+- [Security Features](advanced/security.md)
+- [Performance Optimization](advanced/performance.md)
+- [Custom Middleware](advanced/middleware.md)
+- [Testing](advanced/testing.md)
+- [Troubleshooting](advanced/troubleshooting.md)
+
+### Method References
+- [GET Method](methods/get.md)
+- [POST Method](methods/post.md)
+- [AJAX Handling](methods/ajax.md)
+
+### Traits & Extensions
+- [Available Traits](traits/overview.md)
+- [Custom Extensions](traits/custom.md)
+
+### Examples & Tutorials
+- [Basic Table](examples/basic.md)
+- [Advanced Filtering](examples/filtering.md)
+- [Custom Actions](examples/actions.md)
+- [Multiple Data Sources](examples/data-sources.md)
+- [Real-world Examples](examples/real-world.md)
+
+---
+
+## 🚀 Quick Example
 
 ```php
-use Canvastack\\Canvastack\\Controllers\\Core\\Controller as CoreController;
-use App\\Models\\User;
-
-class UserController extends CoreController
+// In your Controller
+public function index()
 {
-    public function __construct() {
-        parent::__construct(User::class, 'system.accounts.user');
-    }
+    $this->table->method('POST')
+                ->searchable()
+                ->clickable()
+                ->sortable()
+                ->relations($this->model, 'group', 'group_info')
+                ->filterGroups('username', 'selectbox', true)
+                ->orderby('id', 'DESC')
+                ->lists($this->model_table, [
+                    'username:User', 
+                    'email', 
+                    'group_info', 
+                    'active'
+                ]);
 
-    public function index() {
-        $this->setPage('Users');
-
-        // Optional: tune variables before building
-        $this->table->label('User Listing');           // custom title
-        $this->table->sortable(['name', 'email']);     // sortable columns
-        $this->table->clickable(['name']);             // make cells clickable
-        $this->table->fixedColumns(0, 1);              // freeze first and last column
-
-        // Build datatable from model (auto-resolves model when needed)
-        $this->table->lists(
-            'users',                // table name; if null it resolves from model
-            ['no', 'id', 'name', 'email'],
-            true,                   // actions: true => default [view, edit, delete]
-            true,                   // server_side
-            true,                   // numbering (adds No/ID)
-            ['class' => 'table-bordered'],
-            false                   // custom server-side URL (false => default)
-        );
-
-        return $this->render();
-    }
+    return $this->render();
 }
 ```
 
-Under the hood
-- `$this->table->lists()` normalizes columns and labels, attaches actions, and stores render params.
-- `$this->render()` calls `$this->table->render(...)` which triggers `Builder::table()`; the final HTML is added into the page content.
-- DataTables JSON is handled through `View::initRenderDatatables()` using GET or POST depending on configuration.
+## 🛡️ Security First
 
-### Actions
+CanvaStack Table is built with security as a top priority:
+- SQL Injection Prevention
+- XSS Protection
+- CSRF Token Validation
+- Input Sanitization
+- Rate Limiting
 
-- Pass `true` to show default buttons (view, edit, delete).
-- Provide a string like `'primary|Export:/export'` for a custom action.
-- Provide an array of strings for multiple custom actions. Internally parsed by `addActionButtonByString()`.
+## 🎯 Key Features
 
-### Fixed Columns
+- **Multi-Data Source Support**: Eloquent Models, Query Builder, Raw SQL
+- **Advanced Filtering**: Modal-based filtering with dependency chains
+- **Server-Side Processing**: High-performance data handling
+- **Flexible Configuration**: Fluent API with method chaining
+- **Security Hardened**: Multiple layers of security protection
+- **Extensible Architecture**: Trait-based modular system
 
-```php
-$this->table->fixedColumns(0, 1);   // freeze first and last columns
-$this->table->clearFixedColumns();  // remove previous fixed settings
-```
+## 📖 Documentation Structure
 
-### Sorting/Clickable Columns
+This documentation is organized into logical sections:
 
-```php
-$this->table->sortable(['name', 'email']);
-$this->table->clickable(['email']);
-```
+1. **Getting Started** - Everything you need to begin using CanvaStack Tables
+2. **Core Concepts** - Understanding the fundamental architecture
+3. **API Reference** - Detailed method and class documentation
+4. **Features** - Comprehensive feature guides
+5. **Advanced Topics** - Deep-dive into complex scenarios
+6. **Examples** - Practical implementation examples
 
-## Facade Quick Start (alternative)
+Each section builds upon the previous ones, so we recommend reading them in order if you're new to CanvaStack Tables.
 
-```php
-use Canvastack\\Canvastack\\Library\\Components\\Utility\\Canvatility;
+---
 
-$header = ['no', 'id', 'name', 'email', 'Action'];
-$rows = [
-  ['1', '101', 'Alice', 'alice@example.com', Canvatility::createActionButtons('/u/101', '/u/101/edit', false)],
-  ['2', '102', 'Bob',   'bob@example.com',   Canvatility::createActionButtons('/u/102', false, false)],
-];
+## 🤝 Contributing
 
-$tableHtml = Canvatility::generateTable(
-  'Users', 'users', $header, $rows, ['class' => 'table table-bordered'],
-  false,   // numbering
-  true     // containers
-);
-```
+Found an issue or want to contribute to the documentation? Please see our [Contributing Guide](contributing.md).
 
-## Server-side Mode (Facade)
+## 📄 License
 
-```php
-$tableHtml = Canvatility::generateTable(
-  'Users', 'users', $header, [], ['class' => 'table table-bordered'],
-  false, true,
-  true,                         // server_side
-  route('users.data')           // server_side_custom_url
-);
-```
-
-Controller using Yajra:
-
-```php
-use App\\Models\\User;
-use Yajra\\DataTables\\DataTables;
-
-public function data() {
-  return DataTables::of(User::query())
-    ->addColumn('Action', function ($row) {
-      return Canvatility::createActionButtons(
-        route('users.show', $row->id),
-        route('users.edit', $row->id),
-        false
-      );
-    })
-    ->toJson();
-}
-```
-
-Expected JSON follows DataTables spec (`draw`, `recordsTotal`, `recordsFiltered`, `data`).
-
-## Action Buttons (Facade)
-
-```php
-// Quickly generate common buttons
-$html = Canvatility::createActionButtons($viewUrl, $editUrl, $deleteUrl);
-
-// Add custom buttons from string
-$actions = Canvatility::addActionButtonByString('primary|Export:/export');
-$html = Canvatility::createActionButtons($viewUrl, false, false, $actions);
-```
-
-## Modal Content
-
-```php
-$modal = Canvatility::modalContentHtml('user-detail', 'User Detail', [
-  '<p>Name: Alice</p>',
-  '<p>Email: alice@example.com</p>',
-]);
-```
-
-## Filters
-
-```php
-$normalized = Canvatility::filterNormalize([
-  'status' => 'active',
-  'from'   => '2025-08-01',
-  'to'     => '2025-08-31',
-]);
-```
-
-## Formula Columns (overview)
-
-Use `Utility\\Table\\FormulaColumns` for computed output such as status badges, derived fields, or concatenation. Keep logic fast for server-side rendering. See tests under `src/Library/Components/Utility/tests` for examples.
-
-## Performance Tips
-
-- Enable server-side for large datasets.
-- Use `deferRender: true` and avoid heavy HTML in each cell when possible.
-- Compute columns efficiently; avoid running per-row queries.
-
-## API Reference (Selected)
-
-Controller plugin:
-- `$this->table->label($label)`
-- `$this->table->sortable($columns)`
-- `$this->table->clickable($columns)`
-- `$this->table->fixedColumns($left_pos = null, $right_pos = null)` / `$this->table->clearFixedColumns()`
-- `$this->table->lists(string $table_name = null, $fields = [], $actions = true, $server_side = true, $numbering = true, $attributes = [], $server_side_custom_url = false)`
-
-Facade:
-- `Canvatility::generateTable($title, $title_id, array $header, array $body, array $attributes = [], $numbering = false, $containers = true, $server_side = false, $server_side_custom_url = false): string`
-- `Canvatility::createActionButtons($view = false, $edit = false, $delete = false, $add_action = [], $as_root = false): string`
-- `Canvatility::addActionButtonByString($action, bool $is_array = false): array`
-- `Canvatility::modalContentHtml(string $name, string $title, array $elements): string`
-- `Canvatility::tableRowAttr(string $value, $attributes): string`
-
-For advanced control, review `Html/TableUi.php`, `Table/Actions.php`, `Table/Filters.php`, `Table/FormulaColumns.php`, and `Library/Components/Table/Objects.php`.
+CanvaStack Table is open-sourced software licensed under the [MIT license](license.md).
