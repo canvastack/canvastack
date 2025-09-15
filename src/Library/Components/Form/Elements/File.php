@@ -5,6 +5,8 @@ namespace Canvastack\Canvastack\Library\Components\Form\Elements;
 use Collective\Html\FormFacade as Form;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
+use Canvastack\Canvastack\Library\Components\Form\Security\SecurityLogger;
+use Canvastack\Canvastack\Library\Components\Form\Security\InputValidator;
 
 /**
  * Created on 19 Mar 2021
@@ -90,7 +92,30 @@ trait File
     }
 
     /**
-     * Get File Type
+     * Allowed file types and extensions for security
+     */
+    private $allowedMimeTypes = [
+        'image' => [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'
+        ],
+        'document' => [
+            'application/pdf', 'application/msword', 
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/plain', 'text/csv'
+        ],
+        'archive' => [
+            'application/zip', 'application/x-rar-compressed'
+        ]
+    ];
+
+    private $allowedExtensions = [
+        'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg',
+        'pdf', 'doc', 'docx', 'txt', 'csv',
+        'zip', 'rar'
+    ];
+
+    /**
+     * Get File Type with Enhanced Security Validation
      *
      * @param  object  $request
      * @param  string  $input_name
@@ -98,10 +123,139 @@ trait File
      */
     private function getFileType($request, $input_name)
     {
-        $mimeType = $request->file($input_name)->getMimeType();
+        $file = $request->file($input_name);
+        
+        // Validate file type before processing
+        $this->validateFileType($file);
+        
+        $mimeType = $file->getMimeType();
         $getType = explode('/', $mimeType);
 
         return strtolower($getType[0]);
+    }
+
+    /**
+     * Sanitize Filename to Prevent Path Traversal
+     *
+     * @param  string  $originalName
+     * @return string
+     */
+    private function sanitizeFilename($originalName)
+    {
+        // Extract extension safely
+        $pathInfo = pathinfo($originalName);
+        $extension = isset($pathInfo['extension']) ? strtolower($pathInfo['extension']) : '';
+        $filename = $pathInfo['filename'] ?? 'file';
+        
+        // Remove dangerous characters and path traversal attempts
+        $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $filename);
+        $filename = trim($filename, '._-');
+        
+        // Prevent empty filename
+        if (empty($filename)) {
+            $filename = 'upload_' . bin2hex(random_bytes(8));
+        }
+        
+        // Limit length to prevent filesystem issues
+        $filename = substr($filename, 0, 100);
+        
+        return $filename . ($extension ? '.' . $extension : '');
+    }
+
+    /**
+     * Enhanced File Type Validation
+     *
+     * @param  \Illuminate\Http\UploadedFile  $file
+     * @return bool
+     * @throws \InvalidArgumentException
+     */
+    private function validateFileType($file)
+    {
+        $mimeType = $file->getMimeType();
+        $extension = strtolower($file->getClientOriginalExtension());
+        
+        // Check extension whitelist
+        if (!in_array($extension, $this->allowedExtensions)) {
+            throw new \InvalidArgumentException("File extension '{$extension}' is not allowed. Allowed extensions: " . implode(', ', $this->allowedExtensions));
+        }
+        
+        // Check MIME type whitelist
+        $allowedMimes = array_merge(...array_values($this->allowedMimeTypes));
+        if (!in_array($mimeType, $allowedMimes)) {
+            throw new \InvalidArgumentException("File type '{$mimeType}' is not allowed.");
+        }
+        
+        // Additional content validation for images
+        if (str_starts_with($mimeType, 'image/')) {
+            return $this->validateImageContent($file);
+        }
+        
+        return true;
+    }
+
+    /**
+     * Validate Image Content to Prevent Malicious Files
+     *
+     * @param  \Illuminate\Http\UploadedFile  $file
+     * @return bool
+     * @throws \InvalidArgumentException
+     */
+    private function validateImageContent($file)
+    {
+        $imageInfo = @getimagesize($file->getPathname());
+        if ($imageInfo === false) {
+            throw new \InvalidArgumentException("Invalid image file - content does not match image format");
+        }
+        
+        // Check if MIME matches actual content
+        $actualMime = $imageInfo['mime'];
+        if ($actualMime !== $file->getMimeType()) {
+            throw new \InvalidArgumentException("MIME type mismatch - declared: {$file->getMimeType()}, actual: {$actualMime}");
+        }
+        
+        return true;
+    }
+
+    /**
+     * Create Secure Directory with Proper Permissions and Protection
+     *
+     * @param  string  $path
+     * @return void
+     */
+    private function createSecureDirectory($path)
+    {
+        if (!is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
+        
+        // Create .htaccess to prevent direct access and execution
+        $htaccessPath = $path . '/.htaccess';
+        if (!file_exists($htaccessPath)) {
+            $htaccessContent = "# CanvaStack Security Protection\n";
+            $htaccessContent .= "Options -Indexes\n";
+            $htaccessContent .= "Options -ExecCGI\n";
+            $htaccessContent .= "AddHandler cgi-script .php .pl .py .jsp .asp .sh .cgi\n";
+            $htaccessContent .= "\n";
+            $htaccessContent .= "# Prevent execution of PHP files\n";
+            $htaccessContent .= "<Files *.php>\n";
+            $htaccessContent .= "    Order Deny,Allow\n";
+            $htaccessContent .= "    Deny from all\n";
+            $htaccessContent .= "</Files>\n";
+            $htaccessContent .= "\n";
+            $htaccessContent .= "# Prevent execution of other script files\n";
+            $htaccessContent .= "<FilesMatch \"\\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|sh|cgi)$\">\n";
+            $htaccessContent .= "    Order Deny,Allow\n";
+            $htaccessContent .= "    Deny from all\n";
+            $htaccessContent .= "</FilesMatch>\n";
+            
+            file_put_contents($htaccessPath, $htaccessContent);
+        }
+        
+        // Create index.html to prevent directory listing
+        $indexPath = $path . '/index.html';
+        if (!file_exists($indexPath)) {
+            file_put_contents($indexPath, '<!-- Directory access denied -->');
+        }
     }
 
     /**
@@ -219,19 +373,20 @@ trait File
                         $this->validationFile($request, $inputname, $elements['file_validation']);
                     }
 
-                    canvastack_make_dir($filePath, 0777, true, true);
+                    $this->createSecureDirectory($filePath);
                     if (is_array($request->file($inputname))) {
                         //foreach ($request->file($inputname) as $file) {dump($file);}
                     } else {
                         $file = $request->file($inputname);
-                        $filename = $str_time.$file->getClientOriginalName();
+                        $filename = $str_time.$this->sanitizeFilename($file->getClientOriginalName());
                     }
 
                     $this->fileNameInfo = $filename;
                     $fileType = $this->getFileType($request, $inputname);
 
                     if (empty($elements)) {
-                        $file_name = explode('.', $file->getClientOriginalName());
+                        $sanitized_name = $this->sanitizeFilename($file->getClientOriginalName());
+                        $file_name = explode('.', $sanitized_name);
 
                         $elements['file_type'] = $fileType;
                         $elements['file_validation'] = null;
@@ -272,7 +427,7 @@ trait File
             $thumb_time = 'tnail_';
             $datePath = date('Y').'/'.date('m').'/'.date('d');
             $thumbPath = $this->setUploadPath($upload_path.'/'.$datePath.'/'.$this->thumbFolder);
-            canvastack_make_dir($thumbPath, 0777, true, true);
+            $this->createSecureDirectory($thumbPath);
 
             $thumbname = $thumb_time.$fileNameInfo;
             //	$thumbfile  = Image::make($request->file($inputname)->getRealPath());

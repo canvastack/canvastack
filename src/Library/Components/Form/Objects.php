@@ -9,6 +9,11 @@ use Canvastack\Canvastack\Library\Components\Form\Elements\Radio;
 use Canvastack\Canvastack\Library\Components\Form\Elements\Select;
 use Canvastack\Canvastack\Library\Components\Form\Elements\Tab;
 use Canvastack\Canvastack\Library\Components\Form\Elements\Text;
+use Canvastack\Canvastack\Library\Components\Form\Security\HtmlSanitizer;
+use Canvastack\Canvastack\Library\Components\Form\Security\ContentSanitizer;
+use Canvastack\Canvastack\Library\Components\Form\Security\FormStructureDetector;
+use Canvastack\Canvastack\Library\Components\Form\Security\SecureQueryBuilder;
+use Canvastack\Canvastack\Library\Components\Form\Security\FormAuthorizationService;
 use Collective\Html\FormFacade as Form;
 use Collective\Html\HtmlFacade as Html;
 
@@ -61,16 +66,50 @@ class Objects
     }
 
     /**
-     * Draw Data Elements
+     * Draw Data Elements with XSS Protection
      *
-     * @param  array  $data
+     * @param  mixed  $data
      *
      * @author: wisnuwidi
      */
     public function draw($data = [])
     {
         if ($data) {
-            $this->elements[] = $data;
+            if (is_string($data)) {
+                // Check if this is JavaScript content - if so, use minimal formatting to preserve syntax
+                $isJavaScript = strpos($data, 'ajaxSelectionBox') !== false || 
+                               strpos($data, '<script') !== false;
+                
+                if ($isJavaScript) {
+                    // For JavaScript content, use minimal formatting to preserve syntax
+                    $sanitized = ContentSanitizer::sanitizeForm($data, [
+                        'format' => true,
+                        'format_options' => [
+                            'fix_encoding' => true,
+                            'format_lines' => false, // Don't break JavaScript lines
+                            'add_indentation' => false,
+                            'fix_structure' => false, // Don't modify JavaScript structure
+                            'fix_javascript' => true,
+                        ]
+                    ]);
+                } else {
+                    // For regular HTML content, use full formatting
+                    $sanitized = ContentSanitizer::sanitizeForm($data, [
+                        'format' => true,
+                        'format_options' => [
+                            'fix_encoding' => true,
+                            'format_lines' => true,
+                            'add_indentation' => false, // Keep compact for production
+                            'fix_structure' => true,
+                            'fix_javascript' => true, // Fix naked JavaScript issues
+                        ]
+                    ]);
+                }
+                $this->elements[] = $sanitized;
+            } else {
+                // For non-strings, add as-is
+                $this->elements[] = $data;
+            }
         }
     }
 
@@ -144,7 +183,15 @@ class Objects
             $array['method'] = $method;
         }
 
-        $this->draw(Form::open($array).'<div class="form-container">');
+        $formOpen = Form::open($array).'<div class="form-container">';
+        
+        // Auto-add CSRF protection for state-changing methods
+        $methodToCheck = $method ?: 'POST';
+        if (in_array(strtoupper($methodToCheck), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+            $formOpen .= Form::token();
+        }
+
+        $this->draw($formOpen);
     }
 
     private $method = 'PUT';
@@ -186,7 +233,29 @@ class Objects
             if (str_contains(current_route(), 'edit')) {
                 $sliceURL = explode('/', canvastack_current_url());
                 unset($sliceURL[array_key_last($sliceURL)]);
-                $row_selected = intval($sliceURL[array_key_last($sliceURL)]);
+                $rawRecordId = $sliceURL[array_key_last($sliceURL)] ?? null;
+                
+                // SECURITY: Validate and sanitize record ID
+                $row_selected = FormAuthorizationService::validateRecordId($rawRecordId);
+                
+                if ($row_selected === null) {
+                    \Log::warning('SECURITY: Invalid record ID in URL', [
+                        'raw_id' => $rawRecordId,
+                        'url' => canvastack_current_url(),
+                        'user_id' => auth()->id(),
+                        'ip' => request()->ip()
+                    ]);
+                    abort(400, 'Invalid record ID');
+                }
+                
+                // SECURITY: Check authorization before proceeding
+                if (!empty($this->model)) {
+                    $modelClass = is_string($this->model) ? $this->model : get_class($this->model);
+                    
+                    if (!FormAuthorizationService::canAccessRecord($modelClass, $row_selected, 'update')) {
+                        abort(403, 'Unauthorized access to this record');
+                    }
+                }
             }
 
             // Check if $model = null
@@ -326,12 +395,74 @@ class Objects
     public $syncs = [];
 
     /**
-     * Ajax Relational Fields
+     * Ajax Relational Fields - SECURE VERSION
+     * 
+     * This method replaces raw SQL queries with secure parameterized queries
+     * to prevent SQL injection attacks.
      *
+     * @param string $source_field Source field name
+     * @param string $target_field Target field name  
+     * @param string $table Database table name
+     * @param string $valueColumn Column for option values
+     * @param string $labelColumn Column for option labels
+     * @param array $conditions WHERE conditions
+     * @param mixed $selected Selected value
+     * @throws \InvalidArgumentException
+     */
+    public function syncSecure(string $source_field, string $target_field, string $table, string $valueColumn, string $labelColumn, array $conditions = [], $selected = null)
+    {
+        try {
+            // Create secure query parameters
+            $queryParams = SecureQueryBuilder::createQueryParams($table, $valueColumn, $labelColumn, $conditions);
+            
+            $syncs = [];
+            $syncs['source'] = $source_field;
+            $syncs['target'] = $target_field;
+            $syncs['query_params'] = encrypt(json_encode($queryParams));
+            $syncs['selected'] = encrypt($selected);
+            
+            // Properly encode JSON for JavaScript - use JSON_UNESCAPED_SLASHES for cleaner output
+            $data = json_encode($syncs, JSON_UNESCAPED_SLASHES);
+            $ajaxURL = canvastack_get_ajax_urli();
+            
+            // Use double quotes for the JavaScript string to avoid conflicts with JSON double quotes
+            // and properly escape the data
+            $escapedData = str_replace('"', '\\"', $data);
+            
+            $this->draw(canvastack_script("ajaxSelectionBox('{$source_field}', '{$target_field}', '{$ajaxURL}', \"{$escapedData}\");"));
+            
+        } catch (\Exception $e) {
+            // Log security incident
+            \Log::warning('Objects::syncSecure failed', [
+                'error' => $e->getMessage(),
+                'table' => $table,
+                'user_id' => auth()->id(),
+                'ip' => request()->ip()
+            ]);
+            
+            // Fallback to empty options to prevent breaking the form
+            $this->draw(canvastack_script("ajaxSelectionBox('{$source_field}', '{$target_field}', '{$ajaxURL}', '{}');"));
+        }
+    }
+
+    /**
+     * Ajax Relational Fields - LEGACY VERSION (DEPRECATED)
+     * 
+     * @deprecated Use syncSecure() instead for better security
      * @param  string  $labels
      */
     public function sync(string $source_field, string $target_field, string $values, string $labels = null, string $query, $selected = null)
     {
+        // Log usage of deprecated method
+        \Log::warning('DEPRECATED: Objects::sync() method used - potential SQL injection risk', [
+            'source_field' => $source_field,
+            'target_field' => $target_field,
+            'query' => substr($query, 0, 100), // Log first 100 chars only
+            'user_id' => auth()->id(),
+            'ip' => request()->ip(),
+            'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)
+        ]);
+        
         $syncs = [];
         $syncs['source'] = $source_field;
         $syncs['target'] = $target_field;
@@ -339,10 +470,15 @@ class Objects
         $syncs['labels'] = encrypt($labels);
         $syncs['selected'] = encrypt($selected);
         $syncs['query'] = encrypt(trim(preg_replace('/\s\s+/', ' ', $query)));
-        $data = json_encode($syncs);
+        // Properly encode JSON for JavaScript - use JSON_UNESCAPED_SLASHES for cleaner output
+        $data = json_encode($syncs, JSON_UNESCAPED_SLASHES);
         $ajaxURL = canvastack_get_ajax_urli();
-
-        $this->draw(canvastack_script("ajaxSelectionBox('{$source_field}', '{$target_field}', '{$ajaxURL}', '{$data}');"));
+        
+        // Use double quotes for the JavaScript string to avoid conflicts with JSON double quotes
+        // and properly escape the data
+        $escapedData = str_replace('"', '\\"', $data);
+        
+        $this->draw(canvastack_script("ajaxSelectionBox('{$source_field}', '{$target_field}', '{$ajaxURL}', \"{$escapedData}\");"));
     }
 
     private function getModelValue($field_name, $function_name)
@@ -537,31 +673,53 @@ class Objects
 
     private function inputTag($function_name, $name, $attributes, $value)
     {
+        // Only sanitize user-provided string values that could contain XSS
+        $cleanValue = $value;
+        if (is_string($value) && HtmlSanitizer::containsXSS($value)) {
+            $cleanValue = HtmlSanitizer::cleanAttribute($value);
+            HtmlSanitizer::logXSSAttempt($value, 'form_input_value');
+        }
+        
+        // Only sanitize string attributes that could contain XSS
+        $cleanAttributes = [];
+        foreach ($attributes as $key => $val) {
+            if (is_string($val) && HtmlSanitizer::containsXSS($val)) {
+                $cleanAttributes[$key] = HtmlSanitizer::cleanAttribute($val);
+                HtmlSanitizer::logXSSAttempt($val, 'form_attribute');
+            } else {
+                $cleanAttributes[$key] = $val;
+            }
+        }
 
         if ('file' === $function_name) {
             if (! empty($this->params[$function_name][$name]['value'])) {
-                $attributes['value'] = $this->params[$function_name][$name]['value'];
+                $fileValue = $this->params[$function_name][$name]['value'];
+                if (is_string($fileValue) && HtmlSanitizer::containsXSS($fileValue)) {
+                    $cleanAttributes['value'] = HtmlSanitizer::cleanAttribute($fileValue);
+                } else {
+                    $cleanAttributes['value'] = $fileValue;
+                }
             }
 
-            return $this->inputFile($name, $attributes);
+            return $this->inputFile($name, $cleanAttributes);
         }
 
         if ('select' === $function_name) {
             $selected = $this->params[$function_name][$name]['selected'];
 
-            return '<div class="input-group col-sm-9">'.Form::select($name, $value, $selected, $attributes).'</div>';
+            return '<div class="input-group col-sm-9">'.Form::select($name, $value, $selected, $cleanAttributes).'</div>';
         }
 
         if ('checkbox' === $function_name) {
             $selected = $this->params[$function_name][$name]['selected'];
 
-            return '<div class="input-group col-sm-9">'.$this->drawCheckBox($name, $value, $selected, $attributes).'</div>';
+            return '<div class="input-group col-sm-9">'.$this->drawCheckBox($name, $value, $selected, $cleanAttributes).'</div>';
         }
 
         if ('radio' === $function_name) {
             $selected = $this->params[$function_name][$name]['selected'];
 
-            return '<div class="input-group col-sm-9">'.$this->drawRadioBox($name, $value, $selected, $attributes).'</div>';
+            return '<div class="input-group col-sm-9">'.$this->drawRadioBox($name, $value, $selected, $cleanAttributes).'</div>';
         }
 
         if ('date' === $function_name || 'datetime' === $function_name || 'daterange' === $function_name || 'time' === $function_name || 'tagsinput' === $function_name) {
@@ -569,10 +727,10 @@ class Objects
         }
 
         if ('password' === $function_name) {
-            return '<div class="input-group col-sm-9">'.Form::{$function_name}($name, $attributes).'</div>';
+            return '<div class="input-group col-sm-9">'.Form::{$function_name}($name, $cleanAttributes).'</div>';
         }
 
-        return '<div class="input-group col-sm-9">'.Form::{$function_name}($name, $value, $attributes).'</div>';
+        return '<div class="input-group col-sm-9">'.Form::{$function_name}($name, $cleanValue, $cleanAttributes).'</div>';
     }
 
     protected static $validation_attributes = [];
