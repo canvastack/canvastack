@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Method;
 
 use Canvastack\Canvastack\Library\Components\Table\Craft\Elements;
+use Canvastack\Canvastack\Library\Components\Table\Exceptions\SecurityException;
 
 /**
  * Created on Dec 28, 2022
@@ -91,16 +92,20 @@ class Post
 
     public function script()
     {
-        $varTableID = explode('-', $this->id);
+        // SECURITY: Sanitize DOM ID to prevent XSS
+        $sanitizedId = $this->sanitizeDomId($this->id);
+        $varTableID = explode('-', $sanitizedId);
         $varTableID = implode('', $varTableID);
         
         // Build AJAX configuration for POST method - route to AjaxController
-        $token = csrf_token();
+        // SECURITY: Sanitize CSRF token before JavaScript output
+        $token = $this->sanitizeJavaScript(csrf_token());
         $routePrefix = config('canvastack.routes.prefix', 'canvastack');
-        $scriptURI = url("{$routePrefix}/ajax/post?renderDataTables=true");
+        // SECURITY: Sanitize URL before JavaScript output
+        $scriptURI = $this->sanitizeUrl(url("{$routePrefix}/ajax/post?renderDataTables=true"));
         
-        // Build difta parameters
-        $diftaJS = json_encode([
+        // Build difta parameters - SECURITY: Use secure JSON encoding
+        $diftaJS = $this->sanitizeJsonForJavaScript([
             'name' => $this->data['name'] ?? '',
             'source' => 'dynamics'
         ]);
@@ -178,12 +183,12 @@ class Post
             ];
         }
         
-        // Build configuration JSON
-        $configurations = json_encode($postConfig, JSON_UNESCAPED_SLASHES);
+        // Build configuration JSON - SECURITY: Use secure JSON encoding to prevent XSS
+        $configurations = $this->sanitizeJsonForJavaScript($postConfig);
         
         // Add the data function for AJAX POST - Fix JSON syntax issue
         if ($this->server_side) {
-            // Build the data function as a proper JavaScript function
+            // Build the data function as a proper JavaScript function - SECURITY: All variables pre-sanitized
             $dataFunctionStr = "function(data) {
                 var postData = {
                     draw: data.draw,
@@ -197,8 +202,8 @@ class Post
                 
                 postData.difta = {$diftaJS};
                 
-                if (typeof window.canvastack_datatables_config !== 'undefined' && window.canvastack_datatables_config['{$this->id}']) {
-                    postData.datatables_data = window.canvastack_datatables_config['{$this->id}'];
+                if (typeof window.canvastack_datatables_config !== 'undefined' && window.canvastack_datatables_config['{$sanitizedId}']) {
+                    postData.datatables_data = window.canvastack_datatables_config['{$sanitizedId}'];
                 }
                 
                 return postData;
@@ -261,7 +266,8 @@ class Post
         
         // Store configuration for POST requests
         if ($this->server_side) {
-            $configData = json_encode([
+            // SECURITY: Use secure JSON encoding to prevent XSS in configuration data
+            $configData = $this->sanitizeJsonForJavaScript([
                 'columns' => $this->data['columns'] ?? [],
                 'records' => $this->data['records'] ?? [],
                 'modelProcessing' => $this->data['modelProcessing'] ?? [],
@@ -275,46 +281,46 @@ class Post
             if (typeof window.canvastack_datatables_config === 'undefined') {
                 window.canvastack_datatables_config = {};
             }
-            window.canvastack_datatables_config['{$this->id}'] = {$configData};
+            window.canvastack_datatables_config['{$sanitizedId}'] = {$configData};
             ";
         }
         
         $script .= "
 jQuery(function($) {
     try {
-        // Debug: Log configuration before initialization
-        console.log('DataTable POST Configuration for {$this->id}:', {$configurations});
+        // Debug: Log configuration before initialization - SECURITY: Using sanitized ID
+        console.log('DataTable POST Configuration for {$sanitizedId}:', {$configurations});
         
-        // Create global DataTable variable (same as GET method)
-        cody_{$varTableID}_dt = $('#{$this->id}').DataTable(
+        // Create global DataTable variable (same as GET method) - SECURITY: Using sanitized ID
+        cody_{$varTableID}_dt = $('#{$sanitizedId}').DataTable(
             {$configurations}
         );
         
-        // Add comprehensive error handling for AJAX requests
+        // Add comprehensive error handling for AJAX requests - SECURITY: Using sanitized ID
         cody_{$varTableID}_dt.on('error.dt', function(e, settings, techNote, message) {
-            console.error('DataTable AJAX error for {$this->id}: ', message);
+            console.error('DataTable AJAX error for {$sanitizedId}: ', message);
             console.error('Technical note: ', techNote);
             console.error('Settings: ', settings);
         });
         
-        // Add success handler to debug data reception
+        // Add success handler to debug data reception - SECURITY: Using sanitized ID
         cody_{$varTableID}_dt.on('xhr.dt', function(e, settings, json, xhr) {
             if (json) {
-                console.log('DataTable POST received data for {$this->id}:', json);
+                console.log('DataTable POST received data for {$sanitizedId}:', json);
                 console.log('Records total: ', json.recordsTotal);
                 console.log('Records filtered: ', json.recordsFiltered);
                 console.log('Data length: ', json.data ? json.data.length : 0);
             } else {
-                console.warn('DataTable POST received empty response for {$this->id}');
+                console.warn('DataTable POST received empty response for {$sanitizedId}');
             }
         });
         
-        // Add draw event handler to fix clickable functionality on every render
+        // Add draw event handler to fix clickable functionality on every render - SECURITY: Using sanitized ID
         cody_{$varTableID}_dt.on('draw.dt', function() {
-            console.log('DataTable POST draw event fired for {$this->id}');
+            console.log('DataTable POST draw event fired for {$sanitizedId}');
             
-            // Fix clickable functionality: move from TR to TD (same as GET method)
-            $('#{$this->id} tbody tr').each(function() {
+            // Fix clickable functionality: move from TR to TD (same as GET method) - SECURITY: Using sanitized ID
+            $('#{$sanitizedId} tbody tr').each(function() {
                 var \$tr = $(this);
                 if (\$tr.hasClass('clickable')) {
                     \$tr.removeClass('clickable');
@@ -329,35 +335,35 @@ jQuery(function($) {
                 }
             });
             
-            // Add click handler for clickable TDs (same as Scripts.php)
-            $('#{$this->id}').off('click', 'td.clickable').on('click', 'td.clickable', function() {
+            // Add click handler for clickable TDs (same as Scripts.php) - SECURITY: Using sanitized ID and URLs
+            $('#{$sanitizedId}').off('click', 'td.clickable').on('click', 'td.clickable', function() {
                 var getRLP = $(this).parent('tr').attr('rlp');
                 if (getRLP != false && getRLP != undefined) {
-                    var hash = '" . hash_code_id() . "';
+                    var hash = '" . $this->sanitizeJavaScript(hash_code_id()) . "';
                     var _rlp = parseInt(getRLP.replace(hash, '') - 8*800/80);
-                    var url_path = '" . url(canvastack_current_route()->uri ?? '') . "';
+                    var url_path = '" . $this->sanitizeUrl(url(canvastack_current_route()->uri ?? '')) . "';
                     window.location = url_path + '/' + _rlp;
                 }
             });
         });
         
     } catch (error) {
-        console.error('DataTable POST initialization error for {$this->id}: ', error);
+        console.error('DataTable POST initialization error for {$sanitizedId}: ', error);
         console.error('Configuration was: ', {$configurations});
     }
 });
 
-// Add filter button container AFTER DataTable initialization (same as GET method)  
+// Add filter button container AFTER DataTable initialization (same as GET method) - SECURITY: Using sanitized ID  
 jQuery(function($) {
     // Wait for DataTable to be fully initialized before adding filter container
     setTimeout(function() {
-        $('div#{$this->id}_wrapper>.dt-buttons').append('<span class=\"cody_{$this->id}_diy-dt-filter-box\"></span>');
+        $('div#{$sanitizedId}_wrapper>.dt-buttons').append('<span class=\"cody_{$sanitizedId}_diy-dt-filter-box\"></span>');
         
         // Call filter functionality AFTER container is created
         " . $this->generateFilterScript() . "
         
-        // Fix clickable functionality: move from TR to TD (same as GET method)
-        $('#{$this->id} tbody tr').each(function() {
+        // Fix clickable functionality: move from TR to TD (same as GET method) - SECURITY: Using sanitized ID
+        $('#{$sanitizedId} tbody tr').each(function() {
             var \$tr = $(this);
             if (\$tr.hasClass('clickable')) {
                 \$tr.removeClass('clickable');
@@ -372,22 +378,22 @@ jQuery(function($) {
             }
         });
         
-        // Add click handler for clickable TDs (same as Scripts.php)
-        $('#{$this->id}').off('click', 'td.clickable').on('click', 'td.clickable', function() {
+        // Add click handler for clickable TDs (same as Scripts.php) - SECURITY: Using sanitized ID and URLs
+        $('#{$sanitizedId}').off('click', 'td.clickable').on('click', 'td.clickable', function() {
             var getRLP = $(this).parent('tr').attr('rlp');
             if (getRLP != false && getRLP != undefined) {
-                var hash = '" . hash_code_id() . "';
+                var hash = '" . $this->sanitizeJavaScript(hash_code_id()) . "';
                 var _rlp = parseInt(getRLP.replace(hash, '') - 8*800/80);
-                var url_path = '" . url(canvastack_current_route()->uri ?? '') . "';
+                var url_path = '" . $this->sanitizeUrl(url(canvastack_current_route()->uri ?? '')) . "';
                 window.location = url_path + '/' + _rlp;
             }
         });
     }, 200); // Increased timeout to ensure DataTable is fully ready
 });
 
-// Add document ready wrapper for table wrapping only
+// Add document ready wrapper for table wrapping only - SECURITY: Using sanitized ID
 $(document).ready(function() { 
-    $('#{$this->id}').wrap('<div class=\"diy-wrapper-table\"></div>'); 
+    $('#{$sanitizedId}').wrap('<div class=\"diy-wrapper-table\"></div>'); 
     $('.dtfc-fixed-left').last().addClass('last-of-scrool-column-table'); 
 });
         ";
@@ -406,15 +412,17 @@ $(document).ready(function() {
         // Always generate filter script for POST method to ensure compatibility
         // The diyDataTableFilters function will handle cases where no filter modal exists
         
-        $varTableID = explode('-', $this->id);
+        // SECURITY: Sanitize DOM ID before using in JavaScript
+        $sanitizedId = $this->sanitizeDomId($this->id);
+        $varTableID = explode('-', $sanitizedId);
         $varTableID = implode('', $varTableID);
         
-        // Build script URI for POST method
+        // Build script URI for POST method - SECURITY: Sanitize URL
         $routePrefix = config('canvastack.routes.prefix', 'canvastack');
-        $scriptURI = url("{$routePrefix}/ajax/post?renderDataTables=true");
+        $scriptURI = $this->sanitizeUrl(url("{$routePrefix}/ajax/post?renderDataTables=true"));
         
-        // Generate filter JavaScript call (similar to Scripts trait filter method)
-        $filterScript = "diyDataTableFilters('{$this->id}', '{$scriptURI}', cody_{$varTableID}_dt);";
+        // Generate filter JavaScript call (similar to Scripts trait filter method) - SECURITY: Using sanitized values
+        $filterScript = "diyDataTableFilters('{$sanitizedId}', '{$scriptURI}', cody_{$varTableID}_dt);";
         
         // Generate export script (similar to Scripts trait export method)
         $exportScript = $this->generateExportScript();
@@ -429,30 +437,35 @@ $(document).ready(function() {
      */
     private function generateExportScript()
     {
-        $modalID = "{$this->id}_cdyFILTERmodalBOX";
-        $filterID = "{$this->id}_cdyFILTER";
-        $exportID = 'export_'.str_replace('-', '_', $this->id).'_cdyFILTERField';
-        $token = csrf_token();
+        // SECURITY: Sanitize DOM ID before using in JavaScript
+        $sanitizedId = $this->sanitizeDomId($this->id);
+        $modalID = "{$sanitizedId}_cdyFILTERmodalBOX";
+        $filterID = "{$sanitizedId}_cdyFILTER";
+        $exportID = 'export_'.str_replace('-', '_', $sanitizedId).'_cdyFILTERField';
+        // SECURITY: Sanitize CSRF token
+        $token = $this->sanitizeJavaScript(csrf_token());
         
-        // Build export URL for POST method
+        // Build export URL for POST method - SECURITY: Sanitize URL and parameters
         $routePrefix = config('canvastack.routes.prefix', 'canvastack');
-        $exportURL = url("{$routePrefix}/ajax/export?exportDataTables=true");
+        $exportURL = $this->sanitizeUrl(url("{$routePrefix}/ajax/export?exportDataTables=true"));
         
-        // Add difta parameters to export URL
+        // Add difta parameters to export URL - SECURITY: Sanitize data values
         if (!empty($this->data['name'])) {
-            $exportURL .= "&difta[name]={$this->data['name']}&difta[source]=dynamics";
+            $safeName = $this->sanitizeHtmlAttribute($this->data['name']);
+            $exportURL .= "&difta[name]={$safeName}&difta[source]=dynamics";
         }
         
         $connection = '';
         if (!empty($this->data['connection'])) {
-            $connection = "::{$this->data['connection']}";
+            $connection = "::" . $this->sanitizeJavaScript($this->data['connection']);
         }
         
         $filters = [];
         if (!empty($this->filters) && is_array($this->filters)) {
             $filters = $this->filters;
         }
-        $filter = json_encode($filters);
+        // SECURITY: Use secure JSON encoding
+        $filter = $this->sanitizeJsonForJavaScript($filters);
         
         return "exportFromModal('{$modalID}', '{$exportID}', '{$filterID}', '{$token}', '{$exportURL}', '{$connection}', {$filter});";
     }
@@ -584,5 +597,168 @@ $(document).ready(function() {
         }
         
         return $columns;
+    }
+
+    /**
+     * Sanitize JavaScript string to prevent XSS attacks
+     * @param string $input
+     * @return string
+     */
+    private function sanitizeJavaScript(string $input): string
+    {
+        if (empty($input)) {
+            return '';
+        }
+
+        // Remove dangerous characters and patterns for JavaScript context
+        $dangerous = [
+            '<script', '</script>', '<iframe', '</iframe>', 'javascript:', 'vbscript:',
+            'onload=', 'onerror=', 'onclick=', 'onmouseover=', 'onfocus=', 'onblur=',
+            'eval(', 'setTimeout(', 'setInterval(', 'Function(', 'document.write(',
+            'alert(', 'confirm(', 'prompt(', 'console.log('
+        ];
+
+        $cleaned = str_ireplace($dangerous, '', $input);
+        
+        // Additional character escaping for JavaScript context
+        $cleaned = addslashes($cleaned);
+        $cleaned = str_replace(["\r", "\n", "\t"], ['\\r', '\\n', '\\t'], $cleaned);
+        
+        // Validate result doesn't contain malicious patterns
+        if ($cleaned !== $input) {
+            throw new SecurityException("Potentially malicious JavaScript detected", [
+                'original_input' => $input,
+                'sanitized_output' => $cleaned,
+                'context' => 'javascript_sanitization'
+            ]);
+        }
+
+        return $cleaned;
+    }
+
+    /**
+     * Sanitize HTML attribute to prevent XSS attacks
+     * @param string $input
+     * @return string
+     */
+    private function sanitizeHtmlAttribute(string $input): string
+    {
+        if (empty($input)) {
+            return '';
+        }
+
+        // Remove dangerous patterns for HTML attributes
+        $dangerous = [
+            'javascript:', 'vbscript:', 'data:', 'onload=', 'onerror=', 'onclick=',
+            'onmouseover=', 'onfocus=', 'onblur=', '<script', '</script>'
+        ];
+
+        $cleaned = str_ireplace($dangerous, '', $input);
+        $cleaned = htmlspecialchars($cleaned, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        
+        // Validate sanitization effectiveness
+        if (strpos(strtolower($cleaned), 'script') !== false || 
+            strpos(strtolower($cleaned), 'javascript') !== false) {
+            throw new SecurityException("XSS attempt detected in HTML attribute", [
+                'original_input' => $input,
+                'sanitized_output' => $cleaned,
+                'context' => 'html_attribute_sanitization'
+            ]);
+        }
+
+        return $cleaned;
+    }
+
+    /**
+     * Sanitize JSON data for safe JavaScript embedding
+     * @param mixed $data
+     * @return string
+     */
+    private function sanitizeJsonForJavaScript($data): string
+    {
+        // Use Laravel's json encoding with proper escaping
+        $json = json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES);
+        
+        if ($json === false) {
+            throw new SecurityException("JSON encoding failed during sanitization", [
+                'data_type' => gettype($data),
+                'json_error' => json_last_error_msg(),
+                'context' => 'json_sanitization'
+            ]);
+        }
+
+        // Additional XSS protection for script injection
+        $json = str_replace(['</', '<!--', '-->', '<script'], ['<\/', '\\u003c!--', '--\\u003e', '\\u003cscript'], $json);
+        
+        return $json;
+    }
+
+    /**
+     * Validate and sanitize DOM ID for safe usage
+     * @param string $id
+     * @return string
+     */
+    private function sanitizeDomId(string $id): string
+    {
+        if (empty($id)) {
+            throw new SecurityException("Empty DOM ID not allowed", [
+                'context' => 'dom_id_validation'
+            ]);
+        }
+
+        // Remove any characters that could break JavaScript selectors
+        $cleaned = preg_replace('/[^a-zA-Z0-9_-]/', '', $id);
+        
+        if ($cleaned !== $id) {
+            throw new SecurityException("Invalid characters in DOM ID", [
+                'original_id' => $id,
+                'sanitized_id' => $cleaned,
+                'context' => 'dom_id_sanitization'
+            ]);
+        }
+
+        // Ensure ID starts with letter (HTML5 requirement)
+        if (!preg_match('/^[a-zA-Z]/', $cleaned)) {
+            throw new SecurityException("DOM ID must start with a letter", [
+                'invalid_id' => $cleaned,
+                'context' => 'dom_id_format_validation'
+            ]);
+        }
+
+        return $cleaned;
+    }
+
+    /**
+     * Sanitize URL for safe JavaScript usage
+     * @param string $url
+     * @return string
+     */
+    private function sanitizeUrl(string $url): string
+    {
+        if (empty($url)) {
+            return '';
+        }
+
+        // Parse and validate URL
+        $parsed = parse_url($url);
+        if ($parsed === false) {
+            throw new SecurityException("Invalid URL format detected", [
+                'invalid_url' => $url,
+                'context' => 'url_sanitization'
+            ]);
+        }
+
+        // Block dangerous protocols
+        $dangerousProtocols = ['javascript', 'vbscript', 'data', 'file'];
+        if (isset($parsed['scheme']) && in_array(strtolower($parsed['scheme']), $dangerousProtocols)) {
+            throw new SecurityException("Dangerous URL protocol detected", [
+                'url' => $url,
+                'protocol' => $parsed['scheme'],
+                'context' => 'url_protocol_validation'
+            ]);
+        }
+
+        // Escape URL for JavaScript context
+        return addslashes($url);
     }
 }

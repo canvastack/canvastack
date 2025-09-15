@@ -6,3 +6,4 @@
 *.zip
 /.node_modules
 *cache
+.gitupdatelogs

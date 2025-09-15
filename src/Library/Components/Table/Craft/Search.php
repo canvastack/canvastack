@@ -3,6 +3,8 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft;
 
 use Canvastack\Canvastack\Library\Components\Form\Objects as Form;
+use Canvastack\Canvastack\Library\Components\Table\Exceptions\SecurityException;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Created on 24 Apr 2021
@@ -40,6 +42,9 @@ class Search
     private $searchConnection;
 
     private $model_filters = [];
+
+    /** @var array SQL parameter bindings for security */
+    private $bindings = [];
 
     public function __construct($info, $model = null, $filters = [], $sql = null, $connection = null, $filterQuery = [])
     {
@@ -159,6 +164,9 @@ class Search
 
     private function selections($table, $fields = [], $condition = null)
     {
+        // Reset bindings for this query to ensure clean state
+        $this->bindings = [];
+        
         $strfields = implode(',', $fields);
         $where = null;
 
@@ -175,12 +183,17 @@ class Search
                 if ($n <= 1) {
                     $mf_cond = 'WHERE ';
                 }
+                
+                // Validate field name for security
+                $this->validateFieldName($mf_field);
+                
                 if (! is_array($mf_values)) {
-                    $mf_where[] = "{$mf_cond}{$mf_field} = '{$mf_values}'";
+                    $mf_where[] = "{$mf_cond}{$mf_field} = ?";
+                    $this->bindings[] = $mf_values;
                 } else {
-                    $mf_value = implode("', '", $mf_values);
-                    $mf_value = " IN ('{$mf_value}')";
-                    $mf_where[] = "{$mf_cond}{$mf_field}{$mf_value}";
+                    $placeholders = str_repeat('?,', count($mf_values) - 1) . '?';
+                    $mf_where[] = "{$mf_cond}{$mf_field} IN ({$placeholders})";
+                    $this->bindings = array_merge($this->bindings, $mf_values);
                 }
             }
 
@@ -193,15 +206,21 @@ class Search
                 $fqFieldName = $fqData['field_name'];
                 $fqDataValue = $fqData['value'];
 
+                // Validate field name for security
+                $this->validateFieldName($fqFieldName);
+
                 if (is_array($fqData['value'])) {
-                    $fQdataValue = implode("', '", $fqDataValue);
                     if (count($fqData['value']) >= 2) {
-                        $filterQueries[$i] = "`{$fqFieldName}` IN ('{$fQdataValue}')";
+                        $placeholders = str_repeat('?,', count($fqDataValue) - 1) . '?';
+                        $filterQueries[$i] = "`{$fqFieldName}` IN ({$placeholders})";
+                        $this->bindings = array_merge($this->bindings, $fqDataValue);
                     } else {
-                        $filterQueries[$i] = "`{$fqFieldName}` = '{$fQdataValue}'";
+                        $filterQueries[$i] = "`{$fqFieldName}` = ?";
+                        $this->bindings[] = reset($fqDataValue); // Get first element safely
                     }
                 } else {
-                    $filterQueries[$i] = "`{$fqFieldName}` = '{$fqDataValue}'";
+                    $filterQueries[$i] = "`{$fqFieldName}` = ?";
+                    $this->bindings[] = $fqDataValue;
                 }
             }
 
@@ -220,7 +239,15 @@ class Search
         }
 
         if (! empty($strfields)) {
-            $query = $this->select("SELECT {$strfields} FROM `{$table}` {$where} GROUP BY {$strfields};", $this->searchConnection);
+            // Validate table name for security
+            $this->validateTableName($table);
+            
+            // Validate field names for GROUP BY
+            foreach ($fields as $field) {
+                $this->validateFieldName($field);
+            }
+            
+            $query = $this->selectSecure("SELECT {$strfields} FROM `{$table}` {$where} GROUP BY {$strfields};", $this->bindings);
             if (! empty($query)) {
                 $selections = [];
                 foreach ($query as $rows) {
@@ -666,5 +693,90 @@ class Search
         }
 
         return canvastack_get_table_column_type($table, $column, $connection);
+    }
+
+    /**
+     * Validate field name against whitelist to prevent SQL injection
+     * @param string $fieldName
+     * @throws SecurityException
+     */
+    private function validateFieldName(string $fieldName): void
+    {
+        // Remove any quotes or special characters
+        $cleanField = preg_replace('/[^a-zA-Z0-9_.]/', '', $fieldName);
+        
+        if ($cleanField !== $fieldName) {
+            throw new SecurityException("Invalid field name detected: {$fieldName}", [
+                'field_name' => $fieldName,
+                'clean_field' => $cleanField,
+                'validation_type' => 'field_name',
+                'table' => $this->table
+            ]);
+        }
+
+        // Check against allowed patterns
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)*$/', $fieldName)) {
+            throw new SecurityException("Field name format validation failed: {$fieldName}", [
+                'field_name' => $fieldName,
+                'validation_type' => 'field_format',
+                'table' => $this->table
+            ]);
+        }
+    }
+
+    /**
+     * Validate table name against whitelist to prevent SQL injection
+     * @param string $tableName
+     * @throws SecurityException
+     */
+    private function validateTableName(string $tableName): void
+    {
+        // Remove any quotes or special characters
+        $cleanTable = preg_replace('/[^a-zA-Z0-9_]/', '', $tableName);
+        
+        if ($cleanTable !== $tableName) {
+            throw new SecurityException("Invalid table name detected: {$tableName}", [
+                'table_name' => $tableName,
+                'clean_table' => $cleanTable,
+                'validation_type' => 'table_name'
+            ]);
+        }
+
+        // Check against allowed patterns
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $tableName)) {
+            throw new SecurityException("Table name format validation failed: {$tableName}", [
+                'table_name' => $tableName,
+                'validation_type' => 'table_format'
+            ]);
+        }
+    }
+
+    /**
+     * Secure select method with parameter binding
+     * @param string $query
+     * @param array $bindings
+     * @return \Illuminate\Support\Collection
+     */
+    private function selectSecure(string $query, array $bindings = []): \Illuminate\Support\Collection
+    {
+        try {
+            // Use the specified connection or default to 'mysql'
+            $connection = 'mysql';
+            if (!empty($this->searchConnection)) {
+                $connection = $this->searchConnection;
+            }
+            
+            // DB::select() returns array, need to convert to Collection
+            $result = DB::connection($connection)->select($query, $bindings);
+            return collect($result);
+        } catch (\Exception $e) {
+            throw new SecurityException("Secure query execution failed", [
+                'query_hash' => sha1($query),
+                'binding_count' => count($bindings),
+                'error_message' => $e->getMessage(),
+                'connection' => $connection ?? 'default',
+                'table' => $this->table
+            ], $e);
+        }
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query;
 
+use Canvastack\Canvastack\Library\Components\Table\Exceptions\SecurityException;
+
 /**
  * FilterQueryService — builds the dynamic SQL used by legacy init_filter_datatables().
  *
@@ -10,6 +12,9 @@ namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query;
  */
 final class FilterQueryService
 {
+    /** @var array */
+    private $bindings = [];
+
     /**
      * Execute the legacy filter options query builder.
      *
@@ -70,26 +75,36 @@ final class FilterQueryService
             unset($post['_forKeys']);
         }
 
-        // Build extra filter queries from _diyF
+        // Build extra filter queries from _diyF (SECURE VERSION)
         $filterQueries = [];
         if (! empty($filters)) {
             foreach ($filters as $n => $filter) {
                 $fqFieldName = $filter['field_name'] ?? '';
                 $fqDataValue = $filter['value'] ?? '';
 
+                // Validate field name for security
+                $this->validateFieldName($fqFieldName);
+
                 if (is_array($fqDataValue)) {
-                    $fQdataValue = implode("', '", $fqDataValue);
-                    $filterQueries[$n] = "`{$fqFieldName}` IN ('{$fQdataValue}')";
+                    // Use parameter binding for arrays
+                    $placeholders = str_repeat('?,', count($fqDataValue) - 1) . '?';
+                    $filterQueries[$n] = "`{$fqFieldName}` IN ({$placeholders})";
+                    $this->bindings = array_merge($this->bindings, $fqDataValue);
                 } else {
-                    $filterQueries[$n] = "`{$fqFieldName}` = '{$fqDataValue}'";
+                    // Use parameter binding for single values
+                    $filterQueries[$n] = "`{$fqFieldName}` = ?";
+                    $this->bindings[] = $fqDataValue;
                 }
             }
         }
 
-        // Base wheres from remaining POST pairs
+        // Base wheres from remaining POST pairs (SECURE VERSION)
         $wheres = [];
         foreach ($post as $key => $value) {
-            $wheres[] = "`{$key}` = '{$value}'";
+            // Validate field name for security
+            $this->validateFieldName($key);
+            $wheres[] = "`{$key}` = ?";
+            $this->bindings[] = $value;
         }
         if (! empty($filterQueries)) {
             $wheres = array_merge_recursive($wheres, $filterQueries);
@@ -121,7 +136,10 @@ final class FilterQueryService
             $previousdata = [];
             foreach ($previousData as $_field => $_value) {
                 if ($_field !== '') {
-                    $previousdata[] = "`{$_field}` = '{$_value}'";
+                    // Validate field name to prevent SQL injection
+                    $this->validateFieldName($_field);
+                    $previousdata[] = "`{$_field}` = ?";
+                    $this->bindings[] = $_value;
                 }
             }
 
@@ -130,12 +148,104 @@ final class FilterQueryService
             }
         }
 
+        // Validate table and target field names
+        $this->validateTableName($table);
+        $this->validateFieldName($target);
+
         if (! empty($fKeys)) {
             $sql = "SELECT DISTINCT `{$target}` FROM `{$table}` {$fKeyQs} WHERE {$wheres}{$wherePrevious}";
         } else {
             $sql = "SELECT DISTINCT `{$target}` FROM `{$table}` WHERE {$wheres}{$wherePrevious}";
         }
 
-        return canvastack_query($sql, 'SELECT', $connection);
+        return $this->executeSecureQuery($sql, $connection);
+    }
+
+    /**
+     * Validate field name to prevent SQL injection
+     *
+     * @param string $fieldName
+     * @throws \InvalidArgumentException
+     */
+    private function validateFieldName(string $fieldName): void
+    {
+        // Check basic format - must start with letter, contain only alphanumeric and underscore
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $fieldName)) {
+            throw new \InvalidArgumentException("Invalid field name format: {$fieldName}");
+        }
+
+        // Check length limit
+        if (strlen($fieldName) > 64) {
+            throw new \InvalidArgumentException("Field name too long: {$fieldName}");
+        }
+
+        // Optional: Check against whitelist if configured
+        $allowedFields = config('canvastack.security.allowed_fields', []);
+        if (!empty($allowedFields) && !in_array($fieldName, $allowedFields, true)) {
+            \Log::warning("Unauthorized field access attempt: {$fieldName}", [
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent()
+            ]);
+            throw new SecurityException("Field not allowed: {$fieldName}");
+        }
+    }
+
+    /**
+     * Validate table name to prevent SQL injection
+     *
+     * @param string $tableName
+     * @throws \InvalidArgumentException
+     */
+    private function validateTableName(string $tableName): void
+    {
+        // Check basic format
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $tableName)) {
+            throw new \InvalidArgumentException("Invalid table name format: {$tableName}");
+        }
+
+        // Check length limit
+        if (strlen($tableName) > 64) {
+            throw new \InvalidArgumentException("Table name too long: {$tableName}");
+        }
+
+        // Optional: Check against whitelist if configured
+        $allowedTables = config('canvastack.security.allowed_tables', []);
+        if (!empty($allowedTables) && !in_array($tableName, $allowedTables, true)) {
+            \Log::warning("Unauthorized table access attempt: {$tableName}", [
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent()
+            ]);
+            throw new SecurityException("Table not allowed: {$tableName}");
+        }
+    }
+
+    /**
+     * Execute secure query with parameter binding
+     *
+     * @param string $sql
+     * @param mixed $connection
+     * @return mixed
+     */
+    private function executeSecureQuery(string $sql, $connection = null)
+    {
+        try {
+            // Use Laravel's DB facade with parameter binding
+            if ($connection) {
+                return \DB::connection($connection)->select($sql, $this->bindings);
+            } else {
+                return \DB::select($sql, $this->bindings);
+            }
+        } catch (\Exception $e) {
+            // Log security-related database errors
+            \Log::error("Database query error in FilterQueryService", [
+                'error' => $e->getMessage(),
+                'sql' => $sql,
+                'bindings_count' => count($this->bindings),
+                'ip' => request()->ip()
+            ]);
+            
+            // Re-throw with safe message to prevent information disclosure
+            throw new \RuntimeException("Database query failed");
+        }
     }
 }
