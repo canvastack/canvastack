@@ -22,6 +22,10 @@ class CanvastackServiceProvider extends ServiceProvider
         // View namespace to app's resources/views
         $this->loadViewsFrom(base_path('resources/views'), 'CanvaStack');
 
+        // Load Table Security Config files with merge capability
+        $this->mergeConfigFrom(__DIR__.'/Library/Components/Table/config/canvastack-security.php', 'canvastack-security');
+        $this->mergeConfigFrom(__DIR__.'/Library/Components/Table/config/security_whitelist.php', 'canvastack-table-security');
+
         // Facade alias: CanvaStack::...
         AliasLoader::getInstance()->alias('CanvaStack', \Canvastack\Canvastack\Facade\CanvaStack::class);
 
@@ -40,6 +44,12 @@ class CanvastackServiceProvider extends ServiceProvider
             $this->publishes([
                 "{$publishPath}public" => public_path(),
             ], 'CanvaStack Public Folder');
+
+            // Publish Table Security Configuration Files
+            $this->publishes([
+                __DIR__.'/Library/Components/Table/config/canvastack-security.php' => config_path('canvastack-security.php'),
+                __DIR__.'/Library/Components/Table/config/security_whitelist.php' => config_path('canvastack-table-security.php'),
+            ], 'CanvaStack Security Config');
         }
 
         // Register custom Artisan commands for testing and tooling
