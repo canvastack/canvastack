@@ -1,9 +1,9 @@
 {
   "name": "canvastack/canvastack",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "type": "library",
-  "description": "Laravel library (rebranded from incodiy/codiy)",
-  "keywords": ["canvastack", "library"],
+  "description": "Enterprise Laravel library with advanced security hardening and publishable configuration system",
+  "keywords": ["canvastack", "library", "laravel", "security", "enterprise", "datatables", "configurable"],
   "license": "MIT",
   "require": {
     "laravel/ui": "~4.0",
