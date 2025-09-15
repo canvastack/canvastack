@@ -28,6 +28,29 @@ Route::group([
     'middleware' => ['web'],
 ], function () {
 
+    // Serve package assets as fallback when not published
+    Route::get('assets/js/delete-handler.js', function () {
+        $path = __DIR__ . '/../Library/Components/Table/Craft/assets/js/delete-handler.js';
+        if (file_exists($path)) {
+            return response()->file($path, [
+                'Content-Type' => 'application/javascript',
+                'Cache-Control' => 'public, max-age=3600'
+            ]);
+        }
+        return abort(404);
+    })->name('assets.js.delete-handler');
+
+    Route::get('assets/css/delete-modal.css', function () {
+        $path = __DIR__ . '/../Library/Components/Table/Craft/assets/css/delete-modal.css';
+        if (file_exists($path)) {
+            return response()->file($path, [
+                'Content-Type' => 'text/css',
+                'Cache-Control' => 'public, max-age=3600'
+            ]);
+        }
+        return abort(404);
+    })->name('assets.css.delete-modal');
+
     Auth::routes();
 
     Route::get('/login', ['as' => 'login',           'uses' => 'App\Http\Controllers\Admin\System\AuthController@login']);

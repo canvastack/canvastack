@@ -800,14 +800,52 @@ if (! function_exists('canvastack_delete')) {
      */
     function canvastack_delete($request, $model_name, $id)
     {
-        $model = $model_name->find($id);
-
-        if (! empty($model->id)) {
-            $model->delete();
-        } else {
-            if (true === canvastack_is_softdeletes($model_name)) {
-                $remodel = $model_name::withTrashed()->find($id);
-                $remodel->restore();
+        // Use dynamic delete detection for better handling
+        try {
+            $detectorInfo = \Canvastack\Canvastack\Library\Components\Utility\DeleteDetector::getCurrentControllerInfo();
+            
+            // Find the model record
+            $model = null;
+            if (canvastack_is_softdeletes($model_name)) {
+                // For soft delete models, check both active and trashed records
+                $model = $model_name->find($id);
+                if (!$model) {
+                    $model = $model_name::withTrashed()->find($id);
+                }
+            } else {
+                $model = $model_name->find($id);
+            }
+            
+            if (!$model) {
+                throw new \Exception("Record with ID {$id} not found");
+            }
+            
+            // Determine action based on record state
+            if (method_exists($model, 'trashed') && $model->trashed()) {
+                // Record is soft deleted, restore it
+                $model->restore();
+                \Log::info("Record restored via canvastack_delete: ID {$id} in {$detectorInfo['table_name']}");
+            } else {
+                // Record is active, delete it
+                $model->delete();
+                $deleteType = $detectorInfo['delete_type'] ?? (canvastack_is_softdeletes($model_name) ? 'soft' : 'hard');
+                \Log::info("Record {$deleteType} deleted via canvastack_delete: ID {$id} in {$detectorInfo['table_name']}");
+            }
+            
+        } catch (\Throwable $e) {
+            // Fallback to original logic if dynamic detection fails
+            \Log::warning("Dynamic delete detection failed, using fallback: " . $e->getMessage());
+            
+            $model = $model_name->find($id);
+            if (! empty($model->id)) {
+                $model->delete();
+            } else {
+                if (true === canvastack_is_softdeletes($model_name)) {
+                    $remodel = $model_name::withTrashed()->find($id);
+                    if ($remodel) {
+                        $remodel->restore();
+                    }
+                }
             }
         }
     }

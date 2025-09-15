@@ -3,6 +3,8 @@
 namespace Canvastack\Canvastack\Controllers\Core\Craft;
 
 use Canvastack\Canvastack\Library\Components\Charts\Objects as Chart;
+use Canvastack\Canvastack\Library\Components\Utility\DeleteDetector;
+use Canvastack\Canvastack\Library\Traits\DynamicDeleteTrait;
 use Canvastack\Canvastack\Models\Admin\System\DynamicTables;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -26,6 +28,8 @@ use Illuminate\Support\Facades\Validator;
  */
 trait Action
 {
+    use DynamicDeleteTrait;
+    
     public $model = [];
     public $model_path = null;
     public $model_table = null;
@@ -57,6 +61,9 @@ trait Action
             $this->table->sortable();
 
             $this->table->lists($this->model_table);
+            
+            // Auto-inject delete assets for index pages with tables
+            $this->injectDeleteAssets();
         }
 
         return $this->render();
@@ -434,25 +441,77 @@ trait Action
     }
 
     /**
-     * Handle destroy operation dengan service.
+     * Handle destroy operation dengan dynamic delete system.
+     * Uses DynamicDeleteTrait for universal delete functionality.
      *
      * @param Request $request
      * @param int $id
      * @return mixed
      */
-    protected function destroy(Request $request, $id)
+    public function destroy(Request $request, $id)
     {
-        if ($this->service === null) {
-            // Get the original model instance, not the builder
-            $modelInstance = $this->getModel();
-            if ('Builder' === class_basename($modelInstance)) {
-                $modelInstance = new $this->model_path();
+        // Use DynamicDeleteTrait's destroy method for universal handling
+        return $this->dynamicDestroy($request, $id);
+    }
+    
+    /**
+     * Handle restore operation for soft deleted records.
+     * Auto-detects if model supports soft deletes.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return mixed
+     */
+    public function restore(Request $request, $id)
+    {
+        // Use DynamicDeleteTrait's restore method
+        return $this->dynamicRestore($request, $id);
+    }
+    
+    /**
+     * Auto-inject delete assets (JS/CSS) for pages with delete functionality
+     * Assets are published from package to public directory during installation
+     */
+    protected function injectDeleteAssets(): void
+    {
+        try {
+            // Check if we have data components and template
+            if (isset($this->data) && is_object($this->data) && 
+                isset($this->data->components) && is_object($this->data->components) &&
+                isset($this->data->components->template)) {
+                
+                // Check if published assets exist, fallback to package assets
+                $jsPath = public_path('assets/js/delete-handler.js');
+                $cssPath = public_path('assets/css/delete-modal.css');
+                
+                if (file_exists($jsPath) && file_exists($cssPath)) {
+                    // Use published assets
+                    $this->data->components->template->addScript('js', url('assets/js/delete-handler.js'), 'bottom_last');
+                    $this->data->components->template->addScript('css', url('assets/css/delete-modal.css'), 'bottom_first');
+                    Log::info('Delete assets (published) injected successfully for: ' . get_class($this));
+                } else {
+                    // Fallback: serve directly from package (for development)
+                    $packageJsPath = __DIR__ . '/../../../Library/Components/Table/Craft/assets/js/delete-handler.js';
+                    $packageCssPath = __DIR__ . '/../../../Library/Components/Table/Craft/assets/css/delete-modal.css';
+                    
+                    if (file_exists($packageJsPath) && file_exists($packageCssPath)) {
+                        // Create temporary route to serve package assets
+                        $this->data->components->template->addScript('js', url('canvastack/assets/js/delete-handler.js'), 'bottom_last');
+                        $this->data->components->template->addScript('css', url('canvastack/assets/css/delete-modal.css'), 'bottom_first');
+                        Log::info('Delete assets (package) injected successfully for: ' . get_class($this));
+                    } else {
+                        Log::warning('Delete assets not found in package or public directory. Please run: php artisan vendor:publish --tag="CanvaStack Delete Assets"');
+                    }
+                }
+            } else {
+                Log::warning('Cannot inject delete assets - data components not available for: ' . get_class($this));
             }
-            $this->service = new \Canvastack\Canvastack\Services\ActionService($modelInstance, $this->validations, $this->softDeletedModel);
+        } catch (\Throwable $e) {
+            Log::error('Failed to inject delete assets: ' . $e->getMessage(), [
+                'controller' => get_class($this),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
-        $this->service->handleDestroy($request, $id);
-
-        return $this->routeBackAfterAction(__FUNCTION__);
     }
 
     public function model_find($id)

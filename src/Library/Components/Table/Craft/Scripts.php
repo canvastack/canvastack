@@ -245,33 +245,79 @@ trait Scripts
         }
         
         
-        // Add Delete Confirmation Modal JavaScript - SIMPLIFIED VERSION
+        // Enhanced Delete Confirmation Modal JavaScript
         $js .= "
-        // Simple Delete Confirmation Modal Handler
+        // Enhanced Delete Confirmation Modal Handler
         $(document).on('click', '.btn_delete_modal', function(e) {
             e.preventDefault();
             var \$btn = $(this);
             var modalTarget = \$btn.data('target');
+            var formId = \$btn.data('form-id');
+            var recordId = \$btn.data('record-id');
+            var tableName = \$btn.data('table-name');
+            var deleteType = \$btn.data('delete-type');
             
-            console.log('Delete button clicked, target modal:', modalTarget);
+            console.log('Delete button clicked:', {
+                modalTarget: modalTarget,
+                formId: formId,
+                recordId: recordId,
+                tableName: tableName,
+                deleteType: deleteType
+            });
             
-            // Show the modal that was already appended to body
-            if ($(modalTarget).length > 0) {
-                $(modalTarget).modal('show');
-                console.log('Modal shown:', modalTarget);
-            } else {
-                console.error('Modal not found:', modalTarget);
-                // Fallback: show browser confirm dialog
-                var recordId = \$btn.data('record-id');
-                var tableName = \$btn.data('table-name');
-                if (confirm('Anda akan menghapus data dari tabel ' + tableName + ' dengan ID ' + recordId + '. Apakah Anda yakin?')) {
-                    var formId = \$btn.data('form-id');
-                    var form = document.getElementById(formId);
-                    if (form) {
-                        form.submit();
+            // Wait a moment for modal to be appended to DOM
+            setTimeout(function() {
+                var modal = $(modalTarget);
+                if (modal.length > 0) {
+                    // Update modal content with dynamic data
+                    var alertElement = modal.find('.modal-body .alert');
+                    var titleElement = modal.find('.modal-title');
+                    var confirmButton = modal.find('.btn-danger, .btn-warning');
+                    
+                    // Update message based on delete type
+                    var message;
+                    if (deleteType === 'soft') {
+                        message = 'Anda akan menghapus record data dari tabel <strong>\\'' + tableName + '\\'</strong> dengan ID <strong>' + recordId + '</strong>. Data akan dipindahkan ke recycle bin dan dapat dipulihkan kembali. Apakah Anda yakin?';
+                        titleElement.html('<i class=\"fa fa-trash-o\"></i> &nbsp; Confirm Soft Delete');
+                        confirmButton.html('<i class=\"fa fa-trash-o\"></i> Yes, Move to Trash');
+                    } else {
+                        message = 'Anda akan menghapus permanen record data dari tabel <strong>\\'' + tableName + '\\'</strong> dengan ID <strong>' + recordId + '</strong>. Tindakan ini tidak dapat dibatalkan. Apakah Anda yakin?';
+                        titleElement.html('<i class=\"fa fa-trash\"></i> &nbsp; Confirm Permanent Delete');
+                        confirmButton.html('<i class=\"fa fa-trash\"></i> Yes, Delete Permanently');
+                    }
+                    
+                    alertElement.html('<i class=\"fa fa-exclamation-triangle\"></i> ' + message);
+                    
+                    // Show modal with proper z-index
+                    modal.css('z-index', 1060);
+                    modal.modal({
+                        backdrop: 'static',
+                        keyboard: true,
+                        show: true
+                    });
+                    
+                    console.log('Modal shown successfully:', modalTarget);
+                } else {
+                    console.error('Modal not found after timeout:', modalTarget);
+                    // Enhanced fallback with better UX
+                    var message = deleteType === 'soft' 
+                        ? 'Anda akan menghapus record data dari tabel \\'' + tableName + '\\' dengan ID ' + recordId + '. Data akan dipindahkan ke recycle bin. Apakah Anda yakin?'
+                        : 'Anda akan menghapus permanen record data dari tabel \\'' + tableName + '\\' dengan ID ' + recordId + '. Tindakan ini tidak dapat dibatalkan. Apakah Anda yakin?';
+                        
+                    if (confirm(message)) {
+                        var form = document.getElementById(formId);
+                        if (form) {
+                            // Show loading state
+                            \$btn.prop('disabled', true).html('<i class=\"fa fa-spinner fa-spin\"></i>');
+                            form.submit();
+                        } else {
+                            console.error('Form not found:', formId);
+                            alert('Error: Form tidak ditemukan. Silakan refresh halaman dan coba lagi.');
+                            \$btn.prop('disabled', false).html('<i class=\"fa fa-times\"></i>');
+                        }
                     }
                 }
-            }
+            }, 100);
         });
         
         // Handle modal cleanup on hide

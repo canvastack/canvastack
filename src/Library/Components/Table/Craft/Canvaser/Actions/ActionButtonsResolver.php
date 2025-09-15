@@ -27,38 +27,75 @@ final class ActionButtonsResolver
         $action_data['model'] = $model; // kept for parity though legacy passes $model instance; not used directly in renderer
         
         // CRITICAL FIX: Get correct route path for action buttons
-        // Use canvastack_current_route() to get the actual route, not the ajax route
+        // The issue is that datatables are called via AJAX, but we need the original page route
+        // We need to detect the actual controller route, not the ajax route
         try {
-            $currentRouteInfo = canvastack_current_route();
-            if ($currentRouteInfo && isset($currentRouteInfo->uri)) {
-                // Use the actual route URI, not the ajax route
-                $routeUri = $currentRouteInfo->uri;
+            // First, try to get the route from the HTTP_REFERER header (the page that made the AJAX call)
+            $refererUrl = $_SERVER['HTTP_REFERER'] ?? null;
+            if ($refererUrl) {
+                $parsedReferer = parse_url($refererUrl);
+                $refererPath = $parsedReferer['path'] ?? '';
+                
+                // Remove the public part and leading slash
+                $refererPath = preg_replace('#^/[^/]*/public/#', '/', $refererPath);
+                $refererPath = preg_replace('#^/public/#', '/', $refererPath);
+                $refererPath = ltrim($refererPath, '/');
                 
                 // Remove trailing action suffixes (index, create, edit, show) to get base path
-                $pathParts = explode('/', trim($routeUri, '/'));
+                $pathParts = explode('/', $refererPath);
                 if (count($pathParts) > 0 && in_array(end($pathParts), ['index', 'create', 'edit', 'show'])) {
                     array_pop($pathParts);
                 }
-                $basePath = '/' . implode('/', $pathParts);
+                $basePath = implode('/', array_filter($pathParts));
                 
-                $action_data['current_url'] = url($basePath);
+                if (!empty($basePath)) {
+                    $action_data['current_url'] = url($basePath);
+                } else {
+                    throw new \Exception('Empty base path from referer');
+                }
             } else {
-                // Fallback: try to extract route path from current route name
-                $currentRoute = current_route();
-                if ($currentRoute && $currentRoute !== 'datatables.post') {
-                    // Remove the last segment (index/create/edit/show) to get base route
-                    $routeParts = explode('.', $currentRoute);
-                    if (count($routeParts) > 1) {
-                        array_pop($routeParts); // Remove last part (index/create/edit/show)
-                        $baseRoute = implode('.', $routeParts);
-                        $basePath = str_replace('.', '/', $baseRoute);
-                    } else {
-                        // Single part route, use as is
-                        $basePath = str_replace('.', '/', $currentRoute);
+                throw new \Exception('No HTTP_REFERER found');
+            }
+        } catch (\Throwable $e) {
+            // Fallback 1: Try to get from current route info
+            try {
+                $currentRouteInfo = canvastack_current_route();
+                if ($currentRouteInfo && isset($currentRouteInfo->uri)) {
+                    // Use the actual route URI, not the ajax route
+                    $routeUri = $currentRouteInfo->uri;
+                    
+                    // Remove trailing action suffixes (index, create, edit, show) to get base path
+                    $pathParts = explode('/', trim($routeUri, '/'));
+                    if (count($pathParts) > 0 && in_array(end($pathParts), ['index', 'create', 'edit', 'show'])) {
+                        array_pop($pathParts);
                     }
+                    $basePath = implode('/', array_filter($pathParts));
                     
                     $action_data['current_url'] = url($basePath);
                 } else {
+                    throw new \Exception('No current route info');
+                }
+            } catch (\Throwable $e2) {
+                // Fallback 2: Try to extract route path from current route name
+                try {
+                    $currentRoute = current_route();
+                    if ($currentRoute && $currentRoute !== 'datatables.post') {
+                        // Remove the last segment (index/create/edit/show) to get base route
+                        $routeParts = explode('.', $currentRoute);
+                        if (count($routeParts) > 1) {
+                            array_pop($routeParts); // Remove last part (index/create/edit/show)
+                            $baseRoute = implode('.', $routeParts);
+                            $basePath = str_replace('.', '/', $baseRoute);
+                        } else {
+                            // Single part route, use as is
+                            $basePath = str_replace('.', '/', $currentRoute);
+                        }
+                        
+                        $action_data['current_url'] = url($basePath);
+                    } else {
+                        throw new \Exception('Invalid current route');
+                    }
+                } catch (\Throwable $e3) {
                     // Final fallback: extract from current URL
                     $currentUrl = canvastack_current_url();
                     $parsedUrl = parse_url($currentUrl);
@@ -69,25 +106,11 @@ final class ActionButtonsResolver
                     if (count($pathParts) > 0 && in_array(end($pathParts), ['index', 'create', 'edit', 'show'])) {
                         array_pop($pathParts);
                     }
-                    $cleanPath = '/' . implode('/', $pathParts);
+                    $cleanPath = implode('/', array_filter($pathParts));
                     
-                    $action_data['current_url'] = url($cleanPath);
+                    $action_data['current_url'] = url($cleanPath ?: '/');
                 }
             }
-        } catch (\Throwable $e) {
-            // Emergency fallback: extract from current URL
-            $currentUrl = canvastack_current_url();
-            $parsedUrl = parse_url($currentUrl);
-            $path = $parsedUrl['path'] ?? '/';
-            
-            // Remove trailing action suffixes from path
-            $pathParts = explode('/', trim($path, '/'));
-            if (count($pathParts) > 0 && in_array(end($pathParts), ['index', 'create', 'edit', 'show'])) {
-                array_pop($pathParts);
-            }
-            $cleanPath = '/' . implode('/', $pathParts);
-            
-            $action_data['current_url'] = url($cleanPath);
         }
         
 

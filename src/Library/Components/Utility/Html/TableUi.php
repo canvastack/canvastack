@@ -127,13 +127,22 @@ final class TableUi
                 $delete_action = '<form id="'.$formId.'" action="'.action($deleteURL, $delete_id).'" method="post" style="display:none;">'.csrf_field().'<input name="_method" type="hidden" value="DELETE"></form>';
                 
                 // Create button that triggers modal instead of direct submission
+                // Use dynamic detection to get accurate controller and model info
+                $detectorInfo = \Canvastack\Canvastack\Library\Components\Utility\DeleteDetector::getCurrentControllerInfo();
+                $tableName = $detectorInfo['table_name'];
+                $deleteType = $detectorInfo['delete_type'];
+                $modelClass = $detectorInfo['model_class'];
+                
                 $buttonDeleteAttribute = \Canvastack\Canvastack\Library\Components\Utility\Canvatility::attributesToString([
                     'class' => 'btn btn-danger btn-xs btn_delete_modal',
                     'data-toggle' => 'modal',
                     'data-target' => '#'.$modalId,
                     'data-form-id' => $formId,
                     'data-record-id' => $delete_id,
-                    'data-table-name' => $table ?? 'record',
+                    'data-table-name' => $tableName,
+                    'data-delete-type' => $deleteType,
+                    'data-model-class' => $modelClass,
+                    'data-controller-info' => json_encode($detectorInfo),
                     'title' => $restoreDeleted ? 'Restore' : 'Delete',
                 ]);
                 
@@ -471,13 +480,20 @@ final class TableUi
      */
     public static function generateDeleteConfirmationModal(string $modalId, string $formId, string $tableName, string $recordId, bool $isRestore = false): string
     {
+        // Get dynamic controller info for accurate messaging
+        $detectorInfo = \Canvastack\Canvastack\Library\Components\Utility\DeleteDetector::getCurrentControllerInfo();
+        
         $action = $isRestore ? 'restore' : 'delete';
         $actionText = $isRestore ? 'Restore' : 'Delete';
         $actionIcon = $isRestore ? 'fa-recycle' : 'fa-trash-o';
         $actionColor = $isRestore ? 'btn-warning' : 'btn-danger';
-        $actionMessage = $isRestore 
-            ? "Anda akan memulihkan data dari tabel <strong>{$tableName}</strong> dengan ID <strong>{$recordId}</strong>. Apakah Anda yakin ingin memulihkannya?"
-            : "Anda akan menghapus data dari tabel <strong>{$tableName}</strong> dengan ID <strong>{$recordId}</strong>. Apakah Anda yakin ingin menghapusnya?";
+        
+        // Use dynamic message based on delete type
+        if ($isRestore) {
+            $actionMessage = \Canvastack\Canvastack\Library\Components\Utility\DeleteDetector::getRestoreMessage($detectorInfo, $recordId);
+        } else {
+            $actionMessage = \Canvastack\Canvastack\Library\Components\Utility\DeleteDetector::getDeleteMessage($detectorInfo, $recordId);
+        }
 
         // CRITICAL FIX: Generate modal HTML but append to body via JavaScript to fix z-index
         $modalHtml = '<div id="' . $modalId . '" class="modal fade" role="dialog" tabindex="-1" ' .
@@ -519,7 +535,19 @@ final class TableUi
                 // Append modal to body to fix z-index issues
                 $("body").append(\'' . addslashes($modalHtml) . '\');
                 
+                // Ensure proper z-index handling
+                $("#' . $modalId . '").on("show.bs.modal", function() {
+                    $(this).css("z-index", 1070);
+                    $(".modal-backdrop").css("z-index", 1060);
+                });
+                
+                // Handle modal cleanup
+                $("#' . $modalId . '").on("hidden.bs.modal", function() {
+                    $(this).remove();
+                });
+                
                 console.log("Delete modal appended to body: ' . $modalId . '");
+                console.log("Modal data - Table: ' . $tableName . ', ID: ' . $recordId . '");
             });
         </script>';
 

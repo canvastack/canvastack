@@ -83,6 +83,8 @@ class UserController extends Controller
         $this->table->setFieldAsImage(['photo']);
         $this->table->lists($this->model_table, ['username:User', 'email', 'photo', 'group_info', 'address', 'phone', 'expire_date', 'active']);
 
+
+
         return $this->render();
     }
 
@@ -371,33 +373,7 @@ class UserController extends Controller
         return redirect("{$route_back}/{$id}/edit");
     }
 
-    /**
-     * Add missing destroy method for delete functionality
-     */
-    public function destroy(Request $request, $id)
-    {
-        $this->get_session();
-        
-        try {
-            $this->model_find($id);
-            
-            if (!$this->model_data) {
-                return redirect('system/accounts/user')->withErrors(['error' => 'User not found']);
-            }
-            
-            // Delete user-group relationships first
-            Usergroup::where('user_id', $id)->delete();
-            
-            // Delete the user
-            $this->model_data->delete();
-            
-            return redirect('system/accounts/user')->with('success', 'User deleted successfully');
-            
-        } catch (\Exception $e) {
-            \Log::error('Error deleting user: ' . $e->getMessage());
-            return redirect('system/accounts/user')->withErrors(['error' => 'Failed to delete user']);
-        }
-    }
+    // Delete and restore methods are now handled by Action trait with DynamicDeleteTrait
 
     private function input_group()
     {

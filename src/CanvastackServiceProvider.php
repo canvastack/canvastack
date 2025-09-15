@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack;
 
 use Canvastack\Canvastack\Controllers\Core\Controller as CoreController;
+use Canvastack\Canvastack\Library\Components\Utility\DynamicRouteRegistrar;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\ServiceProvider;
 
@@ -18,6 +19,11 @@ class CanvastackServiceProvider extends ServiceProvider
         if (file_exists(__DIR__.'/routes/web.php')) {
             $this->loadRoutesFrom(__DIR__.'/routes/web.php');
         }
+        
+        // Auto-register restore routes for soft delete models
+        $this->app->booted(function () {
+            DynamicRouteRegistrar::registerRestoreRoutes();
+        });
 
         // View namespace to app's resources/views
         $this->loadViewsFrom(base_path('resources/views'), 'CanvaStack');
@@ -50,6 +56,12 @@ class CanvastackServiceProvider extends ServiceProvider
                 __DIR__.'/Library/Components/Table/config/canvastack-security.php' => config_path('canvastack-security.php'),
                 __DIR__.'/Library/Components/Table/config/security_whitelist.php' => config_path('canvastack-table-security.php'),
             ], 'CanvaStack Security Config');
+
+            // Publish Delete Handler Assets
+            $this->publishes([
+                __DIR__.'/Library/Components/Table/Craft/assets/js/delete-handler.js' => public_path('assets/js/delete-handler.js'),
+                __DIR__.'/Library/Components/Table/Craft/assets/css/delete-modal.css' => public_path('assets/css/delete-modal.css'),
+            ], 'CanvaStack Delete Assets');
         }
 
         // Register custom Artisan commands for testing and tooling
