@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Support;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 /**
  * ActionButtonsRenderer
  * - Safe rendering for action buttons with minimal dependency on session/privileges.
@@ -20,6 +22,14 @@ class ActionButtonsRenderer
      */
     public static function render(array $row, object $dt, ?string $table): string
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('ActionButtonsRenderer: Rendering action buttons', [
+                'table' => $table,
+                'row_keys' => array_keys($row),
+                'has_canvastack_current_url' => function_exists('canvastack_current_url')
+            ]);
+        }
+
         $currentUrl = '/';
         if (function_exists('canvastack_current_url')) {
             try {

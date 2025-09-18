@@ -4,11 +4,21 @@ namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Support;
 
 use Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Contracts\ContextAdapterInterface;
 use Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\DTO\DatatablesContext;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 class LegacyContextAdapter implements ContextAdapterInterface
 {
     public function fromLegacyInputs(array $method, object $datatables, array $filters = [], array $filter_page = []): DatatablesContext
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('LegacyContextAdapter: Converting legacy inputs to context', [
+                'method_keys' => array_keys($method),
+                'has_difta_name' => !empty($method['difta']['name']),
+                'filters_count' => count($filters),
+                'filter_page_count' => count($filter_page)
+            ]);
+        }
+
         $context = new DatatablesContext($datatables);
         $context->method = $method;
         $context->filters = $filters;

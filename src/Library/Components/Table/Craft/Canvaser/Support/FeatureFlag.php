@@ -2,10 +2,18 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Support;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 class FeatureFlag
 {
     public static function pipelineEnabled(): bool
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('FeatureFlag: Checking pipeline enabled status', [
+                'has_app_function' => function_exists('app')
+            ]);
+        }
+
         // Default OFF via config; fallback to env if config helper/container not available
         if (function_exists('app')) {
             try {

@@ -4,6 +4,7 @@ namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Support;
 
 use Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Pipeline\DatatablesPipeline;
 use Canvastack\Canvastack\Library\Components\Table\Craft\Datatables as LegacyDatatables;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 class HybridCompare
 {
@@ -15,6 +16,14 @@ class HybridCompare
      */
     public static function run(array $method, object $data, array $filters = [], array $filter_page = []): array
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('HybridCompare: Starting hybrid comparison', [
+                'method_keys' => array_keys($method),
+                'has_filters' => !empty($filters),
+                'has_filter_page' => !empty($filter_page)
+            ]);
+        }
+
         $pipelineOutput = null; // Will be available in Phase 3
 
         // Preflight pipeline
@@ -23,13 +32,11 @@ class HybridCompare
             $context = $adapter->fromLegacyInputs($method, $data, $filters, $filter_page);
             $pipeline = new DatatablesPipeline();
             $context = $pipeline->run($context);
-            if (function_exists('app') && function_exists('logger')) {
-                try {
-                    if (app()->bound('log')) {
-                        logger()->debug('[DT HybridCompare] Preflight OK', ['table' => $context->tableName]);
-                    }
-                } catch (\Throwable $e) { /* ignore */
-                }
+            
+            if (app()->environment(['local', 'testing'])) {
+                SafeLogger::debug('HybridCompare: Preflight pipeline completed', [
+                    'table' => $context->tableName
+                ]);
             }
 
             // Phase 2+: expose a placeholder response if available on context

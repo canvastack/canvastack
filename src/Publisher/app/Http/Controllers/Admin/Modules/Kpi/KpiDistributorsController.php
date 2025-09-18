@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Modules\Kpi;
 
 use App\Http\Controllers\Admin\Modules\Handler;
 use App\Models\Admin\Modules\Kpi\KpiDistributors;
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 
 /**
  * Created on 19 Mar 2023

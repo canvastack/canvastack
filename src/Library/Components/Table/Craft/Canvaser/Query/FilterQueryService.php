@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query;
 
 use Canvastack\Canvastack\Library\Components\Table\Exceptions\SecurityException;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 /**
  * FilterQueryService — builds the dynamic SQL used by legacy init_filter_datatables().
@@ -23,7 +24,18 @@ final class FilterQueryService
      */
     public function run(array $get = [], array $post = [], $connection = null)
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('FilterQueryService: Starting filter query processing', [
+                'has_filter_datatables' => !empty($get['filterDataTables']),
+                'post_keys' => array_keys($post),
+                'connection' => $connection ?? 'default'
+            ]);
+        }
+
         if (empty($get['filterDataTables'])) {
+            if (app()->environment(['local', 'testing'])) {
+                SafeLogger::warning('FilterQueryService: Invalid request - missing filterDataTables parameter');
+            }
             return null;
         }
 

@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Columns;
 
 use Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Assets\AssetPathHelper;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 /**
  * Image column renderer extracted from legacy Datatables orchestrator (behavior preserved).
@@ -18,6 +19,12 @@ final class ImageColumnRenderer
      */
     public static function apply($datatables, $model): void
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('ImageColumnRenderer: Starting image column detection', [
+                'model_type' => is_object($model) ? get_class($model) : gettype($model)
+            ]);
+        }
+
         $imageField = [];
 
         // Detect potential image fields by extension (do not require file to exist for registration)

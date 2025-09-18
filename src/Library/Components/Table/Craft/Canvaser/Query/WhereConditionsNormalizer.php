@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 class WhereConditionsNormalizer
 {
     /**
@@ -10,6 +12,12 @@ class WhereConditionsNormalizer
      */
     public static function normalize(array $raw): array
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('WhereConditionsNormalizer: Normalizing where conditions', [
+                'raw_conditions_count' => count($raw)
+            ]);
+        }
+
         $whereConds = [];
         foreach ($raw as $w) {
             $whereConds[$w['field_name']][$w['operator']]['field_name'][$w['field_name']] = $w['field_name'];

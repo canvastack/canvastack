@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query;
 
 use Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Contracts\QueryFactoryInterface;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 class QueryFactory implements QueryFactoryInterface
 {
@@ -14,13 +15,24 @@ class QueryFactory implements QueryFactoryInterface
      */
     public function buildQuery($model_data, $data, string $table_name, $filters = null, ?array $order_by = null): array
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('QueryFactory: Starting query build', [
+                'table_name' => $table_name,
+                'has_model_data' => !empty($model_data),
+                'has_filters' => !empty($filters),
+                'has_order_by' => !empty($order_by)
+            ]);
+        }
+
         // CRITICAL: Validate model_data is not null
         if (empty($model_data)) {
-            \Log::error('QueryFactory::buildQuery - Model data is null', [
-                'table_name' => $table_name,
-                'filters' => $filters,
-                'order_by' => $order_by
-            ]);
+            if (app()->environment(['local', 'testing'])) {
+                SafeLogger::error('QueryFactory: Model data is null', [
+                    'table_name' => $table_name,
+                    'filters' => $filters,
+                    'order_by' => $order_by
+                ]);
+            }
             throw new \Exception("Model data is null or empty. Cannot build query without valid model.");
         }
         

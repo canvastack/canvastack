@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\DTO;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 class DatatablesContext
 {
     // Minimal fields for Phase 2 (skeleton only)
@@ -37,6 +39,12 @@ class DatatablesContext
 
     public function __construct(object $datatables)
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('DatatablesContext: Creating new context', [
+                'datatables_type' => get_class($datatables)
+            ]);
+        }
+
         $this->datatables = $datatables;
     }
 }

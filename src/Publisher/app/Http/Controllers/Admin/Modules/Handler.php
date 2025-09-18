@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Modules;
 
-use Canvastack\Canvastack\Controllers\Core\Craft\Handler as AuthHandler;
+use Canvastack\Canvastack\Core\Craft\Handler as AuthHandler;
 
 /**
  * Created on 15 Mar 2023

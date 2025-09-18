@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Columns;
 
 use Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Contracts\TableContext;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 /**
  * Apply column-level formatters: formula and format_data
@@ -15,6 +16,14 @@ final class FormatterApplier
     {
         $data = $ctx->data;
         $table = $ctx->tableName;
+
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('FormatterApplier: Starting column formatting', [
+                'table_name' => $table,
+                'has_formula' => !empty($data->datatables->formula[$table]),
+                'has_format_data' => !empty($data->datatables->columns[$table]['format_data'])
+            ]);
+        }
 
         // 1) Formula mapping
         if (! empty($data->datatables->formula[$table])) {

@@ -2,7 +2,7 @@
 
 namespace Canvastack\Canvastack\Controllers\Admin\System;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use Canvastack\Canvastack\Models\Admin\System\Language;
 use Canvastack\Canvastack\Models\Admin\System\Preference;
 use Canvastack\Canvastack\Models\Admin\System\Timezone;

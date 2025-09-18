@@ -24,7 +24,7 @@ The most common and recommended approach is using Eloquent models:
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\User;
 
 class UserController extends Controller

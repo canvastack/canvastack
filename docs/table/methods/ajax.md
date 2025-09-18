@@ -24,7 +24,7 @@ Create custom AJAX endpoints for specialized data processing:
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 

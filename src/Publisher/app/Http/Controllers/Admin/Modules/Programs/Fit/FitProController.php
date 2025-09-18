@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Modules\Programs\Fit;
 
 use App\Http\Controllers\Admin\Modules\Handler;
 use App\Models\Admin\Modules\Programs\Fit\FitPro;
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 
 /**
  * Created on 19 Mar 2023

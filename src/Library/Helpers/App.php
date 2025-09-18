@@ -802,7 +802,7 @@ if (! function_exists('canvastack_delete')) {
     {
         // Use dynamic delete detection for better handling
         try {
-            $detectorInfo = \Canvastack\Canvastack\Library\Components\Utility\DeleteDetector::getCurrentControllerInfo();
+            $detectorInfo = \Canvastack\Canvastack\Library\Components\Utility\Db\DeleteDetector::getCurrentControllerInfo();
             
             // Find the model record
             $model = null;

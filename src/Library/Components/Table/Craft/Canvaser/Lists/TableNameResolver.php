@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Lists;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 class TableNameResolver
 {
     /**
@@ -10,6 +12,14 @@ class TableNameResolver
      */
     public static function resolve(?string $table_name, array &$variables, array &$params, array &$modelProcessing): ?string
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('TableNameResolver: Resolving table name', [
+                'input_table_name' => $table_name,
+                'has_model_processing' => !empty($variables['model_processing']),
+                'has_table_data_model' => !empty($variables['table_data_model'])
+            ]);
+        }
+
         if (! empty($variables['model_processing'])) {
             if ($table_name !== $variables['model_processing']['table']) {
                 $table_name = $variables['model_processing']['table'];

@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Lists;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 class FieldsAndLabelsParser
 {
     /**
@@ -11,6 +13,13 @@ class FieldsAndLabelsParser
      */
     public static function parse(array $fields, array &$labels): array
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('FieldsAndLabelsParser: Parsing fields with labels', [
+                'fields_count' => count($fields),
+                'existing_labels_count' => count($labels)
+            ]);
+        }
+
         $recola = [];
         foreach ($fields as $icol => $cols) {
             if (canvastack_string_contained($cols, ':')) {

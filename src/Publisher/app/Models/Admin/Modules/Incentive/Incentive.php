@@ -2,7 +2,7 @@
 
 namespace App\Models\Admin\Modules\Incentive;
 
-use Canvastack\Canvastack\Models\Core\Model;
+use Canvastack\Canvastack\Core\Model;
 
 /**
  * Created on Mar 16, 2023

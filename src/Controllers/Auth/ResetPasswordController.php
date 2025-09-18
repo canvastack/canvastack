@@ -3,7 +3,7 @@
 namespace Canvastack\Canvastack\Controllers\Auth;
 
 use Canvastack\Canvastack\Controllers\Admin\System\AuthController;
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Foundation\Auth\ResetsPasswords;
 use Illuminate\Http\Request;

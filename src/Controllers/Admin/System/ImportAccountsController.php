@@ -2,7 +2,7 @@
 
 namespace Canvastack\Canvastack\Controllers\Admin\System;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use Canvastack\Canvastack\Models\Admin\System\Group;
 use Canvastack\Canvastack\Models\Admin\System\ImportAccounts;
 use Illuminate\Http\Request;

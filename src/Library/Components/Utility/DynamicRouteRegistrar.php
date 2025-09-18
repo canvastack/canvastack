@@ -30,7 +30,14 @@ class DynamicRouteRegistrar
                 }
                 
                 // Parse controller and method
-                [$controllerClass, $method] = explode('@', $action['controller']);
+                $controllerAction = explode('@', $action['controller']);
+                
+                // Skip if action format is invalid
+                if (count($controllerAction) !== 2) {
+                    continue;
+                }
+                
+                [$controllerClass, $method] = $controllerAction;
                 
                 // Only process destroy routes
                 if ($method !== 'destroy') {
@@ -87,7 +94,17 @@ class DynamicRouteRegistrar
                 return false;
             }
             
-            // Create controller instance to check model
+            // Try to create controller instance to check model
+            // Skip if constructor requires parameters
+            $reflection = new \ReflectionClass($controllerClass);
+            $constructor = $reflection->getConstructor();
+            
+            if ($constructor && $constructor->getNumberOfRequiredParameters() > 0) {
+                // Cannot instantiate controller with required parameters
+                // Try to analyze class properties statically
+                return self::analyzeControllerStatically($controllerClass);
+            }
+            
             $controller = new $controllerClass();
             
             // Try to get model from various properties
@@ -117,6 +134,49 @@ class DynamicRouteRegistrar
             
         } catch (\Throwable $e) {
             Log::warning("Failed to check soft delete model for {$controllerClass}: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Analyze controller statically without instantiation
+     */
+    protected static function analyzeControllerStatically(string $controllerClass): bool
+    {
+        try {
+            $reflection = new \ReflectionClass($controllerClass);
+            
+            // Check for model-related properties in class definition
+            $properties = $reflection->getProperties();
+            
+            foreach ($properties as $property) {
+                $propertyName = $property->getName();
+                
+                // Look for common model property names
+                if (in_array($propertyName, ['model', 'model_data', 'model_table', 'model_path'])) {
+                    // Try to get default value or analyze docblock
+                    if ($property->hasDefaultValue()) {
+                        $defaultValue = $property->getDefaultValue();
+                        
+                        if (is_string($defaultValue) && class_exists($defaultValue)) {
+                            // Check if the model class uses SoftDeletes
+                            $modelTraits = class_uses($defaultValue);
+                            return in_array('Illuminate\Database\Eloquent\SoftDeletes', $modelTraits, true);
+                        }
+                    }
+                }
+            }
+            
+            // Check parent classes for model properties
+            $parentClass = $reflection->getParentClass();
+            if ($parentClass && $parentClass->getName() !== 'Illuminate\Routing\Controller') {
+                return self::analyzeControllerStatically($parentClass->getName());
+            }
+            
+            return false;
+            
+        } catch (\Throwable $e) {
+            Log::warning("Failed to analyze controller statically {$controllerClass}: " . $e->getMessage());
             return false;
         }
     }

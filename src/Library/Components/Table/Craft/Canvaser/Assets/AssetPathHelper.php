@@ -3,19 +3,40 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Assets;
 
 use Canvastack\Canvastack\Library\Components\Utility\Canvatility;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 final class AssetPathHelper
 {
     public static function toPath(string $filePath, bool $http = false, string $publicPath = 'public'): string
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('AssetPathHelper: Starting path resolution', [
+                'file_path' => $filePath,
+                'http_mode' => $http,
+                'public_path' => $publicPath
+            ]);
+        }
+
         if ($http === true) {
             // Delegate URL building to Utility facade when available to avoid duplication
             try {
                 $resolved = Canvatility::checkStringPath($filePath);
                 if (is_string($resolved) && $resolved !== '') {
+                    if (app()->environment(['local', 'testing'])) {
+                        SafeLogger::debug('AssetPathHelper: Path resolved via Canvatility', [
+                            'method' => 'canvatility',
+                            'resolved_path' => $resolved
+                        ]);
+                    }
                     return $resolved;
                 }
             } catch (\Throwable $e) {
+                if (app()->environment(['local', 'testing'])) {
+                    SafeLogger::warning('AssetPathHelper: Canvatility resolution failed', [
+                        'error_type' => get_class($e),
+                        'fallback_method' => 'legacy_path_join'
+                    ]);
+                }
                 // fall back to legacy path-join below
             }
 
@@ -23,8 +44,21 @@ final class AssetPathHelper
             try {
                 $assetsURL = explode('/', url()->asset('assets'));
                 $stringURL = explode('/', $filePath);
-                return implode('/', array_unique(array_merge_recursive($assetsURL, $stringURL)));
+                $result = implode('/', array_unique(array_merge_recursive($assetsURL, $stringURL)));
+                if (app()->environment(['local', 'testing'])) {
+                    SafeLogger::debug('AssetPathHelper: Path resolved via legacy method', [
+                        'method' => 'legacy_url_merge',
+                        'resolved_path' => $result
+                    ]);
+                }
+                return $result;
             } catch (\Throwable $e) {
+                if (app()->environment(['local', 'testing'])) {
+                    SafeLogger::warning('AssetPathHelper: Using final fallback for HTTP path', [
+                        'error_type' => get_class($e),
+                        'fallback_result' => ltrim($filePath)
+                    ]);
+                }
                 // As a last resort, return trimmed input
                 return ltrim($filePath);
             }
@@ -32,8 +66,22 @@ final class AssetPathHelper
 
         // Filesystem path conversion: fallback safely when Laravel helpers unavailable
         try {
-            return str_replace($publicPath.'/', public_path('\\'), $filePath);
+            $result = str_replace($publicPath.'/', public_path('\\'), $filePath);
+            if (app()->environment(['local', 'testing'])) {
+                SafeLogger::debug('AssetPathHelper: Filesystem path conversion completed', [
+                    'method' => 'filesystem_conversion',
+                    'original_path' => $filePath,
+                    'converted_path' => $result
+                ]);
+            }
+            return $result;
         } catch (\Throwable $e) {
+            if (app()->environment(['local', 'testing'])) {
+                SafeLogger::warning('AssetPathHelper: Filesystem conversion failed', [
+                    'error_type' => get_class($e),
+                    'fallback_result' => $filePath
+                ]);
+            }
             return $filePath;
         }
     }

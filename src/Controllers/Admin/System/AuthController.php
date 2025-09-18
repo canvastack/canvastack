@@ -2,8 +2,8 @@
 
 namespace Canvastack\Canvastack\Controllers\Admin\System;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
-use Canvastack\Canvastack\Controllers\Core\Craft\Includes\Privileges;
+use Canvastack\Canvastack\Core\Controller;
+use Canvastack\Canvastack\Core\Craft\Includes\Privileges;
 use Canvastack\Canvastack\Models\Admin\System\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;

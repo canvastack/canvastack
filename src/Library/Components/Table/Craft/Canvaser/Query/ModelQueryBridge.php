@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query;
 
 use Canvastack\Canvastack\Models\Admin\System\DynamicTables;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 /**
  * ModelQueryBridge — unify resolution for model/sql sources and runModel processing.
@@ -18,6 +19,14 @@ final class ModelQueryBridge
      */
     public static function resolve($data, string $name, array $method = []): array
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('ModelQueryBridge: Starting model query resolution', [
+                'name' => $name,
+                'has_processed_order' => !empty($method['processed_order']),
+                'has_model_data' => !empty($data->datatables->model[$name])
+            ]);
+        }
+
         $model_data = null;
         $table_name = '';
         $order_by = [];
@@ -25,10 +34,12 @@ final class ModelQueryBridge
         // CRITICAL: Check for processed_order from DataTables POST request FIRST (highest priority)
         if (!empty($method['processed_order'])) {
             $order_by = $method['processed_order'];
-            \Log::info('ModelQueryBridge::resolve - Using processed order from DataTables request (highest priority)', [
-                'processed_order' => $order_by,
-                'name' => $name
-            ]);
+            if (app()->environment(['local', 'testing'])) {
+                SafeLogger::info('ModelQueryBridge: Using processed order from DataTables request (highest priority)', [
+                    'processed_order' => $order_by,
+                    'name' => $name
+                ]);
+            }
         }
 
         if (! empty($data->datatables->model[$name]) && 

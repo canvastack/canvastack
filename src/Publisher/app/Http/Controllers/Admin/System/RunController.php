@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin\System;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 
 /**
  * Created on Aug 4, 2023

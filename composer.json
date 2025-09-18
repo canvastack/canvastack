@@ -1,6 +1,6 @@
 {
   "name": "canvastack/canvastack",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "type": "library",
   "description": "Enterprise Laravel library with advanced security hardening and publishable configuration system",
   "keywords": ["canvastack", "library", "laravel", "security", "enterprise", "datatables", "configurable"],

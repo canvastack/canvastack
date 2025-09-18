@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Contracts;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 /**
  * Value object yang menampung konteks legacy untuk Datatables orchestrator.
  * Tidak mengubah perilaku; hanya pembungkus data agar modul modular bisa bekerja.
@@ -29,6 +31,14 @@ final class TableContext
     /** @param  array<string,mixed>|object  $method */
     public static function fromLegacy($method, $data, array $request): self
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('TableContext: Creating context from legacy data', [
+                'method_type' => is_array($method) ? 'array' : gettype($method),
+                'has_data' => !empty($data),
+                'request_keys' => array_keys($request)
+            ]);
+        }
+
         $self = new self();
         $self->method = is_array($method) ? $method : (array) $method;
         $self->data = $data;

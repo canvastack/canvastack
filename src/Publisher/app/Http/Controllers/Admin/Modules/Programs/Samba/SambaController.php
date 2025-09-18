@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin\Modules\Programs\Samba;
 
 use App\Models\Admin\Modules\Programs\Samba\Samba;
-use Canvastack\Canvastack\Controllers\Core\Controller;
-use Canvastack\Canvastack\Controllers\Core\Craft\Handler;
+use Canvastack\Canvastack\Core\Controller;
+use Canvastack\Canvastack\Core\Craft\Handler;
 
 /**
  * Created on Jun 28, 2023

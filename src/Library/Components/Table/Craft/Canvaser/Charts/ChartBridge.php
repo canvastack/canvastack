@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Charts;
 
 use Canvastack\Canvastack\Library\Components\Charts\Objects as Chart;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 /**
  * ChartBridge — thin wrapper to invoke chart rendering and extract needed artifacts
@@ -31,6 +32,16 @@ final class ChartBridge
         string $tableName,
         array $chartOptions = []
     ): array {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('ChartBridge: Starting chart invocation', [
+                'chart_type' => $chartType,
+                'table_name' => $tableName,
+                'connection' => $connection ?? 'default',
+                'fieldsets_count' => count($fieldsets),
+                'chart_options_count' => count($chartOptions)
+            ]);
+        }
+
         $chart = new Chart();
         $chart->connection = $connection;
 
@@ -39,17 +50,32 @@ final class ChartBridge
             foreach ($chartOptions as $optName => $optValues) {
                 $chart->{$optName}($optValues);
             }
+            if (app()->environment(['local', 'testing'])) {
+                SafeLogger::debug('ChartBridge: Chart options applied', [
+                    'options_applied' => array_keys($chartOptions)
+                ]);
+            }
         }
 
         // Execute chart type method
         $chart->{$chartType}($tableName, $fieldsets, $format, $category, $group, $order);
 
-        return [
+        $result = [
             'chart' => $chart,
             'chartLibrary' => $chart->chartLibrary,
             'elements' => $chart->elements,
             'identities' => $chart->identities,
             'script_js' => $chart->script_chart['js'] ?? '',
         ];
+
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('ChartBridge: Chart invocation completed', [
+                'chart_library' => $chart->chartLibrary ?? 'unknown',
+                'elements_count' => is_array($chart->elements) ? count($chart->elements) : 0,
+                'has_script_js' => !empty($result['script_js'])
+            ]);
+        }
+
+        return $result;
     }
 }

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Modules\Reports;
 
 use App\Http\Controllers\Admin\Modules\Handler;
 use App\Models\Admin\Modules\Reports\Challange;
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 
 /**
  * Created on Mar 20, 2023

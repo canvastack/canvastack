@@ -2,7 +2,7 @@
 
 namespace Canvastack\Canvastack\Controllers\Front\Modules;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 
 /**
  * Created on 10 Mar 2021

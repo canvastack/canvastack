@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Support;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 final class JsonDiff
 {
     /**
@@ -10,6 +12,14 @@ final class JsonDiff
      */
     public static function compare($legacy, $pipeline): array
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('JsonDiff: Starting payload comparison', [
+                'has_legacy' => !empty($legacy),
+                'has_pipeline' => !empty($pipeline),
+                'pipeline_is_null' => $pipeline === null
+            ]);
+        }
+
         $diff = [];
         try {
             if ($pipeline === null) {

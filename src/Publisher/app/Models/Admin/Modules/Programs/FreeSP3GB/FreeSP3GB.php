@@ -2,7 +2,7 @@
 
 namespace App\Models\Admin\Modules\Programs\FreeSP3GB;
 
-use Canvastack\Canvastack\Models\Core\Model;
+use Canvastack\Canvastack\Core\Model;
 
 /**
  * Created on May 18, 2023

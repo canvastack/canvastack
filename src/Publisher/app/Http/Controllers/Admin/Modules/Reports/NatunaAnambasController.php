@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Modules\Reports;
 
 use App\Http\Controllers\Admin\Modules\Handler;
 use App\Models\Admin\Modules\Reports\NatunaAnambas;
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 
 /**
  * Created on Feb 20, 2023

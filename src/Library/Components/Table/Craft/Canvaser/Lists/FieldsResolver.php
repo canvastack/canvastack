@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Lists;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 class FieldsResolver
 {
     /**
@@ -14,6 +16,15 @@ class FieldsResolver
      */
     public static function resolve(string $table_name, array $fields, array $fieldset_added, array &$context): array
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('FieldsResolver: Resolving fields for table', [
+                'table_name' => $table_name,
+                'fields_count' => count($fields),
+                'fieldset_added_count' => count($fieldset_added),
+                'connection' => $context['connection'] ?? 'mysql'
+            ]);
+        }
+
         $connection = $context['connection'] ?? 'mysql';
         $variables =& $context['variables'];
         $modelProcessing =& $context['modelProcessing'];

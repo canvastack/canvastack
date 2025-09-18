@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Contracts;
 
 use Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\DTO\DatatablesContext;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 interface PipelineStageInterface
 {

@@ -2,7 +2,7 @@
 
 namespace App\Models\Admin\Modules\Programs\Samba;
 
-use Canvastack\Canvastack\Models\Core\Model;
+use Canvastack\Canvastack\Core\Model;
 
 /**
  * Created on Jun 28, 2023

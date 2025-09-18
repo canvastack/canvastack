@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Actions;
 
 use Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Contracts\TableContext;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 /**
  * Compose action column and removed privileges per legacy logic.
@@ -18,6 +19,16 @@ final class ActionButtonsResolver
      */
     public static function apply($datatables, TableContext $ctx, array $privileges, array $actionList, array $buttonsRemoval = [], array $removedPrivileges = []): void
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('ActionButtonsResolver: Starting action buttons resolution', [
+                'table_name' => $ctx->tableName ?? 'unknown',
+                'model_name' => $ctx->method['difta']['name'] ?? 'unknown',
+                'action_count' => count($actionList),
+                'has_button_removal' => !empty($buttonsRemoval),
+                'has_removed_privileges' => !empty($removedPrivileges)
+            ]);
+        }
+
         $data = $ctx->data;
         $table = $ctx->tableName;
         $model = $ctx->method['difta']['name'] ?? 'unknown';
@@ -50,6 +61,13 @@ final class ActionButtonsResolver
                 
                 if (!empty($basePath)) {
                     $action_data['current_url'] = url($basePath);
+                    if (app()->environment(['local', 'testing'])) {
+                        SafeLogger::debug('ActionButtonsResolver: URL resolved from HTTP_REFERER', [
+                            'method' => 'referer',
+                            'base_path' => $basePath,
+                            'resolved_url' => $action_data['current_url']
+                        ]);
+                    }
                 } else {
                     throw new \Exception('Empty base path from referer');
                 }
@@ -57,6 +75,13 @@ final class ActionButtonsResolver
                 throw new \Exception('No HTTP_REFERER found');
             }
         } catch (\Throwable $e) {
+            if (app()->environment(['local', 'testing'])) {
+                SafeLogger::warning('ActionButtonsResolver: Failed to resolve URL from HTTP_REFERER', [
+                    'error_type' => get_class($e),
+                    'fallback_method' => 'current_route_info'
+                ]);
+            }
+            
             // Fallback 1: Try to get from current route info
             try {
                 $currentRouteInfo = canvastack_current_route();
@@ -72,6 +97,13 @@ final class ActionButtonsResolver
                     $basePath = implode('/', array_filter($pathParts));
                     
                     $action_data['current_url'] = url($basePath);
+                    if (app()->environment(['local', 'testing'])) {
+                        SafeLogger::debug('ActionButtonsResolver: URL resolved from current route info', [
+                            'method' => 'current_route_info',
+                            'route_uri' => $routeUri,
+                            'base_path' => $basePath
+                        ]);
+                    }
                 } else {
                     throw new \Exception('No current route info');
                 }
@@ -92,10 +124,24 @@ final class ActionButtonsResolver
                         }
                         
                         $action_data['current_url'] = url($basePath);
+                        if (app()->environment(['local', 'testing'])) {
+                            SafeLogger::debug('ActionButtonsResolver: URL resolved from route name', [
+                                'method' => 'route_name',
+                                'current_route' => $currentRoute,
+                                'base_path' => $basePath
+                            ]);
+                        }
                     } else {
                         throw new \Exception('Invalid current route');
                     }
                 } catch (\Throwable $e3) {
+                    if (app()->environment(['local', 'testing'])) {
+                        SafeLogger::warning('ActionButtonsResolver: Using final URL fallback', [
+                            'error_type' => get_class($e3),
+                            'fallback_method' => 'current_url'
+                        ]);
+                    }
+                    
                     // Final fallback: extract from current URL
                     $currentUrl = canvastack_current_url();
                     $parsedUrl = parse_url($currentUrl);
@@ -109,6 +155,13 @@ final class ActionButtonsResolver
                     $cleanPath = implode('/', array_filter($pathParts));
                     
                     $action_data['current_url'] = url($cleanPath ?: '/');
+                    if (app()->environment(['local', 'testing'])) {
+                        SafeLogger::debug('ActionButtonsResolver: Final URL resolution complete', [
+                            'method' => 'final_fallback',
+                            'clean_path' => $cleanPath ?: '/',
+                            'resolved_url' => $action_data['current_url']
+                        ]);
+                    }
                 }
             }
         }
@@ -142,5 +195,15 @@ final class ActionButtonsResolver
             $arr = method_exists($row, 'getAttributes') ? $row->getAttributes() : (array) $row;
             return \Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Support\ActionButtonsRenderer::render($arr, $data->datatables, $table);
         });
+
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('ActionButtonsResolver: Action buttons resolution completed', [
+                'table_name' => $table,
+                'url_target' => $urlTarget,
+                'current_url' => $action_data['current_url'] ?? 'unknown',
+                'actions_count' => count($action_data['action']['data'] ?? []),
+                'removed_count' => count($action_data['action']['removed'] ?? [])
+            ]);
+        }
     }
 }

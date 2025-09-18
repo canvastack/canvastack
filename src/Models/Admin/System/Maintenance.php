@@ -2,7 +2,7 @@
 
 namespace Canvastack\Canvastack\Models\Admin\System;
 
-use Canvastack\Canvastack\Models\Core\Model;
+use Canvastack\Canvastack\Core\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**

@@ -2,8 +2,8 @@
 
 namespace Canvastack\Canvastack\Controllers\Admin\System;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
-use Canvastack\Canvastack\Controllers\Core\Craft\Handler;
+use Canvastack\Canvastack\Core\Controller;
+use Canvastack\Canvastack\Core\Craft\Handler;
 use Canvastack\Canvastack\Models\Admin\System\User as User;
 use Canvastack\Canvastack\Models\Admin\System\UserActivity;
 use Illuminate\Http\Request;

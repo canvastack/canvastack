@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin\Modules\Programs\FreeSP3GB;
 
 use App\Models\Admin\Modules\Programs\FreeSP3GB\FreeSP3GB;
-use Canvastack\Canvastack\Controllers\Core\Controller;
-use Canvastack\Canvastack\Controllers\Core\Craft\Handler;
+use Canvastack\Canvastack\Core\Controller;
+use Canvastack\Canvastack\Core\Craft\Handler;
 
 /**
  * Created on May 18, 2023

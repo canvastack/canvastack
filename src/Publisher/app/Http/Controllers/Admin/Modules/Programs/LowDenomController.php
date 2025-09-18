@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Modules\Programs;
 
 use App\Http\Controllers\Admin\Modules\Handler;
 use App\Models\Admin\Modules\Programs\LowDenom;
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 
 /**
  * Created on Nov 30, 2022

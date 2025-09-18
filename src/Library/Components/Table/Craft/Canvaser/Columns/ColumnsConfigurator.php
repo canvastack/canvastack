@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Columns;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 /**
  * ColumnsConfigurator
  *
@@ -16,6 +18,14 @@ final class ColumnsConfigurator
      */
     public static function mergeColumns(array &$variables, string $label, array $mergedColumns = [], string $labelPosition = 'top'): void
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('ColumnsConfigurator: Merging columns', [
+                'label' => $label,
+                'merged_columns_count' => count($mergedColumns),
+                'label_position' => $labelPosition
+            ]);
+        }
+
         $variables['merged_columns'][$label] = [
             'position' => $labelPosition,
             'counts' => count($mergedColumns),

@@ -2,7 +2,7 @@
 
 namespace Canvastack\Canvastack\Controllers\Admin\Modules\Shop;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use Canvastack\Canvastack\Models\Admin\Modules\Shop\Products;
 
 /**

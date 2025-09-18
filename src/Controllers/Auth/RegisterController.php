@@ -2,7 +2,7 @@
 
 namespace Canvastack\Canvastack\Controllers\Auth;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 //use Controllers\Controller;
 use Canvastack\Canvastack\Models\Admin\System\User;
 use Illuminate\Foundation\Auth\RegistersUsers;

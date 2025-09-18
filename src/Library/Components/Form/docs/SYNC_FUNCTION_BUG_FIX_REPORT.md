@@ -202,5 +202,5 @@ The fix is **production-ready** and will automatically apply to:
 ---
 
 *Report generated on: $(date)*
-*Bug fix implemented by: AI Assistant*
+*Bug fix implemented by: CanvaStack Dev Team*
 *Verification status: COMPLETE*

@@ -2,7 +2,7 @@
 
 namespace Canvastack\Canvastack;
 
-use Canvastack\Canvastack\Controllers\Core\Controller as CoreController;
+use Canvastack\Canvastack\Core\Controller as CoreController;
 use Canvastack\Canvastack\Library\Components\Utility\DynamicRouteRegistrar;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\ServiceProvider;

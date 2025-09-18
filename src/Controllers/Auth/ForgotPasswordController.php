@@ -2,7 +2,7 @@
 
 namespace Canvastack\Canvastack\Controllers\Auth;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 
 // use Controllers\Controller;
 //use Illuminate\Foundation\Auth\SendsPasswordResetEmails;

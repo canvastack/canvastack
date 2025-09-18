@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Row;
 
 use Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Contracts\TableContext;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 /**
  * Apply row attributes (clickable class & rlp) as in legacy orchestrator.
@@ -12,6 +13,13 @@ final class RowAttributesBuilder
     /** @param  \Yajra\DataTables\DataTableAbstract  $datatables */
     public static function apply($datatables, TableContext $ctx): void
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('RowAttributesBuilder: Applying row attributes', [
+                'table_name' => $ctx->tableName ?? 'unknown',
+                'has_clickable' => !empty($ctx->data->datatables->columns[$ctx->tableName]['clickable'])
+            ]);
+        }
+
         $data = $ctx->data;
         $table = $ctx->tableName;
 

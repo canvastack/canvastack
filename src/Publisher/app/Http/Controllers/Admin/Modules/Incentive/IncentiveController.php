@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Modules\Incentive;
 
 use App\Http\Controllers\Admin\Modules\Handler;
 use App\Models\Admin\Modules\Incentive\Incentive;
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 
 /**
  * Created on Mar 16, 2023

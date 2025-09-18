@@ -4,7 +4,7 @@ namespace Canvastack\Canvastack\Controllers\Admin\System;
 
 use Canvastack\Canvastack\Controllers\Admin\System\Includes\MappingPage;
 use Canvastack\Canvastack\Controllers\Admin\System\Includes\Privileges;
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use Canvastack\Canvastack\Models\Admin\System\Group;
 use Illuminate\Http\Request;
 

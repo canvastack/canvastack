@@ -2,7 +2,7 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft;
 
-use Canvastack\Canvastack\Controllers\Core\Craft\Includes\Privileges;
+use Canvastack\Canvastack\Core\Craft\Includes\Privileges;
 use Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Columns\ColumnFactory;
 use Yajra\DataTables\DataTables as DataTable;
 

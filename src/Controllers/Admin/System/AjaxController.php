@@ -2,7 +2,7 @@
 
 namespace Canvastack\Canvastack\Controllers\Admin\System;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use Canvastack\Canvastack\Library\Components\Chart\Charts;
 use Canvastack\Canvastack\Library\Components\Table\Craft\Datatables;
 use Canvastack\Canvastack\Library\Components\Table\Craft\Export;

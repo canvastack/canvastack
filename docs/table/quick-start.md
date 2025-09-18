@@ -13,7 +13,7 @@ Let's create a simple user management table in just a few steps.
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\User;
 
 class UserController extends Controller
@@ -221,7 +221,7 @@ Here's a comprehensive example combining all features:
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\User;
 
 class UserController extends Controller

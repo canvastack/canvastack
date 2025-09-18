@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Modules\Reports;
 
 use App\Http\Controllers\Admin\Modules\Handler;
 use App\Models\Admin\Modules\Reports\TrikomWireless;
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 
 /**
  * Created on 19 Feb 2023

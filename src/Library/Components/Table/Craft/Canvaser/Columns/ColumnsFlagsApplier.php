@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Columns;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 class ColumnsFlagsApplier
 {
     /**
@@ -10,6 +12,14 @@ class ColumnsFlagsApplier
      */
     public static function apply(string $table_name, array &$columns, array &$variables): void
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('ColumnsFlagsApplier: Applying column flags', [
+                'table_name' => $table_name,
+                'variables_keys' => array_keys($variables),
+                'has_existing_columns' => isset($columns[$table_name])
+            ]);
+        }
+
         if (! isset($columns[$table_name])) {
             $columns[$table_name] = [];
         }

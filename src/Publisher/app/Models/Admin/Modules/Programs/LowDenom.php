@@ -2,7 +2,7 @@
 
 namespace App\Models\Admin\Modules\Programs;
 
-use Canvastack\Canvastack\Models\Core\Model;
+use Canvastack\Canvastack\Core\Model;
 
 /**
  * Created on Nov 30, 2022

@@ -2,7 +2,7 @@
 
 namespace App\Models\Admin\Modules\Kpi;
 
-use Canvastack\Canvastack\Models\Core\Model;
+use Canvastack\Canvastack\Core\Model;
 
 /**
  * Created on 19 Mar 2023

@@ -3,6 +3,7 @@
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Query;
 
 use Canvastack\Canvastack\Library\Components\Table\Craft\Datatables;
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
 
 /**
  * DatatablesPostService — handles POST method datatables requests.
@@ -23,8 +24,19 @@ final class DatatablesPostService
      */
     public function handle(array $get = [], array $post = [], $connection = null)
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('DatatablesPostService: Starting POST request handling', [
+                'has_render_datatables' => !empty($get['renderDataTables']),
+                'post_keys' => array_keys($post),
+                'connection' => $connection ?? 'default'
+            ]);
+        }
+
         // Validate that this is a datatables POST request
         if (empty($get['renderDataTables'])) {
+            if (app()->environment(['local', 'testing'])) {
+                SafeLogger::warning('DatatablesPostService: Invalid request - missing renderDataTables parameter');
+            }
             return null;
         }
 

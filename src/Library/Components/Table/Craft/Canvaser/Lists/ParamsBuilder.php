@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Lists;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 class ParamsBuilder
 {
     /**
@@ -10,6 +12,16 @@ class ParamsBuilder
      */
     public static function build(string $table_name, array &$params, array $variables, $actions, bool $numbering, array $attributes, bool $server_side, bool $server_side_custom_url, array $button_removed = []): array
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('ParamsBuilder: Building params for table', [
+                'table_name' => $table_name,
+                'has_actions' => !empty($actions),
+                'numbering' => $numbering,
+                'server_side' => $server_side,
+                'buttons_removed_count' => count($button_removed)
+            ]);
+        }
+
         $params[$table_name]['actions'] = $actions;
         $params[$table_name]['buttons_removed'] = $button_removed;
 

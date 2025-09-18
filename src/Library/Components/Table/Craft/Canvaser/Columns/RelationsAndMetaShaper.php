@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Columns;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 /**
  * RelationsAndMetaShaper
  *
@@ -25,6 +27,15 @@ final class RelationsAndMetaShaper
      */
     public static function apply(array $fields, array $fieldsetAdded, array $relationalData, string $tableName, array &$columnsMeta, array &$labels): array
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('RelationsAndMetaShaper: Processing relations and meta', [
+                'table_name' => $tableName,
+                'fields_count' => count($fields),
+                'fieldset_added_count' => count($fieldsetAdded),
+                'relational_data_count' => count($relationalData)
+            ]);
+        }
+
         $relations = [];
         $field_relations = [];
         $fieldset_changed = [];

@@ -24,7 +24,7 @@ A basic user management table with search, sorting, and actions.
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\User;
 
 class UserController extends Controller
@@ -156,7 +156,7 @@ A product listing with categories, images, and filtering.
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\Product;
 
 class ProductController extends Controller
@@ -249,7 +249,7 @@ Order listing with customer information and status tracking.
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\Order;
 
 class OrderController extends Controller
@@ -384,7 +384,7 @@ Employee listing with department hierarchy and contact information.
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\Employee;
 
 class EmployeeController extends Controller
@@ -477,7 +477,7 @@ Blog post management with categories, tags, and publishing status.
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\Post;
 
 class PostController extends Controller
@@ -579,7 +579,7 @@ Customer relationship management with contact history and segmentation.
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\Customer;
 
 class CustomerController extends Controller
@@ -707,7 +707,7 @@ Inventory management with stock levels, suppliers, and reorder alerts.
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\InventoryItem;
 
 class InventoryController extends Controller
@@ -835,7 +835,7 @@ Event management system with attendees, venues, and scheduling.
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\Event;
 
 class EventController extends Controller

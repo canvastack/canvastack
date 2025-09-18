@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Support;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 class Inspector
 {
     /**
@@ -14,6 +16,13 @@ class Inspector
             $enabled = (app()->environment('local') || FeatureFlag::mode() === 'hybrid');
             if (! $enabled) {
                 return;
+            }
+
+            if (app()->environment(['local', 'testing'])) {
+                SafeLogger::debug('Inspector: Dumping datatable descriptor', [
+                    'descriptor_keys' => array_keys($descriptor),
+                    'enabled' => $enabled
+                ]);
             }
 
             $dir = storage_path('app/datatable-inspector');

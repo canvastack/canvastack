@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Contracts;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 interface ColumnFactoryInterface
 {
     /**

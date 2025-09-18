@@ -151,7 +151,7 @@ CANVASTACK_DB_PASSWORD=your_password
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\User;
 
 class UserController extends Controller

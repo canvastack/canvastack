@@ -621,7 +621,7 @@ trait ExportTrait
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Models\User;
 
 class UserController extends Controller
@@ -808,7 +808,7 @@ trait CustomFeatureTrait
 
 namespace App\Http\Controllers;
 
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 use App\Traits\Table\CustomFeatureTrait;
 use App\Models\User;
 

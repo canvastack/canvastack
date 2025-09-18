@@ -2,6 +2,8 @@
 
 namespace Canvastack\Canvastack\Library\Components\Table\Craft\Canvaser\Columns;
 
+use Canvastack\Canvastack\Core\Craft\Includes\SafeLogger;
+
 /**
  * FixedColumnsManager
  *
@@ -15,6 +17,15 @@ final class FixedColumnsManager
      */
     public static function setFixedColumns(array &$variables, $leftPos = null, $rightPos = null): void
     {
+        if (app()->environment(['local', 'testing'])) {
+            SafeLogger::debug('FixedColumnsManager: Setting fixed columns', [
+                'left_position' => $leftPos,
+                'right_position' => $rightPos,
+                'has_left' => !empty($leftPos),
+                'has_right' => !empty($rightPos)
+            ]);
+        }
+
         if (! empty($leftPos)) {
             $variables['fixed_columns']['left'] = $leftPos;
         }

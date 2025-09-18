@@ -128,7 +128,7 @@ final class TableUi
                 
                 // Create button that triggers modal instead of direct submission
                 // Use dynamic detection to get accurate controller and model info
-                $detectorInfo = \Canvastack\Canvastack\Library\Components\Utility\DeleteDetector::getCurrentControllerInfo();
+                $detectorInfo = \Canvastack\Canvastack\Library\Components\Utility\Db\DeleteDetector::getCurrentControllerInfo();
                 $tableName = $detectorInfo['table_name'];
                 $deleteType = $detectorInfo['delete_type'];
                 $modelClass = $detectorInfo['model_class'];
@@ -481,7 +481,7 @@ final class TableUi
     public static function generateDeleteConfirmationModal(string $modalId, string $formId, string $tableName, string $recordId, bool $isRestore = false): string
     {
         // Get dynamic controller info for accurate messaging
-        $detectorInfo = \Canvastack\Canvastack\Library\Components\Utility\DeleteDetector::getCurrentControllerInfo();
+        $detectorInfo = \Canvastack\Canvastack\Library\Components\Utility\Db\DeleteDetector::getCurrentControllerInfo();
         
         $action = $isRestore ? 'restore' : 'delete';
         $actionText = $isRestore ? 'Restore' : 'Delete';
@@ -490,9 +490,9 @@ final class TableUi
         
         // Use dynamic message based on delete type
         if ($isRestore) {
-            $actionMessage = \Canvastack\Canvastack\Library\Components\Utility\DeleteDetector::getRestoreMessage($detectorInfo, $recordId);
+            $actionMessage = \Canvastack\Canvastack\Library\Components\Utility\Db\DeleteDetector::getRestoreMessage($detectorInfo, $recordId);
         } else {
-            $actionMessage = \Canvastack\Canvastack\Library\Components\Utility\DeleteDetector::getDeleteMessage($detectorInfo, $recordId);
+            $actionMessage = \Canvastack\Canvastack\Library\Components\Utility\Db\DeleteDetector::getDeleteMessage($detectorInfo, $recordId);
         }
 
         // CRITICAL FIX: Generate modal HTML but append to body via JavaScript to fix z-index

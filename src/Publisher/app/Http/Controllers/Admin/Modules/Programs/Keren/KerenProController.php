@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Modules\Programs\Keren;
 
 use App\Http\Controllers\Admin\Modules\Handler;
 use App\Models\Admin\Modules\Programs\Keren\KerenPro;
-use Canvastack\Canvastack\Controllers\Core\Controller;
+use Canvastack\Canvastack\Core\Controller;
 
 /**
  * Created on Mar 16, 2023
