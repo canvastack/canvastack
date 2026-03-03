@@ -1,10 +1,82 @@
-/.buildpath
-/.project
-.settings
-*.phpx
-/.analytics
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build artifacts
+/public/build/
+/public/hot
+/build/
+
+# Testing
+/.phpunit.cache/
+/coverage/
+.phpunit.result.cache
+
+# Environment
+.env
+.env.backup
+.env.production
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.buildpath
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache
+.cache/
+*.cache
+
+# Archives
 *.zip
-/.node_modules
-*cache
-.gitupdatelogs
-.gitignores
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# Laravel specific
+/storage/*.key
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+
+# Package specific
+/.archive/
+composer.lock
+package-lock.json
+
+# PHPStan
+phpstan-baseline.neon.bak
+
+# Build tools
+mix-manifest.json
+.hot

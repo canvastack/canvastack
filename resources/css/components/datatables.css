@@ -1,0 +1,212 @@
+/**
+ * DataTables Component Styling
+ * 
+ * Custom styling for DataTables integration with Tailwind CSS + DaisyUI
+ * Supports both DataTables 1.x and 2.x
+ * Includes dark mode support
+ */
+
+/* DataTables Pagination Styling - HIGH SPECIFICITY */
+/* New DataTables 2.x uses .dt-paging instead of .dataTables_paginate */
+/* DataTables Component Styling - Inlined for proper PostCSS processing */
+
+.dt-container .dt-paging,
+.dataTables_wrapper .dataTables_paginate {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* DataTables Table Styling - Match Reference Design with MAXIMUM SPECIFICITY */
+.dt-container table.dataTable,
+.dataTables_wrapper table.dataTable {
+    font-size: 0.875rem !important; /* text-sm */
+    width: 100% !important;
+}
+
+/* Table body cells - MAXIMUM SPECIFICITY to override DataTables + Tailwind */
+.dt-container table.dataTable tbody tr td,
+.dataTables_wrapper table.dataTable tbody tr td,
+table.dataTable tbody tr td {
+    padding: 1rem 1.5rem !important; /* px-6 py-4 */
+    font-size: 0.875rem !important; /* text-sm */
+    font-weight: 500 !important; /* font-medium */
+    /* Use Tailwind format with CSS variables */
+    --tw-text-opacity: 1 !important;
+    color: rgb(17 24 39 / var(--tw-text-opacity, 1)) !important; /* text-gray-900 */
+}
+
+/* Dark mode body cells - lighter color for better readability */
+.dark .dt-container table.dataTable tbody tr td,
+.dark .dataTables_wrapper table.dataTable tbody tr td,
+.dark table.dataTable tbody tr td {
+    --tw-text-opacity: 1 !important;
+    color: rgb(182, 191, 206) !important; /* Lighter gray */
+}
+
+/* Table header cells - MAXIMUM SPECIFICITY */
+.dt-container table.dataTable thead tr th,
+.dataTables_wrapper table.dataTable thead tr th,
+table.dataTable thead tr th {
+    padding: 0.75rem 1.5rem !important; /* px-6 py-3 */
+    font-size: 0.75rem !important; /* text-xs */
+    font-weight: 500 !important; /* font-medium */
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important; /* tracking-wider */
+    background-color: #f9fafb !important; /* bg-gray-50 */
+    /* Use Tailwind format with CSS variables */
+    --tw-text-opacity: 1 !important;
+    color: rgb(107 114 128 / var(--tw-text-opacity, 1)) !important; /* text-gray-500 */
+}
+
+/* Dark mode for table header - Tailwind format */
+.dark .dt-container table.dataTable thead tr th,
+.dark .dataTables_wrapper table.dataTable thead tr th,
+.dark table.dataTable thead tr th {
+    --tw-text-opacity: 1 !important;
+    color: rgb(156 163 175 / var(--tw-text-opacity, 1)) !important; /* dark:text-gray-400 */
+    background-color: rgba(31, 41, 55, 0.5) !important; /* dark:bg-gray-800/50 */
+}
+
+/* Table row hover */
+.dt-container table.dataTable tbody tr:hover,
+.dataTables_wrapper table.dataTable tbody tr:hover {
+    background-color: #f9fafb !important; /* hover:bg-gray-50 */
+}
+
+.dark .dt-container table.dataTable tbody tr:hover,
+.dark .dataTables_wrapper table.dataTable tbody tr:hover {
+    background-color: rgba(31, 41, 55, 0.5) !important; /* dark:hover:bg-gray-800/50 */
+}
+
+/* Table row dividers */
+.dt-container table.dataTable tbody tr,
+.dataTables_wrapper table.dataTable tbody tr {
+    border-bottom: 1px solid #f3f4f6 !important; /* divide-gray-100 */
+}
+
+.dark .dt-container table.dataTable tbody tr,
+.dark .dataTables_wrapper table.dataTable tbody tr {
+    border-bottom: 1px solid #1f2937 !important; /* dark:divide-gray-800 */
+}
+
+/* Column Alignments - CRITICAL: ID column center with HIGHEST SPECIFICITY */
+/* Center alignment for columns with text-center class (applied by AdminRenderer) */
+.dt-container table.dataTable tbody tr td.text-center,
+.dt-container table.dataTable thead tr th.text-center,
+.dataTables_wrapper table.dataTable tbody tr td.text-center,
+.dataTables_wrapper table.dataTable thead tr th.text-center {
+    text-align: center !important;
+}
+
+/* Right alignment for columns with text-right class */
+.dt-container table.dataTable tbody tr td.text-right,
+.dt-container table.dataTable thead tr th.text-right,
+.dataTables_wrapper table.dataTable tbody tr td.text-right,
+.dataTables_wrapper table.dataTable thead tr th.text-right {
+    text-align: right !important;
+}
+
+/* Actions column - ALWAYS right aligned (fallback) */
+.dt-container table.dataTable tbody tr td:last-child,
+.dt-container table.dataTable thead tr th:last-child,
+.dataTables_wrapper table.dataTable tbody tr td:last-child,
+.dataTables_wrapper table.dataTable thead tr th:last-child {
+    text-align: right !important;
+}
+
+/* Ensure pagination container is on the right */
+.dt-container .dt-info,
+.dataTables_wrapper .dataTables_info {
+    font-size: 0.75rem !important; /* text-xs - smaller */
+    color: #9ca3af !important; /* gray-400 - lighter */
+    padding: 0 !important;
+    margin: 0 !important;
+    flex: 0 0 auto !important;
+}
+
+.dark .dt-container .dt-info,
+.dark .dataTables_wrapper .dataTables_info {
+color: #6b7280 !important; /* gray-500 for dark mode */
+}
+
+.dt-container .dt-paging,
+.dataTables_wrapper .dataTables_paginate {
+    flex: 0 0 auto !important;
+    margin-left: auto !important;
+}
+
+.dt-container .dt-paging .dt-paging-button,
+.dt-container .dt-paging button,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button,
+.dataTables_wrapper .dataTables_paginate button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.25rem 0.5rem !important; /* Smaller padding: py-1 px-2 */
+    font-size: 0.75rem !important; /* text-xs - smaller */
+    line-height: 1rem !important;
+    border-radius: 0.375rem !important; /* rounded-md - more rounded */
+    transition: all 0.2s ease !important;
+    text-decoration: none !important;
+    min-width: 2rem !important; /* Smaller min-width */
+    height: 2rem !important; /* Fixed height */
+    margin: 0 0.125rem !important; /* Small gap between buttons */
+    border: none !important;
+    background: transparent !important;
+    color: inherit !important;
+    cursor: pointer !important;
+}
+
+.dt-container .dt-paging .dt-paging-button:hover:not(.current):not(.disabled),
+.dt-container .dt-paging button:hover:not(.current):not(.disabled),
+.dataTables_wrapper .dataTables_paginate .dt-paging-button:hover:not(.current):not(.disabled),
+.dataTables_wrapper .dataTables_paginate button:hover:not(.current):not(.disabled) {
+    background: #f3f4f6 !important; /* gray-100 */
+}
+
+/* Dark mode hover */
+.dark .dt-container .dt-paging .dt-paging-button:hover:not(.current):not(.disabled),
+.dark .dt-container .dt-paging button:hover:not(.current):not(.disabled),
+.dark .dataTables_wrapper .dataTables_paginate .dt-paging-button:hover:not(.current):not(.disabled),
+.dark .dataTables_wrapper .dataTables_paginate button:hover:not(.current):not(.disabled) {
+    background: #1f2937 !important; /* gray-800 */
+}
+
+.dt-container .dt-paging .dt-paging-button.current,
+.dt-container .dt-paging .dt-paging-button.current:hover,
+.dt-container .dt-paging button.current,
+.dt-container .dt-paging button.current:hover,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.current,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.current:hover,
+.dataTables_wrapper .dataTables_paginate button.current,
+.dataTables_wrapper .dataTables_paginate button.current:hover {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7) !important;
+    color: white !important;
+}
+
+.dt-container .dt-paging .dt-paging-button.disabled,
+.dt-container .dt-paging .dt-paging-button.disabled:hover,
+.dt-container .dt-paging button.disabled,
+.dt-container .dt-paging button.disabled:hover,
+.dt-container .dt-paging button:disabled,
+.dt-container .dt-paging button:disabled:hover,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled:hover,
+.dataTables_wrapper .dataTables_paginate button.disabled,
+.dataTables_wrapper .dataTables_paginate button.disabled:hover,
+.dataTables_wrapper .dataTables_paginate button:disabled,
+.dataTables_wrapper .dataTables_paginate button:disabled:hover {
+    background: transparent !important;
+    cursor: not-allowed !important;
+    opacity: 0.5 !important;
+}
+
+.dt-container .dt-paging .dt-paging-button:focus,
+.dt-container .dt-paging button:focus,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button:focus,
+.dataTables_wrapper .dataTables_paginate button:focus {
+    outline: none !important;
+}

@@ -1,0 +1,58 @@
+{
+  "name": "midnight",
+  "display_name": "Midnight",
+  "version": "1.0.0",
+  "author": "CanvaStack Team",
+  "description": "A sleek dark theme with deep blues and purples, perfect for night owls",
+  "preview_image": "preview.png",
+  "tags": ["dark", "blue", "purple", "night", "professional"],
+  
+  "colors": {
+    "primary": "#6366f1",
+    "secondary": "#8b5cf6",
+    "accent": "#a855f7",
+    "success": "#10b981",
+    "warning": "#f59e0b",
+    "error": "#ef4444",
+    "info": "#3b82f6",
+    "neutral": {
+      "50": "#f8fafc",
+      "100": "#f1f5f9",
+      "200": "#e2e8f0",
+      "300": "#cbd5e1",
+      "400": "#94a3b8",
+      "500": "#64748b",
+      "600": "#475569",
+      "700": "#334155",
+      "800": "#1e293b",
+      "900": "#0f172a",
+      "950": "#020617"
+    }
+  },
+  
+  "gradients": {
+    "primary": "linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)",
+    "hero": "linear-gradient(to right, #4f46e5, #7c3aed)",
+    "card": "linear-gradient(135deg, #1e293b, #334155)",
+    "button": "linear-gradient(to right, #6366f1, #8b5cf6)"
+  },
+  
+  "typography": {
+    "font_family": "Inter",
+    "font_family_mono": "JetBrains Mono"
+  },
+  
+  "dark_mode": {
+    "enabled": true,
+    "default": "dark",
+    "colors": {
+      "primary": "#818cf8",
+      "secondary": "#a78bfa",
+      "accent": "#c084fc",
+      "background": "#020617",
+      "surface": "#0f172a",
+      "text": "#f1f5f9",
+      "border": "#1e293b"
+    }
+  }
+}

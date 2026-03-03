@@ -1,0 +1,276 @@
+/**
+ * Searchable Select Component Styles
+ * 
+ * Tailwind CSS + DaisyUI styling for Choices.js searchable select dropdowns.
+ * Supports admin/public contexts and dark mode.
+ * 
+ * Requirements: 6.12, 6.13, 6.14, 6.15
+ */
+
+/* Base Choices.js Container */
+.choices {
+    @apply relative mb-0 text-base;
+}
+
+.choices:focus {
+    @apply outline-none;
+}
+
+.choices.is-disabled .choices__inner,
+.choices.is-disabled .choices__input {
+    @apply bg-gray-100 cursor-not-allowed opacity-60;
+}
+
+/* Inner Container */
+.choices__inner {
+    @apply inline-block w-full bg-white border border-gray-300 rounded-lg px-3 py-2 min-h-[2.75rem];
+    @apply transition-colors duration-200;
+}
+
+.choices__inner:hover {
+    @apply border-indigo-500;
+}
+
+.choices.is-focused .choices__inner,
+.choices.is-open .choices__inner {
+    @apply border-indigo-500 ring-2 ring-indigo-500 ring-opacity-20;
+}
+
+/* Admin Context Styling */
+.choices[data-context="admin"] .choices__inner {
+    @apply bg-white border-gray-300;
+}
+
+.choices[data-context="admin"].is-focused .choices__inner,
+.choices[data-context="admin"].is-open .choices__inner {
+    @apply border-indigo-500 ring-indigo-500;
+}
+
+/* Public Context Styling */
+.choices[data-context="public"] .choices__inner {
+    @apply bg-white border-gray-300;
+}
+
+.choices[data-context="public"].is-focused .choices__inner,
+.choices[data-context="public"].is-open .choices__inner {
+    @apply border-indigo-500 ring-indigo-500;
+}
+
+/* Dark Mode Support */
+.dark .choices__inner {
+    @apply bg-gray-800 border-gray-700 text-gray-100;
+}
+
+.dark .choices__inner:hover {
+    @apply border-indigo-500 border-opacity-60;
+}
+
+.dark .choices.is-focused .choices__inner,
+.dark .choices.is-open .choices__inner {
+    @apply border-indigo-500 ring-indigo-500 ring-opacity-30;
+}
+
+/* Input Field */
+.choices__input {
+    @apply bg-transparent border-0 p-0 m-0 text-base;
+    @apply focus:outline-none focus:ring-0;
+}
+
+.choices__input::placeholder {
+    @apply text-gray-500;
+}
+
+.dark .choices__input {
+    @apply text-gray-100;
+}
+
+.dark .choices__input::placeholder {
+    @apply text-gray-400;
+}
+
+/* Dropdown List */
+.choices__list--dropdown {
+    @apply absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1;
+    @apply max-h-60 overflow-auto;
+}
+
+.choices__list--dropdown.is-active {
+    @apply block;
+}
+
+.dark .choices__list--dropdown {
+    @apply bg-gray-800 border-gray-700;
+}
+
+/* Dropdown Items */
+.choices__item {
+    @apply px-3 py-2 text-base cursor-pointer transition-colors duration-150;
+}
+
+.choices__item--selectable {
+    @apply hover:bg-indigo-50 hover:text-indigo-700;
+}
+
+.choices__item--selectable.is-highlighted {
+    @apply bg-indigo-100 text-indigo-700;
+}
+
+.dark .choices__item--selectable {
+    @apply hover:bg-indigo-900 hover:bg-opacity-20 hover:text-indigo-300;
+}
+
+.dark .choices__item--selectable.is-highlighted {
+    @apply bg-indigo-900 bg-opacity-30 text-indigo-300;
+}
+
+/* Selected Items (Multiple Mode) */
+.choices__list--multiple {
+    @apply flex flex-wrap gap-2;
+}
+
+.choices__list--multiple .choices__item {
+    @apply inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm;
+    @apply border border-indigo-200;
+}
+
+.dark .choices__list--multiple .choices__item {
+    @apply bg-indigo-900 bg-opacity-30 text-indigo-300 border-indigo-700;
+}
+
+/* Remove Button */
+.choices__button {
+    @apply ml-2 text-indigo-600 hover:text-red-600 transition-colors duration-150;
+    @apply border-0 bg-transparent cursor-pointer p-0;
+}
+
+.choices__button:focus {
+    @apply outline-none;
+}
+
+.dark .choices__button {
+    @apply text-indigo-400 hover:text-red-400;
+}
+
+/* Placeholder */
+.choices__placeholder {
+    @apply text-gray-500;
+}
+
+.dark .choices__placeholder {
+    @apply text-gray-400;
+}
+
+/* Group Headings */
+.choices__group {
+    @apply pt-2;
+}
+
+.choices__heading {
+    @apply px-3 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider;
+    @apply border-b border-gray-300;
+}
+
+.dark .choices__heading {
+    @apply text-gray-400 border-gray-700;
+}
+
+/* Loading State */
+.choices.is-loading::after {
+    @apply content-[''] absolute right-3 top-1/2 -mt-2 w-4 h-4;
+    @apply border-2 border-indigo-500 border-t-transparent rounded-full;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Disabled State */
+.choices__item--disabled {
+    @apply opacity-50 cursor-not-allowed;
+}
+
+/* Search Input in Dropdown */
+.choices__input--cloned {
+    @apply w-full px-3 py-2 border-0 border-b border-gray-300;
+    @apply focus:outline-none focus:border-indigo-500;
+}
+
+.dark .choices__input--cloned {
+    @apply border-gray-700 focus:border-indigo-500;
+}
+
+/* No Results Message */
+.choices__item--choice.has-no-results {
+    @apply text-gray-600 text-center py-4;
+}
+
+.dark .choices__item--choice.has-no-results {
+    @apply text-gray-400;
+}
+
+/* Admin Context - Indigo Theme */
+.choices[data-context="admin"] .choices__item--selectable.is-highlighted {
+    @apply bg-indigo-50 text-indigo-700;
+}
+
+.dark .choices[data-context="admin"] .choices__item--selectable.is-highlighted {
+    @apply bg-indigo-900 bg-opacity-30 text-indigo-300;
+}
+
+.choices[data-context="admin"] .choices__list--multiple .choices__item {
+    @apply bg-indigo-50 text-indigo-700 border-indigo-200;
+}
+
+.dark .choices[data-context="admin"] .choices__list--multiple .choices__item {
+    @apply bg-indigo-900 bg-opacity-30 text-indigo-300 border-indigo-700;
+}
+
+/* Public Context - Primary Theme */
+.choices[data-context="public"] .choices__item--selectable.is-highlighted {
+    @apply bg-indigo-50 text-indigo-700;
+}
+
+.dark .choices[data-context="public"] .choices__item--selectable.is-highlighted {
+    @apply bg-indigo-900 bg-opacity-30 text-indigo-300;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+    .choices__list--dropdown {
+        @apply max-h-48;
+    }
+    
+    .choices__item {
+        @apply px-2 py-1.5 text-sm;
+    }
+    
+    .choices__list--multiple .choices__item {
+        @apply px-2 py-0.5 text-xs;
+    }
+}
+
+/* Accessibility - Focus Visible */
+.choices:focus-visible {
+    @apply outline-none;
+}
+
+.choices__inner:focus-visible {
+    @apply ring-2 ring-indigo-500 ring-offset-2;
+}
+
+.dark .choices__inner:focus-visible {
+    @apply ring-offset-gray-800;
+}
+
+/* Clear Button (when removeItems is true) */
+.choices__button[data-button] {
+    @apply inline-flex items-center justify-center w-5 h-5 rounded-full;
+    @apply hover:bg-red-100 transition-colors;
+}
+
+.dark .choices__button[data-button] {
+    @apply hover:bg-red-900 hover:bg-opacity-20;
+}

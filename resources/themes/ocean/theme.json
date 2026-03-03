@@ -1,0 +1,58 @@
+{
+  "name": "ocean",
+  "display_name": "Ocean",
+  "version": "1.0.0",
+  "author": "CanvaStack Team",
+  "description": "A refreshing ocean-inspired theme with blue and teal gradients",
+  "preview_image": "preview.png",
+  "tags": ["blue", "teal", "ocean", "gradient", "modern"],
+  
+  "colors": {
+    "primary": "#0ea5e9",
+    "secondary": "#06b6d4",
+    "accent": "#14b8a6",
+    "success": "#10b981",
+    "warning": "#f59e0b",
+    "error": "#ef4444",
+    "info": "#3b82f6",
+    "neutral": {
+      "50": "#f0fdfa",
+      "100": "#ccfbf1",
+      "200": "#99f6e4",
+      "300": "#5eead4",
+      "400": "#2dd4bf",
+      "500": "#14b8a6",
+      "600": "#0d9488",
+      "700": "#0f766e",
+      "800": "#115e59",
+      "900": "#134e4a",
+      "950": "#042f2e"
+    }
+  },
+  
+  "gradients": {
+    "primary": "linear-gradient(135deg, #0ea5e9, #06b6d4, #14b8a6)",
+    "hero": "linear-gradient(to right, #06b6d4, #0ea5e9)",
+    "card": "linear-gradient(135deg, #e0f2fe, #cffafe)",
+    "button": "linear-gradient(to right, #0ea5e9, #06b6d4)"
+  },
+  
+  "typography": {
+    "font_family": "Inter",
+    "font_family_mono": "JetBrains Mono"
+  },
+  
+  "dark_mode": {
+    "enabled": true,
+    "default": "light",
+    "colors": {
+      "primary": "#22d3ee",
+      "secondary": "#2dd4bf",
+      "accent": "#5eead4",
+      "background": "#0c4a6e",
+      "surface": "#075985",
+      "text": "#f0f9ff",
+      "border": "#0369a1"
+    }
+  }
+}

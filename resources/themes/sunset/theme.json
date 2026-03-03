@@ -1,0 +1,58 @@
+{
+  "name": "sunset",
+  "display_name": "Sunset",
+  "version": "1.0.0",
+  "author": "CanvaStack Team",
+  "description": "A warm and vibrant theme inspired by sunset colors",
+  "preview_image": "preview.png",
+  "tags": ["orange", "pink", "sunset", "warm", "vibrant"],
+  
+  "colors": {
+    "primary": "#f97316",
+    "secondary": "#ec4899",
+    "accent": "#a855f7",
+    "success": "#10b981",
+    "warning": "#f59e0b",
+    "error": "#ef4444",
+    "info": "#3b82f6",
+    "neutral": {
+      "50": "#fff7ed",
+      "100": "#ffedd5",
+      "200": "#fed7aa",
+      "300": "#fdba74",
+      "400": "#fb923c",
+      "500": "#f97316",
+      "600": "#ea580c",
+      "700": "#c2410c",
+      "800": "#9a3412",
+      "900": "#7c2d12",
+      "950": "#431407"
+    }
+  },
+  
+  "gradients": {
+    "primary": "linear-gradient(135deg, #f97316, #ec4899, #a855f7)",
+    "hero": "linear-gradient(to right, #ff6b6b, #feca57)",
+    "card": "linear-gradient(135deg, #fff7ed, #fce7f3)",
+    "button": "linear-gradient(to right, #f97316, #ec4899)"
+  },
+  
+  "typography": {
+    "font_family": "Inter",
+    "font_family_mono": "JetBrains Mono"
+  },
+  
+  "dark_mode": {
+    "enabled": true,
+    "default": "light",
+    "colors": {
+      "primary": "#fb923c",
+      "secondary": "#f472b6",
+      "accent": "#c084fc",
+      "background": "#7c2d12",
+      "surface": "#9a3412",
+      "text": "#fff7ed",
+      "border": "#c2410c"
+    }
+  }
+}

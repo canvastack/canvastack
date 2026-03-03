@@ -1,0 +1,86 @@
+{
+    "name": "backup_2026-03-01_20-40-21",
+    "created_at": "2026-03-01T20:40:21+00:00",
+    "version": "1.0.0",
+    "config": {
+        "version": "1.0.0",
+        "exported_at": "2026-03-01T20:40:21+00:00",
+        "settings": {
+            "app": {
+                "name": null,
+                "description": null,
+                "version": null,
+                "base_url": null,
+                "lang": null,
+                "maintenance": null
+            },
+            "theme": {
+                "active": null,
+                "default": null,
+                "cache_enabled": null,
+                "hot_reload": null,
+                "dark_mode": {
+                    "enabled": null,
+                    "default": null
+                }
+            },
+            "localization": {
+                "default_locale": "en",
+                "fallback_locale": "en",
+                "available_locales": {
+                    "en": {
+                        "name": "English",
+                        "native": "English",
+                        "flag": "\ud83c\uddfa\ud83c\uddf8"
+                    },
+                    "id": {
+                        "name": "Indonesian",
+                        "native": "Bahasa Indonesia",
+                        "flag": "\ud83c\uddee\ud83c\udde9"
+                    },
+                    "ar": {
+                        "name": "Arabic",
+                        "native": "\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
+                        "flag": "\ud83c\uddf8\ud83c\udde6"
+                    },
+                    "he": {
+                        "name": "Hebrew",
+                        "native": "\u05e2\u05d1\u05e8\u05d9\u05ea",
+                        "flag": "\ud83c\uddee\ud83c\uddf1"
+                    },
+                    "fa": {
+                        "name": "Persian",
+                        "native": "\u0641\u0627\u0631\u0633\u06cc",
+                        "flag": "\ud83c\uddee\ud83c\uddf7"
+                    },
+                    "ur": {
+                        "name": "Urdu",
+                        "native": "\u0627\u0631\u062f\u0648",
+                        "flag": "\ud83c\uddf5\ud83c\uddf0"
+                    }
+                },
+                "detect_browser": false,
+                "cache_enabled": null
+            },
+            "rbac": {
+                "contexts": null,
+                "cache_enabled": true,
+                "super_admin_bypass": null,
+                "context_aware": null,
+                "strict_mode": null
+            },
+            "performance": {
+                "chunk_size": null,
+                "eager_load": null,
+                "query_cache": null,
+                "lazy_load_components": null,
+                "optimize_queries": null
+            },
+            "cache": {
+                "enabled": null,
+                "driver": null,
+                "ttl": null
+            }
+        }
+    }
+}
