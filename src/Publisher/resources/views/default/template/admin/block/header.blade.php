@@ -9,11 +9,10 @@
  * @copyright	wisnuwidi
  * @email		wisnuwidi@canvastack.com
  */
-$baseUrl      = function_exists('canvastack_config') ? canvastack_config('baseURL') : url('');
-$baseTemplate = function_exists('canvastack_config') ? canvastack_config('base_template') : 'assets/templates/default';
-$template     = function_exists('canvastack_config') ? canvastack_config('template') : 'admin';
-$assetURL     = rtrim("{$baseUrl}/{$baseTemplate}/{$template}", '/');
-$breadcrumbs  = is_string($breadcrumbs ?? null) ? $breadcrumbs : '';
+$baseUrl      = canvas_config('baseURL');
+$baseTemplate = canvas_config('base_template');
+$template     = canvas_config('template');
+$assetURL     = "{$baseUrl}/{$baseTemplate}/{$template}";
 ?>
 			
 				<!-- HEADER BLOCK OPEN  -->
@@ -27,7 +26,7 @@ $breadcrumbs  = is_string($breadcrumbs ?? null) ? $breadcrumbs : '';
 									<span></span>
 									<span></span>
 								</div>
-								<div class="search-box IncoDIY-search-box pull-left">
+								<div class="search-box CanvaStack-search-box pull-left">
 									<div class="search-inputbox">
 										<form action="#">
 											<input id="search-input" type="text" name="search" placeholder="Search..." required />
@@ -84,5 +83,3 @@ $breadcrumbs  = is_string($breadcrumbs ?? null) ? $breadcrumbs : '';
 				</div>
 				{!! $breadcrumbs !!}
 				<!-- HEADER BLOCK CLOSE  -->
-
-

@@ -1,88 +1,59 @@
 <?php
+namespace Canvastack\Origin;
 
-namespace Canvastack\Canvastack;
-
-use Canvastack\Canvastack\Core\Controller as CoreController;
-use Canvastack\Canvastack\Library\Components\Utility\DynamicRouteRegistrar;
-use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\ServiceProvider;
+use Canvastack\Origin\Controllers\Core\Controller as CanvaStack;
 
-class CanvastackServiceProvider extends ServiceProvider
-{
-    public function boot()
-    {
-        // Define no-op auth route macro for Laravel 10+ when laravel/ui is absent
-        \Illuminate\Support\Facades\Route::macro('auth', function () {
-        });
+/**
+ * Created on Mar 22, 2018
+ * Time Created : 4:52:52 PM
+ * Filename :  Canvastack\CanvastackServiceProvider.php
+ *
+ * @filesource Canvastack\CanvastackServiceProvider.php
+ *            
+ * @author    wisnuwidi@canvastack.com - 2018
+ * @copyright wisnuwidi
+ * @email     wisnuwidi@canvastack.com
+ */
+class CanvastackServiceProvider extends ServiceProvider {
 
-        // Proper route loading handled by Laravel (works with/without cache)
-        if (file_exists(__DIR__.'/routes/web.php')) {
-            $this->loadRoutesFrom(__DIR__.'/routes/web.php');
-        }
-        
-        // Auto-register restore routes for soft delete models
-        $this->app->booted(function () {
-            DynamicRouteRegistrar::registerRestoreRoutes();
-        });
+	/**
+	 * Bootstrap the application services.
+	 *
+	 * @return void
+	 */
+	public function boot() {
+		if ($this->app->routesAreCached()) {
+			require_once __DIR__ . '/routes/web.php';
+		}
 
-        // View namespace to app's resources/views
-        $this->loadViewsFrom(base_path('resources/views'), 'CanvaStack');
+		$this->loadViewsFrom(base_path('resources/views'), 'CanvaStack');
+		$publish_path = __DIR__ . '/Publisher/';
+		
+		if ($this->app->runningInConsole()) {
+			$this->publishes([ 
+				"{$publish_path}database/migrations" => database_path('migrations'),
+				"{$publish_path}database/seeders"    => database_path('seeders'),
+				"{$publish_path}config"              => base_path('config'),
+				"{$publish_path}routes"              => base_path('routes'),
+				"{$publish_path}app"                 => base_path('app'),
+				"{$publish_path}resources/views"     => base_path('resources/views')
+			], 'CanvaStack');
+			
+			$this->publishes([ 
+				"{$publish_path}public" => base_path('public')
+			], 'CanvaStack Public Folder');
+		}
+	}
 
-        // Load Table Security Config files with merge capability
-        $this->mergeConfigFrom(__DIR__.'/Library/Components/Table/config/canvastack-security.php', 'canvastack-security');
-        $this->mergeConfigFrom(__DIR__.'/Library/Components/Table/config/security_whitelist.php', 'canvastack-table-security');
-
-        // Facade alias: CanvaStack::...
-        AliasLoader::getInstance()->alias('CanvaStack', \Canvastack\Canvastack\Facade\CanvaStack::class);
-
-        // Publishable resources
-        $publishPath = __DIR__.'/Publisher/';
-        if ($this->app->runningInConsole()) {
-            $this->publishes([
-                "{$publishPath}database/migrations" => database_path('migrations'),
-                "{$publishPath}database/seeders" => database_path('seeders'),
-                "{$publishPath}config" => base_path('config'),
-                "{$publishPath}routes" => base_path('routes'),
-                "{$publishPath}app" => app_path(),
-                "{$publishPath}resources/views" => resource_path('views'),
-            ], 'CanvaStack');
-
-            $this->publishes([
-                "{$publishPath}public" => public_path(),
-            ], 'CanvaStack Public Folder');
-
-            // Publish Table Security Configuration Files
-            $this->publishes([
-                __DIR__.'/Library/Components/Table/config/canvastack-security.php' => config_path('canvastack-security.php'),
-                __DIR__.'/Library/Components/Table/config/security_whitelist.php' => config_path('canvastack-table-security.php'),
-            ], 'CanvaStack Security Config');
-
-            // Publish Delete Handler Assets
-            $this->publishes([
-                __DIR__.'/Library/Components/Table/Craft/assets/js/delete-handler.js' => public_path('assets/js/delete-handler.js'),
-                __DIR__.'/Library/Components/Table/Craft/assets/css/delete-modal.css' => public_path('assets/css/delete-modal.css'),
-            ], 'CanvaStack Delete Assets');
-        }
-
-        // Register custom Artisan commands for testing and tooling
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                \Canvastack\Canvastack\Console\CanvastackTestCommand::class,
-                \Canvastack\Canvastack\Console\CanvastackSnapshotValidateCommand::class,
-                \Canvastack\Canvastack\Console\CanvastackSnapshotMakeCommand::class,
-                \Canvastack\Canvastack\Console\CanvastackPipelineDryRunCommand::class,
-                \Canvastack\Canvastack\Console\CanvastackDbCheckCommand::class,
-                \Canvastack\Canvastack\Console\CanvastackInspectorSummaryCommand::class,
-                \Canvastack\Canvastack\Console\CanvastackPipelineBenchCommand::class,
-                \Canvastack\Canvastack\Console\CanvastackRelationBenchCommand::class,
-            ]);
-        }
-    }
-
-    public function register()
-    {
-        $this->app->singleton('CanvaStack', function ($app) {
-            return new CoreController();
-        });
-    }
+	/**
+	 * Register the application services.
+	 *
+	 * @return void
+	 */
+	public function register() {
+		$this->app->singleton(CanvaStack::class, function ($app) {
+			return new CanvaStack();
+		});
+	}
 }

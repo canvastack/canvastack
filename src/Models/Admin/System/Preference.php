@@ -1,8 +1,7 @@
 <?php
+namespace Canvastack\Origin\Models\Admin\System;
 
-namespace Canvastack\Canvastack\Models\Admin\System;
-
-use Canvastack\Canvastack\Core\Model;
+use Canvastack\Origin\Models\Core\Model;
 
 /**
  * Created on Mar 14, 2018
@@ -13,14 +12,12 @@ use Canvastack\Canvastack\Core\Model;
  *
  * @author		wisnuwidi@canvastack.com - 2018
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class Preference extends Model
-{
-    protected $table = 'base_preference';
-
-    protected $guarded = [];
-
-    public $timestamps = false;
+ 
+class Preference extends Model {
+	protected $table   = 'base_preference';
+	protected $guarded = [];
+	
+	public $timestamps = false;
 }

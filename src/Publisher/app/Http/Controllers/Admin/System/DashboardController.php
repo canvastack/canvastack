@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Http\Controllers\Admin\System;
 
-use Canvastack\Canvastack\Controllers\Admin\System\DashboardController as Dashboard;
+use Canvastack\Origin\Controllers\Admin\System\DashboardController as Dashboard;
 
 /**
  * Created on May 17, 2018
@@ -13,9 +12,6 @@ use Canvastack\Canvastack\Controllers\Admin\System\DashboardController as Dashbo
  *
  * @author		wisnuwidi@canvastack.com - 2018
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class DashboardController extends Dashboard
-{
-}
+class DashboardController extends Dashboard {}

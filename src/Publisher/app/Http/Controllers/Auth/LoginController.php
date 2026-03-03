@@ -1,9 +1,6 @@
 <?php
-
 namespace App\Http\Controllers\Auth;
 
-use Canvastack\Canvastack\Controllers\Auth\LoginController as Login;
+use Canvastack\Origin\Controllers\Auth\LoginController as Login;
 
-class LoginController extends Login
-{
-}
+class LoginController extends Login {}

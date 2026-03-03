@@ -1,8 +1,7 @@
 <?php
+namespace Canvastack\Origin\Models\Admin\System;
 
-namespace Canvastack\Canvastack\Models\Admin\System;
-
-use Canvastack\Canvastack\Core\Model;
+use Canvastack\Origin\Models\Core\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -14,16 +13,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @author		wisnuwidi@canvastack.com - 2018
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class Maintenance extends Model
-{
-    use SoftDeletes;
-
-    protected $table = 'base_maintenance';
-
-    protected $guarded = [];
-
-    protected $dates = ['deleted_at'];
+ 
+class Maintenance extends Model {
+	use SoftDeletes;
+	
+	protected $table   = 'base_maintenance';
+	protected $guarded = [];
+	protected $dates   = ['deleted_at'];
 }

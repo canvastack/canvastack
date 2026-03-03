@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Models\Admin\Modules;
 
-use Canvastack\Canvastack\Core\Model;
+use Canvastack\Origin\Models\Core\Model;
 
 /**
  * Created on 24 Mar 2021
@@ -12,12 +11,11 @@ use Canvastack\Canvastack\Core\Model;
  *
  * @author		wisnuwidi@canvastack.com - 2021
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class Form extends Model
-{
-    protected $table = 'test_inputform';
-
-    protected $guarded = [];
+ 
+class Form extends Model {
+	
+	protected $table	 = 'test_inputform';
+	protected $guarded = [];
 }

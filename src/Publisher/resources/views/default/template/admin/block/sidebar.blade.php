@@ -9,15 +9,7 @@
  * @copyright	wisnuwidi
  * @email		wisnuwidi@canvastack.com
  */
-// Safe defaults for preview or missing data
-$logo = isset($logo) && is_string($logo) ? $logo : '/assets/templates/default/images/logo.png';
-$appName = isset($appName) ? $appName : (function_exists('canvastack_config') ? \canvastack_config('site_name') : (config('app.name') ?? 'Application'));
-$menu_sidebar = isset($menu_sidebar) && is_array($menu_sidebar) ? $menu_sidebar : [];
-$sidebar_content = isset($sidebar_content) ? $sidebar_content : '';
-$components = isset($components) && is_object($components) ? $components : null;
-
-$filePath = public_path().$logo;
-$fileExists = is_string($filePath) && file_exists($filePath);
+$fileExists = file_exists(public_path().$logo);
 ?>
 <div class="sidebar-menu">
 	<div class="sidebar-header">
@@ -25,7 +17,7 @@ $fileExists = is_string($filePath) && file_exists($filePath);
 			@if ($fileExists)
 				<a href="{{ URL::to('admin')}}" class="lights font-congenial-black color-transparent"><img alt="{{ $appName }}" /></a>
 			@else
-				<a href="{{ URL::to('admin')}}" class="lights font-congenial-black color-transparent"><img src="{{ $logo }}" alt="{{ $appName }}" /><span>{{ $appName }}</span></a>
+				<a href="{{ URL::to('admin')}}" class="lights font-congenial-black color-transparent"><img src="{{ $logo }}" alt="{{ $components->meta->content['text']['app_name'] }}" /><span>{{ $components->meta->content['text']['app_name'] }}</span></a>
 			@endif
 		</div>
 	</div>

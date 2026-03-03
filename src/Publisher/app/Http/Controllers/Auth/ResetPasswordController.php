@@ -1,9 +1,6 @@
 <?php
-
 namespace App\Http\Controllers\Auth;
 
-use Canvastack\Canvastack\Controllers\Auth\ResetPasswordController as ResetPassword;
+use Canvastack\Origin\Controllers\Auth\ResetPasswordController as ResetPassword;
 
-class ResetPasswordController extends ResetPassword
-{
-}
+class ResetPasswordController extends ResetPassword {}

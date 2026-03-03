@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Models\Admin\System;
 
-use Canvastack\Canvastack\Models\Admin\System\DynamicTables as DynamicDataTables;
+use Canvastack\Origin\Models\Admin\System\DynamicTables as DynamicDataTables;
 
 /**
  * Created on 2 Jun 2021
@@ -12,9 +11,6 @@ use Canvastack\Canvastack\Models\Admin\System\DynamicTables as DynamicDataTables
  *
  * @author		wisnuwidi@canvastack.com - 2021
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class DynamicTables extends DynamicDataTables
-{
-}
+class DynamicTables extends DynamicDataTables {}

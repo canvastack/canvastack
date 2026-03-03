@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Http\Controllers\Front\Modules;
 
-use Canvastack\Canvastack\Controllers\Front\Modules\HomeController as Home;
+use Canvastack\Origin\Controllers\Front\Modules\HomeController as Home;
 
 /**
  * Created on 10 Mar 2021
@@ -12,9 +11,7 @@ use Canvastack\Canvastack\Controllers\Front\Modules\HomeController as Home;
  *
  * @author		wisnuwidi@canvastack.com - 2021
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class HomeController extends Home
-{
-}
+ 
+class HomeController extends Home {}

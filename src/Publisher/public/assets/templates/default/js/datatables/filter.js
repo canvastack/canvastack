@@ -4,7 +4,7 @@ function ajaxSelectionProcess(object, id, target_id, url, data = [], method = 'P
 	if (typeof dataInfo.labels   != 'undefined') var lURL = 'l=' + dataInfo.labels;
 	if (typeof dataInfo.values   != 'undefined') var vURL = 'v=' + dataInfo.values;
 	if (typeof dataInfo.selected != 'undefined') var sURL = 's=' + dataInfo.selected;
-	if (typeof dataInfo.query    != 'undefined') var qURL = canvastack_random() + '=' + dataInfo.query;
+	if (typeof dataInfo.query    != 'undefined') var qURL = canvas_random() + '=' + dataInfo.query;
 	
 	if (typeof dataInfo.labels != 'undefined' && typeof dataInfo.values != 'undefined' && typeof dataInfo.selected != 'undefined' && typeof dataInfo.query != 'undefined') {
 		var urls = url + '&' + lURL + '&' + vURL + '&' + sURL + '&' + qURL;
@@ -91,11 +91,11 @@ function exportFromModal(modalID, exportID, filterID, token, url, link, filter =
 		
 		$.ajax ({
 			type    : 'POST',
-			data    : canvastack_array_to_object(inputData),
+			data    : canvas_array_to_object(inputData),
 			dataType: 'JSON',
 			url     : url,
 			success : function(n) {
-				window.location.href = n.diyExportStreamPath;
+				window.location.href = n.canvasExportStreamPath;
 			},
 			complete : function() {
 				$('#exportFilterButton' + modalID).removeAttr('style');
@@ -106,9 +106,9 @@ function exportFromModal(modalID, exportID, filterID, token, url, link, filter =
 	});
 }
 
-function diyDataTableFilters(id, url, obTable) {
-	$('#diy-' + id + '-search-box').appendTo('.cody_' + id + '_diy-dt-filter-box');
-	$('.diy-dt-search-box').removeClass('hide');
+function canvasDataTableFilters(id, url, obTable) {
+	$('#canvas-' + id + '-search-box').appendTo('.canvas_' + id + '_canvas-dt-filter-box');
+	$('.canvas-dt-search-box').removeClass('hide');
 	$('#' + id + '_cdyProcessing').hide();
 	
 	$('#' + id + '_cdyFILTERForm').on('submit', function(event) {

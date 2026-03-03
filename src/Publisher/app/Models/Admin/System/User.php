@@ -1,9 +1,6 @@
 <?php
-
 namespace App\Models\Admin\System;
 
-use Canvastack\Canvastack\Models\Admin\System\User as UserModel;
+use Canvastack\Origin\Models\Admin\System\User as UserModel;
 
-class User extends UserModel
-{
-}
+class User extends UserModel {}

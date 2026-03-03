@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Models\Admin\System;
 
-use Canvastack\Canvastack\Models\Admin\System\Group as GroupModel;
+use Canvastack\Origin\Models\Admin\System\Group as GroupModel;
 
 /**
  * Created on Jan 14, 2018
@@ -11,11 +10,8 @@ use Canvastack\Canvastack\Models\Admin\System\Group as GroupModel;
  *
  * @filesource	Group.php
  *
- * @author		wisnuwidi@IncoDIY - 2018
+ * @author		wisnuwidi@CanvaStack - 2018
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class Group extends GroupModel
-{
-}
+class Group extends GroupModel {}

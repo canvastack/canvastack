@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Http\Controllers\Admin\System;
 
-use Canvastack\Canvastack\Controllers\Admin\System\PreferenceController as Preference;
+use Canvastack\Origin\Controllers\Admin\System\PreferenceController as Preference;
 
 /**
  * Created on Mar 7, 2018
@@ -13,9 +12,6 @@ use Canvastack\Canvastack\Controllers\Admin\System\PreferenceController as Prefe
  *
  * @author		wisnuwidi@canvastack.com - 2018
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class PreferenceController extends Preference
-{
-}
+class PreferenceController extends Preference {}

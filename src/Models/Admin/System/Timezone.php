@@ -1,8 +1,7 @@
 <?php
+namespace Canvastack\Origin\Models\Admin\System;
 
-namespace Canvastack\Canvastack\Models\Admin\System;
-
-use Canvastack\Canvastack\Core\Model;
+use Canvastack\Origin\Models\Core\Model;
 
 /**
  * Created on Jan 15, 2018
@@ -11,16 +10,14 @@ use Canvastack\Canvastack\Core\Model;
  *
  * @filesource	Timezone.php
  *
- * @author		wisnuwidi@IncoDIY - 2018
+ * @author		wisnuwidi@CanvaStack - 2018
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class Timezone extends Model
-{
-    protected $table = 'base_timezone';
-
-    protected $guarded = [];
-
-    public $timestamps = false;
+ 
+class Timezone extends Model {
+	protected $table		= 'base_timezone';
+	protected $guarded	= [];
+	
+	public $timestamps	= false;
 }

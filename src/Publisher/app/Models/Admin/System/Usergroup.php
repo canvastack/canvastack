@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Models\Admin\System;
 
-use Canvastack\Canvastack\Models\Admin\System\Usergroup as UserGroupModel;
+use Canvastack\Origin\Models\Admin\System\Usergroup as UserGroupModel;
 
 /**
  * Created on Jan 14, 2018
@@ -11,11 +10,8 @@ use Canvastack\Canvastack\Models\Admin\System\Usergroup as UserGroupModel;
  *
  * @filesource	Usergroup.php
  *
- * @author		wisnuwidi@IncoDIY - 2018
+ * @author		wisnuwidi@CanvaStack - 2018
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class Usergroup extends UserGroupModel
-{
-}
+class Usergroup extends UserGroupModel {}

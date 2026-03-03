@@ -1,12 +1,11 @@
 <?php
+namespace Canvastack\Origin\Models\Admin\System;
 
-namespace Canvastack\Canvastack\Models\Admin\System;
-
-use Canvastack\Canvastack\Core\Model;
+use Canvastack\Origin\Models\Core\Model;
 
 /**
  * Created on Jun 9, 2023
- *
+ * 
  * Time Created : 2:11:03 PM
  *
  * @filesource  UserActivity.php
@@ -14,23 +13,18 @@ use Canvastack\Canvastack\Core\Model;
  * @author      wisnuwidi@gmail.com - 2023
  * @copyright   wisnuwidi@gmail.com,
  *              canvastack@gmail.com
- *
  * @email       wisnuwidi@gmail.com
  */
-class UserActivity extends Model
-{
-    protected $table = 'temp_montly_activity';
-
-    protected $guarded = [];
-
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    public function montly_activity()
-    {
-        $sql = "
+class UserActivity extends Model {
+	protected $table   = 'temp_montly_activity';
+	protected $guarded = [];
+	
+	public function __construct() {
+		parent::__construct();
+	}
+	
+	public function montly_activity() {
+		$sql = "
 			SELECT
 				monthly_activity.monthly_activity,
 				monthly_activity.group_id,
@@ -130,13 +124,12 @@ class UserActivity extends Model
 			GROUP BY LEFT(monthly_activity.monthly_activity, 7), monthly_activity.user_id, monthly_activity.group_id
 			ORDER BY LEFT(monthly_activity.monthly_activity, 7) DESC, monthly_activity.user_id, monthly_activity.group_id
 		";
-
-        canvastack_temp_table($this->table, $sql, false);
-    }
-
-    public function user_never_login()
-    {
-        $sql = "
+		
+		canvas_temp_table($this->table, $sql, false);
+	}
+	
+	public function user_never_login() {
+		$sql = "
 			SELECT
 				userinfo.user_id,
 				userinfo.group_info,
@@ -175,7 +168,7 @@ class UserActivity extends Model
 			) userinfo
 			WHERE userinfo.email NOT IN (SELECT DISTINCT user_email FROM `log_activities`)
 		";
-
-        canvastack_temp_table('temp_'.__FUNCTION__, $sql, false);
-    }
+		
+		canvas_temp_table('temp_' . __FUNCTION__, $sql, false);
+	}
 }

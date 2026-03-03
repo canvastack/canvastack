@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Http\Controllers\Admin\System;
 
-use Canvastack\Canvastack\Controllers\Admin\System\IconController as Icon;
+use Canvastack\Origin\Controllers\Admin\System\IconController as Icon;
 
 /**
  * Created on Mar 15, 2018
@@ -13,9 +12,6 @@ use Canvastack\Canvastack\Controllers\Admin\System\IconController as Icon;
  *
  * @author		wisnuwidi@canvastack.com - 2018
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class IconController extends Icon
-{
-}
+class IconController extends Icon {}

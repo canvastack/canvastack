@@ -1,8 +1,8 @@
 <?php
 
-namespace Canvastack\Canvastack\Controllers\Auth;
+namespace Canvastack\Origin\Controllers\Auth;
 
-use Canvastack\Canvastack\Core\Controller;
+use Canvastack\Origin\Controllers\Core\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 class LoginController extends Controller

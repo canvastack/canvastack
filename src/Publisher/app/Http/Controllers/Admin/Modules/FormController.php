@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Http\Controllers\Admin\Modules;
 
-use Canvastack\Canvastack\Controllers\Admin\Modules\FormController as Form;
+use Canvastack\Origin\Controllers\Admin\Modules\FormController as Form;
 
 /**
  * Created on 23 Mar 2021
@@ -12,9 +11,7 @@ use Canvastack\Canvastack\Controllers\Admin\Modules\FormController as Form;
  *
  * @author		wisnuwidi@canvastack.com - 2021
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class FormController extends Form
-{
-}
+ 
+class FormController extends Form {}

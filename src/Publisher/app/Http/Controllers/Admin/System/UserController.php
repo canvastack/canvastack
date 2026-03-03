@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Http\Controllers\Admin\System;
 
-use Canvastack\Canvastack\Controllers\Admin\System\UserController as User;
+use Canvastack\Origin\Controllers\Admin\System\UserController as User;
 
 /**
  * Created on Jul 26, 2017
@@ -11,11 +10,8 @@ use Canvastack\Canvastack\Controllers\Admin\System\UserController as User;
  *
  * @filesource	UserController.php
  *
- * @author		wisnuwidi @IncoDIY - 2017
+ * @author		wisnuwidi @CanvaStack - 2017
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class UserController extends User
-{
-}
+class UserController extends User {}

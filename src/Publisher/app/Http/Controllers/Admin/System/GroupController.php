@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Http\Controllers\Admin\System;
 
-use Canvastack\Canvastack\Controllers\Admin\System\GroupController as Group;
+use Canvastack\Origin\Controllers\Admin\System\GroupController as Group;
 
 /**
  * Created on Jan 19, 2018
@@ -11,11 +10,8 @@ use Canvastack\Canvastack\Controllers\Admin\System\GroupController as Group;
  *
  * @filesource	GroupController.php
  *
- * @author		wisnuwidi@IncoDIY - 2018
+ * @author		wisnuwidi@CanvaStack - 2018
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class GroupController extends Group
-{
-}
+class GroupController extends Group {}

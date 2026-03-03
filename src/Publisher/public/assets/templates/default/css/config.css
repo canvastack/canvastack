@@ -42,45 +42,45 @@ div.dataTables_processing > div:last-child {
 }
 /* FORCE DATATABLE LOAD PROCESSING VIEW */
 
-.diy-wrapper-table {
+.canvas-wrapper-table {
 	width: 100%;
 	overflow-x: auto;
 }
 
-.dataTables_scrollBody .diy-wrapper-table {
+.dataTables_scrollBody .canvas-wrapper-table {
 	width: auto !important;
 	overflow-x: initial !important;
 }
 
-.diy-wrapper-table .dataTables_scrollHead > .dataTables_scrollFootInner table.table-bordered tr th:first-child, 
-.diy-wrapper-table .dataTables_scrollHead > .dataTables_scrollHeadInner table.table-bordered tr th:first-child,
-.diy-wrapper-table .dataTables_scrollHead > .dataTables_scrollFootInner table.table-bordered tr th:first-child:hover, 
-.diy-wrapper-table .dataTables_scrollHead > .dataTables_scrollHeadInner table.table-bordered tr th:first-child:hover {
+.canvas-wrapper-table .dataTables_scrollHead > .dataTables_scrollFootInner table.table-bordered tr th:first-child, 
+.canvas-wrapper-table .dataTables_scrollHead > .dataTables_scrollHeadInner table.table-bordered tr th:first-child,
+.canvas-wrapper-table .dataTables_scrollHead > .dataTables_scrollFootInner table.table-bordered tr th:first-child:hover, 
+.canvas-wrapper-table .dataTables_scrollHead > .dataTables_scrollHeadInner table.table-bordered tr th:first-child:hover {
   border: 1px 1px 7px solid #f17d7d !important;
 }
 
-.diy-wrapper-table table.dataTable.table-striped > tbody > tr.odd > * {
+.canvas-wrapper-table table.dataTable.table-striped > tbody > tr.odd > * {
   box-shadow: none !important;
 }
 
-.diy-wrapper-table .table-default.table-bordered td,
-.diy-wrapper-table .table-default.table-bordered th {
+.canvas-wrapper-table .table-default.table-bordered td,
+.canvas-wrapper-table .table-default.table-bordered th {
 	border-top: 1px solid rgba(232, 119, 119, 0.05) !important;
 }
 
-.diy-wrapper-table .table-default.table-bordered td {
+.canvas-wrapper-table .table-default.table-bordered td {
 	border-right: 1px solid rgba(232, 119, 119, 0.1) !important;
 }
 
-.diy-wrapper-table .table-default.table-bordered th {	
+.canvas-wrapper-table .table-default.table-bordered th {	
 	border-right: 1px solid rgba(232, 119, 119, 1) !important;
 }
 
-.diy-wrapper-table .canvastack-datatable {
+.canvas-wrapper-table .CanvaStack-datatable {
 	margin-top: 0 !important;
 }
 
-.diy-wrapper-table table.dataTable.no-footer {
+.canvas-wrapper-table table.dataTable.no-footer {
   border-bottom: none !important;
 }
 
@@ -132,14 +132,14 @@ button.dt-button:hover, div.dt-button:hover, a.dt-button:hover, .btn-secondary:h
   background-image: none !important;
 }
 
-.diy-dt-search-box button.dt-button.buttons-filter, .diy-dt-search-box div.dt-button.buttons-filter, .diy-dt-search-box a.dt-button.buttons-filter {
+.canvas-dt-search-box button.dt-button.buttons-filter, .canvas-dt-search-box div.dt-button.buttons-filter, .canvas-dt-search-box a.dt-button.buttons-filter {
 	border: none;
 	padding: 0.5em 0.8em !important;
 	position: relative;
 	top: 1px;
 }
 
-.tab-content .diy-dt-search-box button.dt-button.buttons-filter, .tab-content .diy-dt-search-box div.dt-button.buttons-filter, .tab-content .diy-dt-search-box a.dt-button.buttons-filter {
+.tab-content .canvas-dt-search-box button.dt-button.buttons-filter, .tab-content .canvas-dt-search-box div.dt-button.buttons-filter, .tab-content .canvas-dt-search-box a.dt-button.buttons-filter {
 	top: 0;
 }
 
@@ -445,11 +445,11 @@ table td .rdio.text-left label {
 	left: -1px !important;
 }
 
-table.canvastack-datatable .diy-column-action {
+table.CanvaStack-datatable .canvas-column-action {
 	min-width: 86px;
 }
 
-.diy-dt-filter-box {
+.canvas-dt-filter-box {
 	position: relative;
 }
 
@@ -462,16 +462,16 @@ div.input-group .cke {
 	cursor: pointer !important;
 }
 
-.diy-dt-search-box button.dt-button.buttons-filter, 
-.diy-dt-search-box div.dt-button.buttons-filter, 
-.diy-dt-search-box a.dt-button.buttons-filter {
+.canvas-dt-search-box button.dt-button.buttons-filter, 
+.canvas-dt-search-box div.dt-button.buttons-filter, 
+.canvas-dt-search-box a.dt-button.buttons-filter {
 	background-color: #28A745 !important;
 	border-color: #2D9F47 !important;
 }
 
-.diy-dt-search-box button.dt-button.buttons-filter:hover, 
-.diy-dt-search-box div.dt-button.buttons-filter:hover, 
-.diy-dt-search-box a.dt-button.buttons-filter:hover {
+.canvas-dt-search-box button.dt-button.buttons-filter:hover, 
+.canvas-dt-search-box div.dt-button.buttons-filter:hover, 
+.canvas-dt-search-box a.dt-button.buttons-filter:hover {
 	background-color: #ffc107 !important;
 	border-color: #ffc107 !important;
 	background-image: none !important;
@@ -491,14 +491,14 @@ div.input-group .cke {
 	z-index: 1;
 }
 
-.diy-action-box {
+.canvas-action-box {
 	position: relative;
 	display: inline-table;
 	width: 100%;
 	z-index: 0;
 }
 
-.diy-action-box button {
+.canvas-action-box button {
 	margin: 0 5px !important;
 }
 
@@ -552,7 +552,7 @@ label:active:after {
 
 
 .show-hidden-on-hover:hover + .hide,
-.canvastack-datatable>tbody>tr>td>div.show-hidden-on-hover:hover + div.hide {
+.CanvaStack-datatable>tbody>tr>td>div.show-hidden-on-hover:hover + div.hide {
  	display: block !important;
 	left: calc(100% - 5px);
 	transform: translateX(-100%);
@@ -791,7 +791,7 @@ body .page-container>.main-content>.main-content-inner>.content-box>.body .callo
 	cursor: default !important;
 }
 
-.hidden-column, .diy-hide-column {
+.hidden-column, .canvas-hide-column {
 	display: none;
 	width: 0;
 }
@@ -1109,7 +1109,7 @@ table.dataTable tr td .action-buttons-box .action-buttons .btn {
 	line-height: 1.6;
 	border-radius: 2px !important;
 }
-table.canvastack-datatable thead>tr>th {
+table.CanvaStack-datatable thead>tr>th {
 	text-align: center;
 }
 table.dataTable tr td .action-buttons-box .action-buttons .btn i::before {

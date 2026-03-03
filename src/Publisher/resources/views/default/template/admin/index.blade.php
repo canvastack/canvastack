@@ -34,7 +34,7 @@
 						
 						@if (!empty($route_info))
 						<!-- START ACTION BUTTON BLOCK -->
-						{!! canvastack_action_buttons($route_info) !!}
+						{!! canvas_action_buttons($route_info) !!}
 						<!-- END ACTION BUTTON BLOCK -->
 						@endif
 						
@@ -66,5 +66,3 @@
 		@include('default.template.admin.block.downscripts')
 	</body>
 </html>
-
-

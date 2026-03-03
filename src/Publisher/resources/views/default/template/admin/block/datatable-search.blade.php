@@ -12,7 +12,5 @@
 ?>
 
 @if (!empty($components->table->filter_contents)) 
-	{!! canvastack_modal_content_box($components->table->filter_contents) !!}
+	{!! canvas_modal_content_box($components->table->filter_contents) !!}
 @endif
-
-

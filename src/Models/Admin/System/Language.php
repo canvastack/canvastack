@@ -1,8 +1,7 @@
 <?php
+namespace Canvastack\Origin\Models\Admin\System;
 
-namespace Canvastack\Canvastack\Models\Admin\System;
-
-use Canvastack\Canvastack\Core\Model;
+use Canvastack\Origin\Models\Core\Model;
 
 /**
  * Created on Jan 15, 2018
@@ -11,16 +10,13 @@ use Canvastack\Canvastack\Core\Model;
  *
  * @filesource	Language.php
  *
- * @author		wisnuwidi@IncoDIY - 2018
+ * @author		wisnuwidi@CanvaStack - 2018
  * @copyright	wisnuwidi
- *
  * @email		wisnuwidi@canvastack.com
  */
-class Language extends Model
-{
-    protected $table = 'base_language';
-
-    protected $guarded = [];
-
-    public $timestamps = false;
+class Language extends Model {
+	protected $table		= 'base_language';
+	protected $guarded		= [];
+	
+	public $timestamps		= false;
 }

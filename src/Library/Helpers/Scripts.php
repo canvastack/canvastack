@@ -3,71 +3,74 @@
  * Created on 12 Mar 2021
  * Time Created	: 13:48:55
  *
- * @filesource	Scripts.php canvastack_config("baseURL") . '/' . canvastack_config("template_folder")
+ * @filesource	Scripts.php canvas_config("baseURL") . '/' . canvas_config("template_folder")
  *
- * author: wisnuwidi@canvastack.com - 2021
- * email:  wisnuwidi@canvastack.com
+ * @author		wisnuwidi@canvastack.com - 2021
+ * @copyright	wisnuwidi
+ * @email		wisnuwidi@canvastack.com
  */
-
-use Canvastack\Canvastack\Library\Components\Utility\Canvatility;
-
-if (! function_exists('canvastack_script_html_element_value')) {
-
+ 
+if (!function_exists('canvas_script_html_element_value')) {
+    
     /**
      * Find Match HTML Elements to get string Value and all HTML Tag
      *
-     * BC: delegate to Canvatility::elementValue
+     * created @Sep 28, 2018
+     * author: wisnuwidi
+     *
+     * @param string $string
+     * @param string $tagname
+     * @param string $elm
+     *
+     * @return string
      */
-    function canvastack_script_html_element_value($string, $tagname, $elm, $asHTML = true)
-    {
-        return Canvatility::elementValue($string, $tagname, $elm, $asHTML);
+    function canvas_script_html_element_value($string, $tagname, $elm, $asHTML = true) {
+        $match = false;
+        preg_match("/<{$tagname}\s.*?\b{$elm}=\"(.*?)\".*?>/si", $string, $match);
+        
+        $data = null;
+        if (false === $asHTML) {
+            $data = $match[1];
+        } else {
+            $data = $match[0];
+        }
+        
+        return $data;
     }
 }
 
-if (! function_exists('canvastack_script_asset_path')) {
-
+if (!function_exists('canvas_script_asset_path')) {
+    
     /**
      * Get Asset Path
-     *
-     * Delegate to Canvatility for centralized logic.
+     * 
+     * @return string
      */
-    function canvastack_script_asset_path()
-    {
-        return Canvatility::assetBasePath();
+    function canvas_script_asset_path() {
+    	return canvas_config("baseURL") . '/' . canvas_config("base_template") . '/' . canvas_config("template");
     }
 }
 
-if (! function_exists('canvastack_script_check_string_path')) {
-
+if (!function_exists('canvas_script_check_string_path')) {
+    
     /**
      * Check string path
-     *
-     * Delegate to Canvatility for centralized logic.
+     * 
+     * @param string $string
+     * 
+     * @return string
      */
-    function canvastack_script_check_string_path($string, $exist_check = false)
-    {
-        return Canvatility::checkStringPath($string, $exist_check);
-    }
-}
-
-if (! function_exists('canvastack_image_validations')) {
-    /**
-     * Back-compat image validation helper
-     * Example: canvastack_image_validations(2000) => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:2000'
-     */
-    function canvastack_image_validations($maxKb = 2048)
-    {
-        return Canvatility::imageValidations((int) $maxKb);
-    }
-}
-
-if (! function_exists('canvastack_set_filesize')) {
-    /**
-     * Back-compat helper to convert to kilobytes.
-     * Legacy code already passes KB, so this is effectively passthrough.
-     */
-    function canvastack_set_filesize($size)
-    {
-        return Canvatility::toKilobytes((int) $size);
+    function canvas_script_check_string_path($string, $exist_check = false) {
+        if ((str_contains($string, 'https://') || str_contains($string, 'http://'))) {
+            $path = $string;
+        } else {
+            $path = canvas_script_asset_path() . "/{$string}";
+        }
+        
+        if (true === $exist_check) {
+            if (canvas_exist_url($path)) return $path;
+        } else {
+            return $path;
+        }
     }
 }
