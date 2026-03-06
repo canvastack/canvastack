@@ -51,6 +51,7 @@
         class="fixed inset-0 z-50 overflow-y-auto"
         @click.away="open = false"
         @keydown.escape.window="open = false"
+        @open-filter-modal.window="open = true"
         style="display: none;"
         dusk="filter-modal"
         role="dialog"

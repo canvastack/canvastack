@@ -6,6 +6,7 @@ namespace Canvastack\Canvastack\Http\Controllers;
 
 use Canvastack\Canvastack\Components\Table\TableBuilder;
 use Canvastack\Canvastack\Library\Components\MetaTags;
+use Illuminate\Routing\Controller;
 use Illuminate\View\View;
 
 /**

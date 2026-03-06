@@ -135,10 +135,16 @@ class BaseController extends LaravelController
         // Render table component if configured  
         if ($this->isTableConfigured()) {
             try {
-                $components[] = $this->table->render();
+                \Log::debug('BaseController: Rendering table...');
+                $tableHtml = $this->table->render();
+                \Log::debug('BaseController: Table HTML length', ['length' => strlen($tableHtml)]);
+                $components[] = $tableHtml;
             } catch (\Exception $e) {
                 // Table render failed, skip
+                \Log::error('BaseController: Table render failed', ['error' => $e->getMessage()]);
             }
+        } else {
+            \Log::debug('BaseController: Table not configured, skipping render');
         }
         
         // Render chart component if configured
@@ -189,14 +195,18 @@ class BaseController extends LaravelController
     protected function isTableConfigured(): bool
     {
         if (empty($this->table)) {
+            \Log::debug('BaseController: Table is empty');
             return false;
         }
         
         // Check if table has columns
         if (method_exists($this->table, 'getColumns')) {
-            return !empty($this->table->getColumns());
+            $columns = $this->table->getColumns();
+            \Log::debug('BaseController: Table columns', ['columns' => $columns, 'count' => count($columns)]);
+            return !empty($columns);
         }
         
+        \Log::debug('BaseController: Table does not have getColumns method');
         return false;
     }
     

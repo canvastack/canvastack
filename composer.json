@@ -18,6 +18,7 @@
     ],
     "require": {
         "php": "^8.2|^8.3",
+        "dompdf/dompdf": "^3.0|^2.0",
         "ezyang/htmlpurifier": "^4.19",
         "illuminate/cache": "^12.0",
         "illuminate/collections": "^12.0",
@@ -29,7 +30,8 @@
         "illuminate/support": "^12.0",
         "illuminate/validation": "^12.0",
         "illuminate/view": "^12.0",
-        "intervention/image": "^3.0"
+        "intervention/image": "^3.0",
+        "phpoffice/phpspreadsheet": "^3.0|^2.0|^1.29"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0",

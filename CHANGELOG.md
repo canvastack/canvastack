@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [3.0.1] - 2026-03-07 (In Progress)
+
+### Added (Work in Progress)
+- TanStack Table renderer with column pinning, row selection, and bulk actions (in development)
+- Dual-engine architecture (DataTables/TanStack) with middleware-based switching
+- Filter persistence system with cascade manager and date range support
+- Dark mode support with theme preference middleware and localStorage persistence
+- Comprehensive i18n support with Arabic RTL and locale switching capabilities
+- Server-side processing engine with caching and performance optimizations
+- RBAC integration with fine-grained permission controls for table operations
+- New CSS modules: TanStack table styles, filter modal, dark mode, and Flatpickr dark theme
+- New JS components: TanStack table interactions, filter cascade, date range picker, locale switcher
+- Filter options controller for dynamic filter data loading
+- Table configuration file (`config/canvastack-table.php`)
+- Extensive test coverage: feature tests, unit tests, performance tests, and security tests
+- Documentation updates: API references, examples, migration guides, and feature documentation
+
+### Changed
+- Enhanced FilterManager with cascade support and improved filter handling
+- Updated DataFormatter with better data processing capabilities
+- Improved AdminRenderer with enhanced rendering logic
+- Enhanced Tab and TabManager with better state management
+- Updated TableBuilder with dual-engine support
+- Refactored BaseController and DataTableController for better architecture
+- Enhanced LocaleController with improved locale handling
+- Updated service provider with new middleware and route registrations
+- Improved test fixtures and test case setup
+- Updated Vite configuration for new asset compilation
+
+### Notes
+- TanStack table development is ongoing and not yet finalized
+- Some features may be subject to change before final release
+- Backward compatibility with existing DataTables implementation is maintained
+
+---
+
+## [3.0.0] - TBD
+
 ### Added
 - Complete documentation restructure with 22+ comprehensive guides
 - Architecture documentation (overview, design patterns, layered architecture, DI)

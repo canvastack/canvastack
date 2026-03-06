@@ -188,7 +188,7 @@ class AdminRenderer implements RendererInterface
                 <!-- Left: Length Menu -->
                 <div class="flex items-center gap-2 flex-shrink-0">
                     <label class="text-sm text-gray-600 dark:text-gray-400">' . htmlspecialchars(__('canvastack::components.table.show')) . '</label>
-                    <select id="' . $tableId . '_length" class="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none">
+                    <select id="' . $tableId . '_length" class="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:border-transparent outline-none" style="--tw-ring-color: ' . (function_exists('theme_color') ? theme_color('primary') : '#6366f1') . '">
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
@@ -208,7 +208,7 @@ class AdminRenderer implements RendererInterface
                     <!-- Filter Button with Badge -->
                     <button 
                         id="' . $tableId . '_filter_btn"
-                        class="px-4 py-2 gradient-bg text-white rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-indigo-500/25 flex items-center gap-2 relative">
+                        class="px-4 py-2 gradient-bg text-white rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-lg flex items-center gap-2 relative" style="box-shadow: 0 10px 15px -3px ' . (function_exists('theme_color') ? theme_color('primary') : '#6366f1') . '40, 0 4px 6px -4px ' . (function_exists('theme_color') ? theme_color('primary') : '#6366f1') . '40">
                         <i data-lucide="filter" class="w-4 h-4"></i>
                         <span>' . htmlspecialchars(__('canvastack::components.table.filter')) . '</span>
                         ' . ($activeFilterCount > 0 ? '
@@ -224,12 +224,12 @@ class AdminRenderer implements RendererInterface
                         type="text" 
                         id="' . $tableId . '_search"
                         placeholder="' . htmlspecialchars(__('canvastack::components.table.search_placeholder')) . '"
-                        class="w-full pl-10 pr-12 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+                        class="w-full pl-10 pr-12 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:border-transparent outline-none transition" style="--tw-ring-color: ' . (function_exists('theme_color') ? theme_color('primary') : '#6366f1') . '"
                     >
                     <!-- Search Submit Button (appears when typing) -->
                     <button 
                         id="' . $tableId . '_search_btn"
-                        class="absolute right-2 p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition opacity-0 pointer-events-none flex items-center justify-center"
+                        class="absolute right-2 p-1.5 text-white rounded-lg transition opacity-0 pointer-events-none flex items-center justify-center" style="background-color: ' . (function_exists('theme_color') ? theme_color('primary') : '#6366f1') . '"
                         style="transition: opacity 0.2s; width: 28px; height: 28px;"
                         title="Search">
                         <i data-lucide="search" class="w-3.5 h-3.5"></i>
@@ -340,7 +340,8 @@ class AdminRenderer implements RendererInterface
             $html .= '<th class="' . $thClass . '"' . $styleAttr . '>';
 
             if ($sortable) {
-                $html .= '<div class="flex items-center gap-2 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400">';
+                $primaryColor = function_exists('theme_color') ? theme_color('primary') : '#6366f1';
+                $html .= '<div class="flex items-center gap-2 cursor-pointer transition" style="--hover-color: ' . $primaryColor . '" onmouseover="this.style.color=this.style.getPropertyValue(\'--hover-color\')" onmouseout="this.style.color=\'\'">';
                 $html .= htmlspecialchars($label);
                 $html .= '<i data-lucide="chevron-down" class="w-3 h-3"></i>';
                 $html .= '</div>';
@@ -680,7 +681,8 @@ class AdminRenderer implements RendererInterface
             $icon = $action['icon'] ?? 'circle';
             $url = $action['url'] ?? '#';
             $method = $action['method'] ?? 'GET';
-            $class = $action['class'] ?? 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400';
+            $primaryColor = function_exists('theme_color') ? theme_color('primary') : '#6366f1';
+            $class = $action['class'] ?? 'text-gray-600 dark:text-gray-400 transition';
             $confirm = $action['confirm'] ?? null;
             
             // Replace :id placeholder with actual ID
@@ -763,6 +765,9 @@ class AdminRenderer implements RendererInterface
         $httpMethod = $config['httpMethod'] ?? 'POST';
         $ajaxUrl = $config['ajaxUrl'] ?? '/datatable/data';
         $columns = $config['columns'] ?? [];
+        
+        // Get theme colors for JavaScript
+        $primaryColor = function_exists('theme_color') ? theme_color('primary') : '#6366f1';
         
         // Use actions from class property (already extracted in render() method)
         $actions = $this->actions;
@@ -996,6 +1001,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Translations object
     const translations = {$translationsJson};
     
+    // Theme color for actions and UI elements
+    const primaryColor = '{$primaryColor}';
+    
     // Wait for jQuery to be ready
     if (typeof $ === 'undefined') {
         console.error('jQuery not loaded. DataTables requires jQuery.');
@@ -1040,7 +1048,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const icon = action.icon || 'circle';
                         let url = action.url || '#';
                         const method = action.method || 'GET';
-                        const className = action.class || 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400';
+                        const className = action.class || 'text-gray-600 dark:text-gray-400 transition';
                         const confirm = action.confirm || null;
                         
                         // Replace :id placeholder with actual ID
@@ -1075,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return row;
             },
             language: {
-                processing: '<div class=\"flex items-center justify-center gap-2\"><div class=\"animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600\"></div><span>' + translations.processing + '</span></div>',
+                processing: '<div class=\"flex items-center justify-center gap-2\"><div class=\"animate-spin rounded-full h-5 w-5 border-b-2\" style=\"border-color: ' + primaryColor + '\"></div><span>' + translations.processing + '</span></div>',
                 emptyTable: translations.emptyTable,
                 zeroRecords: translations.zeroRecords,
                 info: translations.info,
@@ -1384,7 +1392,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 'copy' => [
                     'extend' => 'copy',
                     'text' => '<i data-lucide="copy" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i><span style="display:inline;vertical-align:middle;">Copy</span>',
-                    'className' => 'btn btn-sm bg-indigo-600 hover:bg-indigo-700 text-white border-0',
+                    'className' => 'btn btn-sm text-white border-0',
+                    'attr' => [
+                        'style' => 'background-color: ' . (function_exists('theme_color') ? theme_color('primary') : '#6366f1')
+                    ],
                     'exportOptions' => [
                         'columns' => ':visible:not(.no-export):not(:last-child)' // Exclude actions column
                     ]

@@ -4,6 +4,9 @@ import { resolve } from 'path';
 import fs from 'fs';
 import viteCompression from 'vite-plugin-compression';
 import viteImagemin from 'vite-plugin-imagemin';
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
+import cssnano from 'cssnano';
 
 // Check if generated Tailwind config exists, otherwise use default
 const tailwindConfig = fs.existsSync(resolve(__dirname, 'tailwind.config.generated.js'))
@@ -15,7 +18,9 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/canvastack.css',
+                'resources/css/tanstack-table.css',
                 'resources/js/canvastack.js',
+                'resources/js/tanstack-table.js',
             ],
             refresh: true,
         }),
@@ -78,11 +83,11 @@ export default defineConfig({
     css: {
         postcss: {
             plugins: [
-                require('tailwindcss')(tailwindConfig),
-                require('autoprefixer'),
+                tailwindcss(tailwindConfig),
+                autoprefixer(),
                 // Minify CSS in production
                 ...(process.env.NODE_ENV === 'production' ? [
-                    require('cssnano')({
+                    cssnano({
                         preset: ['default', {
                             discardComments: {
                                 removeAll: true,
@@ -118,6 +123,7 @@ export default defineConfig({
             output: {
                 manualChunks: {
                     'vendor': ['alpinejs', 'apexcharts'],
+                    'tanstack': ['@tanstack/table-core', '@tanstack/virtual-core'],
                     'animation': ['gsap'],
                     'icons': ['lucide'],
                     'datepicker': ['flatpickr'],
@@ -152,6 +158,6 @@ export default defineConfig({
         target: 'es2020',
     },
     optimizeDeps: {
-        include: ['alpinejs', 'apexcharts', 'gsap', 'flatpickr'],
+        include: ['alpinejs', 'apexcharts', 'gsap', 'flatpickr', '@tanstack/table-core', '@tanstack/virtual-core'],
     },
 });

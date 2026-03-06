@@ -29,6 +29,198 @@ class DataTableController extends Controller
     }
 
     /**
+     * Get data for TanStack Table server-side processing.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getTanStackData(Request $request): JsonResponse
+    {
+        try {
+            // Get TanStack Table parameters
+            $page = (int) $request->input('page', 1);
+            $pageSize = (int) $request->input('pageSize', 10);
+            $sorting = $request->input('sorting', []);
+            $globalFilter = $request->input('globalFilter', '');
+            $columnFilters = $request->input('columnFilters', []);
+            $filters = $request->input('filters', []); // Custom filters from filter modal
+            
+            // Log incoming request for debugging
+            \Log::info('TanStack Table getData request', [
+                'page' => $page,
+                'pageSize' => $pageSize,
+                'globalFilter' => $globalFilter,
+                'columnFilters' => $columnFilters,
+                'filters' => $filters,
+            ]);
+            
+            // Get table/model information
+            $tableName = $request->input('tableName', 'users');
+            $modelClass = $request->input('modelClass');
+            
+            // Build query - prefer model over raw table
+            if ($modelClass && class_exists($modelClass)) {
+                $query = $modelClass::query();
+            } else {
+                $query = DB::table($tableName);
+            }
+            
+            // Get total count before filtering
+            if ($modelClass && class_exists($modelClass)) {
+                $totalRecords = $modelClass::count();
+            } else {
+                $totalRecords = DB::table($tableName)->count();
+            }
+            
+            // Apply global filter
+            if ($globalFilter !== '') {
+                $searchableColumns = $request->input('searchableColumns', []);
+                if (!empty($searchableColumns)) {
+                    $query->where(function ($q) use ($searchableColumns, $globalFilter) {
+                        foreach ($searchableColumns as $column) {
+                            $q->orWhere($column, 'like', "%{$globalFilter}%");
+                        }
+                    });
+                }
+            }
+            
+            // Apply column filters
+            foreach ($columnFilters as $filter) {
+                if (isset($filter['id']) && isset($filter['value'])) {
+                    $column = $filter['id'];
+                    $value = $filter['value'];
+                    $query->where($column, $value);
+                }
+            }
+            
+            // Apply custom filters from filter modal
+            if (!empty($filters) && is_array($filters)) {
+                \Log::info('Applying custom filters', ['filters' => $filters]);
+                
+                foreach ($filters as $column => $value) {
+                    if (empty($value)) {
+                        continue;
+                    }
+                    
+                    // Check if this is a date column
+                    $isDateColumn = (substr($column, -3) === '_at' || $column === 'date');
+                    
+                    if ($isDateColumn && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                        // Date filter - use whereDate for exact date match
+                        $query->whereDate($column, $value);
+                        \Log::info('Applied whereDate filter', ['column' => $column, 'value' => $value]);
+                    } else {
+                        // Exact match filter
+                        $query->where($column, $value);
+                        \Log::info('Applied where filter', ['column' => $column, 'value' => $value]);
+                    }
+                }
+            }
+            
+            // Get filtered count
+            $filteredRecords = (clone $query)->count();
+            
+            // Apply sorting
+            if (!empty($sorting) && isset($sorting[0])) {
+                $sortColumn = $sorting[0]['id'] ?? 'id';
+                $sortDirection = ($sorting[0]['desc'] ?? false) ? 'desc' : 'asc';
+                $query->orderBy($sortColumn, $sortDirection);
+            }
+            
+            // Apply pagination
+            $offset = ($page - 1) * $pageSize;
+            $query->skip($offset)->take($pageSize);
+            
+            // Get data
+            $data = $query->get()->toArray();
+            
+            // Add actions to each row (simple implementation)
+            // In production, actions should be configured via TableBuilder
+            foreach ($data as &$row) {
+                $row['_actions'] = $this->buildSimpleActions($row);
+            }
+            
+            // Return TanStack Table response
+            return response()->json([
+                'data' => $data,
+                'meta' => [
+                    'page' => $page,
+                    'pageSize' => $pageSize,
+                    'totalRows' => $filteredRecords, // Use filtered count for pagination
+                    'totalPages' => ceil($filteredRecords / $pageSize), // Calculate pages from filtered count
+                    'filteredRows' => $filteredRecords,
+                    'totalRecordsBeforeFilter' => $totalRecords, // Keep original total for reference
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('TanStack Table getData error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+            ]);
+            
+            return response()->json([
+                'data' => [],
+                'meta' => [
+                    'page' => 1,
+                    'pageSize' => 10,
+                    'totalRows' => 0,
+                    'totalPages' => 0,
+                    'filteredRows' => 0,
+                ],
+                'error' => 'Error loading data: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Build simple actions for a row.
+     * 
+     * This is a simplified implementation. In production, actions should be
+     * configured via TableBuilder and passed through the request.
+     *
+     * @param array $row
+     * @return array
+     */
+    protected function buildSimpleActions(array $row): array
+    {
+        $id = $row['id'] ?? null;
+        
+        if (!$id) {
+            return [];
+        }
+        
+        // Build default actions (view, edit, delete)
+        return [
+            [
+                'name' => 'view',
+                'label' => 'View',
+                'icon' => 'eye',
+                'url' => '#',
+                'method' => 'GET',
+                'class' => 'btn-sm btn-info',
+            ],
+            [
+                'name' => 'edit',
+                'label' => 'Edit',
+                'icon' => 'edit',
+                'url' => route('test.form-edit', $id),
+                'method' => 'GET',
+                'class' => 'btn-sm btn-warning',
+            ],
+            [
+                'name' => 'delete',
+                'label' => 'Delete',
+                'icon' => 'trash',
+                'url' => '#',
+                'method' => 'DELETE',
+                'confirm' => 'Are you sure you want to delete this item?',
+                'class' => 'btn-sm btn-error',
+            ],
+        ];
+    }
+
+    /**
      * Get data for DataTables server-side processing.
      *
      * @param Request $request
@@ -299,6 +491,63 @@ class DataTableController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error saving filters: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get filter values from session.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getFilters(Request $request): JsonResponse
+    {
+        // Validate request
+        $validator = Validator::make($request->all(), [
+            'table_id' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $tableId = $request->input('table_id');
+
+        try {
+            // Try both session keys for backward compatibility
+            // First try with table_id (new format)
+            $sessionKey = "datatable_filters_{$tableId}";
+            $filters = session($sessionKey, null);
+            
+            // If not found, try with just the table ID without prefix
+            if (empty($filters)) {
+                $filters = session($tableId, []);
+            }
+
+            \Log::info('Get filters from session', [
+                'table_id' => $tableId,
+                'session_key' => $sessionKey,
+                'filters' => $filters,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'filters' => $filters ?? [],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error getting filters', [
+                'error' => $e->getMessage(),
+                'table_id' => $tableId,
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error getting filters: ' . $e->getMessage(),
             ], 500);
         }
     }

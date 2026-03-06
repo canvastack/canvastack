@@ -510,6 +510,58 @@ class TableBuilderTest extends TestCase
     }
 
     /** @test */
+    public function it_gets_cache_time(): void
+    {
+        // Initially cache time should be null
+        $this->assertNull($this->tableBuilder->getCacheTime());
+
+        // Set cache time
+        $this->tableBuilder->cache(300);
+
+        // Get cache time should return the set value
+        $this->assertEquals(300, $this->tableBuilder->getCacheTime());
+    }
+
+    /** @test */
+    public function it_sets_cache_time(): void
+    {
+        // Set cache time using setCacheTime()
+        $result = $this->tableBuilder->setCacheTime(600);
+
+        // Should return self for method chaining
+        $this->assertInstanceOf(TableBuilder::class, $result);
+
+        // Cache time should be set
+        $this->assertEquals(600, $this->tableBuilder->getCacheTime());
+    }
+
+    /** @test */
+    public function it_sets_cache_time_via_cache_method(): void
+    {
+        // Set cache time using cache()
+        $this->tableBuilder->cache(900);
+
+        // getCacheTime() should return the same value
+        $this->assertEquals(900, $this->tableBuilder->getCacheTime());
+    }
+
+    /** @test */
+    public function it_updates_cache_time(): void
+    {
+        // Set initial cache time
+        $this->tableBuilder->cache(300);
+        $this->assertEquals(300, $this->tableBuilder->getCacheTime());
+
+        // Update cache time
+        $this->tableBuilder->setCacheTime(600);
+        $this->assertEquals(600, $this->tableBuilder->getCacheTime());
+
+        // Update again using cache()
+        $this->tableBuilder->cache(900);
+        $this->assertEquals(900, $this->tableBuilder->getCacheTime());
+    }
+
+    /** @test */
     public function it_sets_and_gets_config(): void
     {
         $config = ['key' => 'value'];

@@ -30,6 +30,11 @@ Route::match(['get', 'post'], '/datatable/data', [\Canvastack\Canvastack\Http\Co
     ->middleware(['web'])
     ->name('datatable.data');
 
+// TanStack Table AJAX endpoint for server-side processing
+Route::match(['get', 'post'], '/canvastack/table/data', [\Canvastack\Canvastack\Http\Controllers\DataTableController::class, 'getTanStackData'])
+    ->middleware(['web'])
+    ->name('canvastack.table.data');
+
 // DataTables Filter Endpoints
 Route::post('/datatable/filter-options', [\Canvastack\Canvastack\Http\Controllers\DataTableController::class, 'getFilterOptions'])
     ->middleware(['web'])
@@ -38,6 +43,10 @@ Route::post('/datatable/filter-options', [\Canvastack\Canvastack\Http\Controller
 Route::post('/datatable/save-filters', [\Canvastack\Canvastack\Http\Controllers\DataTableController::class, 'saveFilters'])
     ->middleware(['web'])
     ->name('datatable.save-filters');
+
+Route::post('/datatable/get-filters', [\Canvastack\Canvastack\Http\Controllers\DataTableController::class, 'getFilters'])
+    ->middleware(['web'])
+    ->name('datatable.get-filters');
 
 Route::post('/datatable/save-display-limit', [\Canvastack\Canvastack\Http\Controllers\DataTableController::class, 'saveDisplayLimit'])
     ->middleware(['web'])

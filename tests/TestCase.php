@@ -601,6 +601,25 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
+     * Assert that a given table has a specific number of records.
+     */
+    protected function assertDatabaseCount(string $table, int $expectedCount): void
+    {
+        $actualCount = Capsule::table($table)->count();
+
+        $this->assertEquals(
+            $expectedCount,
+            $actualCount,
+            sprintf(
+                'Failed asserting that table [%s] contains exactly %d records. Found %d records.',
+                $table,
+                $expectedCount,
+                $actualCount
+            )
+        );
+    }
+
+    /**
      * Setup in-memory SQLite database for testing.
      */
     protected function setupDatabase($app): void
@@ -657,6 +676,11 @@ abstract class TestCase extends BaseTestCase
             return new \Canvastack\Canvastack\Support\Localization\RtlSupport(
                 $app->make('canvastack.locale')
             );
+        });
+
+        // Also bind with alias
+        $app->singleton('canvastack.rtl', function ($app) {
+            return $app->make(\Canvastack\Canvastack\Support\Localization\RtlSupport::class);
         });
 
         // Register TranslationLoader with mock
@@ -1041,6 +1065,27 @@ abstract class TestCase extends BaseTestCase
      */
     protected function createTestTables(Capsule $capsule): void
     {
+        // Create users table for testing (if not exists)
+        // This table is used by both RBAC tests and ServerSideProcessing tests
+        if (!$capsule->schema()->hasTable('users')) {
+            $capsule->schema()->create('users', function ($table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email')->unique();
+                $table->timestamp('email_verified_at')->nullable();
+                $table->string('password')->nullable();
+                $table->boolean('is_super_admin')->default(false);
+                $table->boolean('active')->default(true);
+                $table->string('status')->default('active'); // For filtering tests
+                $table->string('role')->default('user'); // For filtering tests
+                $table->unsignedBigInteger('department_id')->nullable();
+                $table->unsignedBigInteger('organization_id')->nullable();
+                $table->unsignedBigInteger('team_id')->nullable();
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+
         // Create translatable_products table for testing
         $capsule->schema()->create('translatable_products', function ($table) {
             $table->id();
@@ -1171,19 +1216,21 @@ abstract class TestCase extends BaseTestCase
                 ->onDelete('cascade');
         });
 
-        // Create users table for RBAC testing
-        $capsule->schema()->create('users', function ($table) {
+        // Users table already created above with all required columns
+        // Just verify it exists
+        if (!$capsule->schema()->hasTable('users')) {
+            throw new \RuntimeException('Users table should have been created earlier in createTestTables()');
+        }
+
+        // Create test_users table for TableBuilder testing
+        $capsule->schema()->create('test_users', function ($table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable(); // Add email verification timestamp
             $table->string('password');
-            $table->boolean('is_super_admin')->default(false);
-            $table->boolean('active')->default(true); // Add active column for property tests
-            $table->unsignedBigInteger('organization_id')->nullable(); // For multi-tenant tests
-            $table->unsignedBigInteger('team_id')->nullable(); // For team-based tests
+            $table->string('status')->default('active'); // For filtering tests
+            $table->string('role')->default('user'); // For filtering tests
             $table->timestamps();
-            $table->softDeletes(); // Add soft deletes support
         });
 
         // Create posts table for testing

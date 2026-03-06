@@ -25,6 +25,8 @@
     "vite-plugin-imagemin": "^0.6.1"
   },
   "dependencies": {
+    "@tanstack/table-core": "^8.11.6",
+    "@tanstack/virtual-core": "^3.0.1",
     "alpinejs": "^3.13.3",
     "apexcharts": "^3.45.1",
     "daisyui": "^4.6.0",

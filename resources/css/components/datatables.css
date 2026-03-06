@@ -35,7 +35,7 @@ table.dataTable tbody tr td {
     font-weight: 500 !important; /* font-medium */
     /* Use Tailwind format with CSS variables */
     --tw-text-opacity: 1 !important;
-    color: rgb(17 24 39 / var(--tw-text-opacity, 1)) !important; /* text-gray-900 */
+    color: var(--tw-gray-900, rgb(17 24 39)) !important; /* text-gray-900 */
 }
 
 /* Dark mode body cells - lighter color for better readability */
@@ -43,7 +43,7 @@ table.dataTable tbody tr td {
 .dark .dataTables_wrapper table.dataTable tbody tr td,
 .dark table.dataTable tbody tr td {
     --tw-text-opacity: 1 !important;
-    color: rgb(182, 191, 206) !important; /* Lighter gray */
+    color: var(--tw-gray-300, rgb(209 213 219)) !important; /* Lighter gray */
 }
 
 /* Table header cells - MAXIMUM SPECIFICITY */
@@ -55,10 +55,10 @@ table.dataTable thead tr th {
     font-weight: 500 !important; /* font-medium */
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important; /* tracking-wider */
-    background-color: #f9fafb !important; /* bg-gray-50 */
+    background-color: var(--tw-gray-50, #f9fafb) !important; /* bg-gray-50 */
     /* Use Tailwind format with CSS variables */
     --tw-text-opacity: 1 !important;
-    color: rgb(107 114 128 / var(--tw-text-opacity, 1)) !important; /* text-gray-500 */
+    color: var(--tw-gray-500, rgb(107 114 128)) !important; /* text-gray-500 */
 }
 
 /* Dark mode for table header - Tailwind format */
@@ -66,30 +66,30 @@ table.dataTable thead tr th {
 .dark .dataTables_wrapper table.dataTable thead tr th,
 .dark table.dataTable thead tr th {
     --tw-text-opacity: 1 !important;
-    color: rgb(156 163 175 / var(--tw-text-opacity, 1)) !important; /* dark:text-gray-400 */
-    background-color: rgba(31, 41, 55, 0.5) !important; /* dark:bg-gray-800/50 */
+    color: var(--tw-gray-400, rgb(156 163 175)) !important; /* dark:text-gray-400 */
+    background-color: var(--tw-gray-800-50, rgba(31, 41, 55, 0.5)) !important; /* dark:bg-gray-800/50 */
 }
 
 /* Table row hover */
 .dt-container table.dataTable tbody tr:hover,
 .dataTables_wrapper table.dataTable tbody tr:hover {
-    background-color: #f9fafb !important; /* hover:bg-gray-50 */
+    background-color: var(--tw-gray-50, #f9fafb) !important; /* hover:bg-gray-50 */
 }
 
 .dark .dt-container table.dataTable tbody tr:hover,
 .dark .dataTables_wrapper table.dataTable tbody tr:hover {
-    background-color: rgba(31, 41, 55, 0.5) !important; /* dark:hover:bg-gray-800/50 */
+    background-color: var(--tw-gray-800-50, rgba(31, 41, 55, 0.5)) !important; /* dark:hover:bg-gray-800/50 */
 }
 
 /* Table row dividers */
 .dt-container table.dataTable tbody tr,
 .dataTables_wrapper table.dataTable tbody tr {
-    border-bottom: 1px solid #f3f4f6 !important; /* divide-gray-100 */
+    border-bottom: 1px solid var(--tw-gray-100, #f3f4f6) !important; /* divide-gray-100 */
 }
 
 .dark .dt-container table.dataTable tbody tr,
 .dark .dataTables_wrapper table.dataTable tbody tr {
-    border-bottom: 1px solid #1f2937 !important; /* dark:divide-gray-800 */
+    border-bottom: 1px solid var(--tw-gray-800, #1f2937) !important; /* dark:divide-gray-800 */
 }
 
 /* Column Alignments - CRITICAL: ID column center with HIGHEST SPECIFICITY */
@@ -121,7 +121,7 @@ table.dataTable thead tr th {
 .dt-container .dt-info,
 .dataTables_wrapper .dataTables_info {
     font-size: 0.75rem !important; /* text-xs - smaller */
-    color: #9ca3af !important; /* gray-400 - lighter */
+    color: var(--tw-gray-400, #9ca3af) !important; /* gray-400 - lighter */
     padding: 0 !important;
     margin: 0 !important;
     flex: 0 0 auto !important;
@@ -129,7 +129,7 @@ table.dataTable thead tr th {
 
 .dark .dt-container .dt-info,
 .dark .dataTables_wrapper .dataTables_info {
-color: #6b7280 !important; /* gray-500 for dark mode */
+    color: var(--tw-gray-500, #6b7280) !important; /* gray-500 for dark mode */
 }
 
 .dt-container .dt-paging,
@@ -164,7 +164,7 @@ color: #6b7280 !important; /* gray-500 for dark mode */
 .dt-container .dt-paging button:hover:not(.current):not(.disabled),
 .dataTables_wrapper .dataTables_paginate .dt-paging-button:hover:not(.current):not(.disabled),
 .dataTables_wrapper .dataTables_paginate button:hover:not(.current):not(.disabled) {
-    background: #f3f4f6 !important; /* gray-100 */
+    background: var(--tw-gray-100, #f3f4f6) !important; /* gray-100 */
 }
 
 /* Dark mode hover */
@@ -172,7 +172,7 @@ color: #6b7280 !important; /* gray-500 for dark mode */
 .dark .dt-container .dt-paging button:hover:not(.current):not(.disabled),
 .dark .dataTables_wrapper .dataTables_paginate .dt-paging-button:hover:not(.current):not(.disabled),
 .dark .dataTables_wrapper .dataTables_paginate button:hover:not(.current):not(.disabled) {
-    background: #1f2937 !important; /* gray-800 */
+    background: var(--tw-gray-800, #1f2937) !important; /* gray-800 */
 }
 
 .dt-container .dt-paging .dt-paging-button.current,
@@ -183,7 +183,11 @@ color: #6b7280 !important; /* gray-500 for dark mode */
 .dataTables_wrapper .dataTables_paginate .dt-paging-button.current:hover,
 .dataTables_wrapper .dataTables_paginate button.current,
 .dataTables_wrapper .dataTables_paginate button.current:hover {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7) !important;
+    background: linear-gradient(135deg, 
+        var(--cs-color-primary, #6366f1), 
+        var(--cs-color-secondary, #8b5cf6), 
+        var(--cs-color-accent, #a855f7)
+    ) !important;
     color: white !important;
 }
 

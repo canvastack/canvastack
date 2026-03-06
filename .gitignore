@@ -80,3 +80,8 @@ phpstan-baseline.neon.bak
 # Build tools
 mix-manifest.json
 .hot
+
+# Backups
+*.bak
+*.backup
+*.backup*

@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
       class="{{ request()->cookie('darkMode') === 'true' ? 'dark' : '' }}">
 <head>
-    @include('canvastack::layouts.partials.meta')
+    @include('canvastack::layouts.partials.meta', ['table_engine' => $table_engine ?? null])
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
     

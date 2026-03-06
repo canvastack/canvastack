@@ -57,6 +57,27 @@ class Tab
     protected array $config = [];
 
     /**
+     * Whether this tab should be lazy loaded (Requirement 32.7)
+     * 
+     * @var bool
+     */
+    protected bool $lazyLoad = false;
+
+    /**
+     * AJAX URL for lazy loading content (Requirement 32.7)
+     * 
+     * @var string|null
+     */
+    protected ?string $lazyLoadUrl = null;
+
+    /**
+     * Whether tab content has been loaded (Requirement 32.7)
+     * 
+     * @var bool
+     */
+    protected bool $isLoaded = false;
+
+    /**
      * Constructor
      * 
      * @param string $name Tab display name
@@ -225,6 +246,125 @@ class Tab
             'charts' => array_map(fn($chart) => $chart->toArray(), $this->charts),
             'content' => $this->content,
             'config' => $this->config,
+        ];
+    }
+
+    /**
+     * Get keyboard navigation attributes for accessibility (Requirement 32.5)
+     * 
+     * @param bool $isActive Whether this tab is currently active
+     * @param int $index Tab index (0-based)
+     * @return array Attributes for tab button
+     */
+    public function getKeyboardAttributes(bool $isActive, int $index): array
+    {
+        return [
+            'role' => 'tab',
+            'aria-selected' => $isActive ? 'true' : 'false',
+            'aria-controls' => 'tabpanel-' . $this->id,
+            'id' => 'tab-' . $this->id,
+            'tabindex' => $isActive ? '0' : '-1',
+            'data-tab-index' => (string) $index,
+        ];
+    }
+
+    /**
+     * Get keyboard navigation attributes for tab panel (Requirement 32.5)
+     * 
+     * @param bool $isActive Whether this tab is currently active
+     * @return array Attributes for tab panel
+     */
+    public function getPanelAttributes(bool $isActive): array
+    {
+        return [
+            'role' => 'tabpanel',
+            'id' => 'tabpanel-' . $this->id,
+            'aria-labelledby' => 'tab-' . $this->id,
+            'tabindex' => '0',
+            'hidden' => !$isActive,
+        ];
+    }
+
+    /**
+     * Enable lazy loading for this tab (Requirement 32.7)
+     * 
+     * @param string $url AJAX URL to load content from
+     * @return void
+     */
+    public function enableLazyLoad(string $url): void
+    {
+        $this->lazyLoad = true;
+        $this->lazyLoadUrl = $url;
+        $this->isLoaded = false;
+    }
+
+    /**
+     * Disable lazy loading for this tab (Requirement 32.7)
+     * 
+     * @return void
+     */
+    public function disableLazyLoad(): void
+    {
+        $this->lazyLoad = false;
+        $this->lazyLoadUrl = null;
+        $this->isLoaded = true;
+    }
+
+    /**
+     * Check if tab is lazy loaded (Requirement 32.7)
+     * 
+     * @return bool
+     */
+    public function isLazyLoaded(): bool
+    {
+        return $this->lazyLoad;
+    }
+
+    /**
+     * Get lazy load URL (Requirement 32.7)
+     * 
+     * @return string|null
+     */
+    public function getLazyLoadUrl(): ?string
+    {
+        return $this->lazyLoadUrl;
+    }
+
+    /**
+     * Check if tab content has been loaded (Requirement 32.7)
+     * 
+     * @return bool
+     */
+    public function isContentLoaded(): bool
+    {
+        return $this->isLoaded;
+    }
+
+    /**
+     * Mark tab content as loaded (Requirement 32.7)
+     * 
+     * @return void
+     */
+    public function markAsLoaded(): void
+    {
+        $this->isLoaded = true;
+    }
+
+    /**
+     * Get lazy loading attributes for tab panel (Requirement 32.7)
+     * 
+     * @return array Attributes for lazy loading
+     */
+    public function getLazyLoadAttributes(): array
+    {
+        if (!$this->lazyLoad) {
+            return [];
+        }
+
+        return [
+            'data-lazy-load' => 'true',
+            'data-lazy-url' => $this->lazyLoadUrl,
+            'data-loaded' => $this->isLoaded ? 'true' : 'false',
         ];
     }
 }

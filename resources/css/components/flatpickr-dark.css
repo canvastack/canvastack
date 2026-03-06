@@ -1,0 +1,181 @@
+/**
+ * Flatpickr Dark Mode Styles
+ * 
+ * Custom dark mode styling for Flatpickr date picker
+ * Integrates with CanvaStack theme system
+ */
+
+/* Dark mode calendar container */
+.flatpickr-dark.flatpickr-calendar {
+    background: rgb(17 24 39); /* gray-900 */
+    border-color: rgb(55 65 81); /* gray-700 */
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+}
+
+/* Dark mode month navigation */
+.flatpickr-dark .flatpickr-months {
+    background: rgb(31 41 55); /* gray-800 */
+    border-bottom: 1px solid rgb(55 65 81); /* gray-700 */
+}
+
+.flatpickr-dark .flatpickr-current-month {
+    color: rgb(243 244 246); /* gray-100 */
+}
+
+.flatpickr-dark .flatpickr-current-month .flatpickr-monthDropdown-months {
+    background: rgb(31 41 55); /* gray-800 */
+    color: rgb(243 244 246); /* gray-100 */
+    border-color: rgb(55 65 81); /* gray-700 */
+}
+
+.flatpickr-dark .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
+    background: rgb(55 65 81); /* gray-700 */
+}
+
+.flatpickr-dark .numInputWrapper:hover,
+.flatpickr-dark .flatpickr-current-month .numInputWrapper:hover {
+    background: rgb(55 65 81); /* gray-700 */
+}
+
+.flatpickr-dark .numInput {
+    color: rgb(243 244 246); /* gray-100 */
+}
+
+/* Dark mode navigation arrows */
+.flatpickr-dark .flatpickr-prev-month,
+.flatpickr-dark .flatpickr-next-month {
+    color: rgb(156 163 175); /* gray-400 */
+}
+
+.flatpickr-dark .flatpickr-prev-month:hover,
+.flatpickr-dark .flatpickr-next-month:hover {
+    color: rgb(243 244 246); /* gray-100 */
+    background: rgb(55 65 81); /* gray-700 */
+}
+
+.flatpickr-dark .flatpickr-prev-month svg,
+.flatpickr-dark .flatpickr-next-month svg {
+    fill: rgb(156 163 175); /* gray-400 */
+}
+
+.flatpickr-dark .flatpickr-prev-month:hover svg,
+.flatpickr-dark .flatpickr-next-month:hover svg {
+    fill: rgb(243 244 246); /* gray-100 */
+}
+
+/* Dark mode weekdays */
+.flatpickr-dark .flatpickr-weekdays {
+    background: rgb(31 41 55); /* gray-800 */
+    border-bottom: 1px solid rgb(55 65 81); /* gray-700 */
+}
+
+.flatpickr-dark .flatpickr-weekday {
+    color: rgb(156 163 175); /* gray-400 */
+}
+
+/* Dark mode days */
+.flatpickr-dark .flatpickr-days {
+    background: rgb(17 24 39); /* gray-900 */
+}
+
+.flatpickr-dark .flatpickr-day {
+    color: rgb(209 213 219); /* gray-300 */
+    border-color: transparent;
+}
+
+.flatpickr-dark .flatpickr-day:hover {
+    background: rgb(55 65 81); /* gray-700 */
+    border-color: rgb(55 65 81); /* gray-700 */
+    color: rgb(243 244 246); /* gray-100 */
+}
+
+.flatpickr-dark .flatpickr-day.today {
+    border-color: var(--cs-color-primary, rgb(99 102 241)); /* primary */
+    color: var(--cs-color-primary, rgb(99 102 241)); /* primary */
+}
+
+.flatpickr-dark .flatpickr-day.today:hover {
+    background: var(--cs-color-primary, rgb(99 102 241)); /* primary */
+    border-color: var(--cs-color-primary, rgb(99 102 241)); /* primary */
+    color: white;
+}
+
+.flatpickr-dark .flatpickr-day.selected,
+.flatpickr-dark .flatpickr-day.startRange,
+.flatpickr-dark .flatpickr-day.endRange {
+    background: var(--cs-color-primary, rgb(99 102 241)); /* primary */
+    border-color: var(--cs-color-primary, rgb(99 102 241)); /* primary */
+    color: white;
+}
+
+.flatpickr-dark .flatpickr-day.selected:hover,
+.flatpickr-dark .flatpickr-day.startRange:hover,
+.flatpickr-dark .flatpickr-day.endRange:hover {
+    background: var(--cs-color-primary-dark, rgb(79 70 229)); /* primary-dark */
+    border-color: var(--cs-color-primary-dark, rgb(79 70 229)); /* primary-dark */
+}
+
+.flatpickr-dark .flatpickr-day.inRange {
+    background: rgba(99, 102, 241, 0.1); /* primary with opacity */
+    border-color: transparent;
+    color: rgb(209 213 219); /* gray-300 */
+}
+
+.flatpickr-dark .flatpickr-day.disabled,
+.flatpickr-dark .flatpickr-day.disabled:hover {
+    color: rgb(75 85 99); /* gray-600 */
+    background: transparent;
+    border-color: transparent;
+    cursor: not-allowed;
+}
+
+.flatpickr-dark .flatpickr-day.prevMonthDay,
+.flatpickr-dark .flatpickr-day.nextMonthDay {
+    color: rgb(107 114 128); /* gray-500 */
+}
+
+.flatpickr-dark .flatpickr-day.prevMonthDay:hover,
+.flatpickr-dark .flatpickr-day.nextMonthDay:hover {
+    background: rgb(55 65 81); /* gray-700 */
+    color: rgb(156 163 175); /* gray-400 */
+}
+
+/* Dark mode time picker */
+.flatpickr-dark .flatpickr-time {
+    background: rgb(31 41 55); /* gray-800 */
+    border-top: 1px solid rgb(55 65 81); /* gray-700 */
+}
+
+.flatpickr-dark .flatpickr-time input {
+    color: rgb(243 244 246); /* gray-100 */
+    background: rgb(17 24 39); /* gray-900 */
+}
+
+.flatpickr-dark .flatpickr-time input:hover,
+.flatpickr-dark .flatpickr-time input:focus {
+    background: rgb(55 65 81); /* gray-700 */
+}
+
+.flatpickr-dark .flatpickr-time .flatpickr-time-separator,
+.flatpickr-dark .flatpickr-time .flatpickr-am-pm {
+    color: rgb(156 163 175); /* gray-400 */
+}
+
+/* Dark mode input field */
+.flatpickr-dark .flatpickr-input {
+    background: rgb(31 41 55); /* gray-800 */
+    border-color: rgb(55 65 81); /* gray-700 */
+    color: rgb(243 244 246); /* gray-100 */
+}
+
+.flatpickr-dark .flatpickr-input:focus {
+    border-color: var(--cs-color-primary, rgb(99 102 241)); /* primary */
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Smooth transitions */
+.flatpickr-dark .flatpickr-day,
+.flatpickr-dark .flatpickr-prev-month,
+.flatpickr-dark .flatpickr-next-month {
+    transition: all 0.2s ease;
+}

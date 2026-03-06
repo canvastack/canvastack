@@ -19,6 +19,7 @@ class User extends Model
         'email',
         'password',
         'role',
+        'status',
         'department_id',
     ];
 
@@ -31,5 +32,12 @@ class User extends Model
      *
      * @var bool
      */
-    public $incrementing = false;
+    public $incrementing = true;
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = true;
 }

@@ -79,6 +79,27 @@ php artisan vendor:publish --tag=canvastack-views
 php artisan vendor:publish --tag=canvastack-assets
 ```
 
+### Environment Configuration
+
+Add these variables to your `.env` file:
+
+```env
+# Table Engine Configuration
+CANVASTACK_TABLE_ENGINE=datatables  # Options: datatables, tanstack
+
+# Cache Configuration
+CACHE_DRIVER=redis
+CANVASTACK_CACHE_ENABLED=true
+CANVASTACK_CACHE_TABLES_TTL=300
+
+# Performance Settings
+CANVASTACK_CHUNK_SIZE=100
+CANVASTACK_EAGER_LOAD=true
+CANVASTACK_QUERY_CACHE=true
+```
+
+See [Configuration Guide](docs/getting-started/configuration.md) for all available options.
+
 ### Run Migrations
 
 ```bash

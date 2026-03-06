@@ -36,6 +36,13 @@ class FilterManager
     protected ?string $sessionKey = null;
 
     /**
+     * Cascade manager instance
+     * 
+     * @var CascadeManager|null
+     */
+    protected ?CascadeManager $cascadeManager = null;
+
+    /**
      * Add a filter to the manager
      * 
      * @param string $column Column name to filter
@@ -105,6 +112,21 @@ class FilterManager
     }
 
     /**
+     * Clear a specific filter
+     * 
+     * @param string $column Column name to clear
+     * @return void
+     */
+    public function clearFilter(string $column): void
+    {
+        unset($this->activeFilters[$column]);
+        
+        if (isset($this->filters[$column])) {
+            $this->filters[$column]->setValue(null);
+        }
+    }
+
+    /**
      * Set session key for persistence
      * 
      * @param string $sessionKey Session key
@@ -154,6 +176,42 @@ class FilterManager
         
         if (!empty($savedFilters)) {
             $this->setActiveFilters($savedFilters);
+        }
+    }
+
+    /**
+     * Clear filters from session
+     * 
+     * @return void
+     */
+    public function clearSession(): void
+    {
+        if ($this->sessionKey === null) {
+            return;
+        }
+
+        session()->forget($this->sessionKey);
+    }
+
+    /**
+     * Clear a specific filter from session
+     * 
+     * @param string $column Column name to clear
+     * @return void
+     */
+    public function clearFilterFromSession(string $column): void
+    {
+        if ($this->sessionKey === null) {
+            return;
+        }
+
+        $savedFilters = session($this->sessionKey, []);
+        unset($savedFilters[$column]);
+        
+        if (empty($savedFilters)) {
+            session()->forget($this->sessionKey);
+        } else {
+            session([$this->sessionKey => $savedFilters]);
         }
     }
 
@@ -224,5 +282,54 @@ class FilterManager
         }
         
         return $result;
+    }
+
+    /**
+     * Set cascade manager instance
+     * 
+     * @param CascadeManager $cascadeManager Cascade manager
+     * @return void
+     */
+    public function setCascadeManager(CascadeManager $cascadeManager): void
+    {
+        $this->cascadeManager = $cascadeManager;
+    }
+
+    /**
+     * Get cascade manager instance
+     * 
+     * @return CascadeManager|null
+     */
+    public function getCascadeManager(): ?CascadeManager
+    {
+        return $this->cascadeManager;
+    }
+
+    /**
+     * Update dependent filter options when a filter value changes
+     * 
+     * @param string $changedColumn The filter column that changed
+     * @param mixed $newValue The new value
+     * @return array<string, array> Map of filter column to updated options
+     */
+    public function updateDependentOptions(string $changedColumn, $newValue): array
+    {
+        if ($this->cascadeManager === null) {
+            return [];
+        }
+
+        return $this->cascadeManager->updateDependentOptions($changedColumn, $newValue);
+    }
+
+    /**
+     * Build cascade graph from registered filters
+     * 
+     * @return void
+     */
+    public function buildCascadeGraph(): void
+    {
+        if ($this->cascadeManager !== null) {
+            $this->cascadeManager->buildCascadeGraph();
+        }
     }
 }
