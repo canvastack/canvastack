@@ -8,18 +8,36 @@
 
 {{-- Core Scripts --}}
 <script>
-    // Dark mode toggle
+    // Dark mode toggle with debug
     function toggleDark() {
+        console.log('toggleDark() called');
+        console.log('Before toggle - HTML classes:', document.documentElement.className);
+        
         document.documentElement.classList.toggle('dark');
         const isDark = document.documentElement.classList.contains('dark');
+        
+        console.log('After toggle - isDark:', isDark);
+        console.log('After toggle - HTML classes:', document.documentElement.className);
+        
         document.cookie = `darkMode=${isDark}; path=/; max-age=31536000`;
         localStorage.setItem('darkMode', isDark);
+        
+        console.log('Saved to localStorage:', localStorage.getItem('darkMode'));
+        console.log('Saved to cookie:', document.cookie);
     }
     
     // Initialize dark mode from localStorage
-    if (localStorage.getItem('darkMode') === 'true') {
-        document.documentElement.classList.add('dark');
-    }
+    (function() {
+        const isDark = localStorage.getItem('darkMode') === 'true';
+        console.log('Initial dark mode check:', isDark);
+        console.log('localStorage.darkMode:', localStorage.getItem('darkMode'));
+        
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+            console.log('Added dark class to html');
+        }
+        console.log('HTML classes after init:', document.documentElement.className);
+    })();
     
     // Sidebar toggle (desktop)
     function toggleSidebar() {

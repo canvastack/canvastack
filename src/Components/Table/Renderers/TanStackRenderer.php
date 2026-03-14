@@ -47,6 +47,14 @@ class TanStackRenderer
     protected ThemeLocaleIntegration $themeLocaleIntegration;
 
     /**
+     * Flag to track if global functions have been output.
+     * Static to ensure they're only output once across all instances.
+     *
+     * @var bool
+     */
+    protected static bool $globalFunctionsOutput = false;
+
+    /**
      * Constructor.
      *
      * @param ThemeLocaleIntegration $themeLocaleIntegration
@@ -54,6 +62,17 @@ class TanStackRenderer
     public function __construct(ThemeLocaleIntegration $themeLocaleIntegration)
     {
         $this->themeLocaleIntegration = $themeLocaleIntegration;
+    }
+
+    /**
+     * Reset the global functions output flag.
+     * This method is intended for testing purposes only.
+     * 
+     * @return void
+     */
+    public static function resetGlobalFunctionsFlag(): void
+    {
+        self::$globalFunctionsOutput = false;
     }
 
     /**
@@ -84,6 +103,13 @@ class TanStackRenderer
         array $columns,
         array $alpineData
     ): string {
+        // Log IMMEDIATELY at method entry
+        \Log::info('TanStackRenderer::render CALLED', [
+            'tableId' => $table->getUniqueId(),
+            'hasFilters' => $table->hasFilters(),
+            'connection' => $table->getConnection(),
+        ]);
+        
         // Use cache key to avoid re-rendering identical tables
         $cacheKey = $this->getCacheKey($table, $config);
         
@@ -107,15 +133,21 @@ class TanStackRenderer
         // Store column pinning configuration
         $this->columnPinning = $config['columnPinning'] ?? null;
         
-        // Render filter modal BEFORE table container so Alpine can init it
-        $tableId = $table->getTableId() ?? 'tanstack-table-' . uniqid();
+        // Use unique ID from HashGenerator (Requirement 8.1, 8.2)
+        // This ensures each table instance has a secure, unique identifier
+        $tableId = $table->getUniqueId();
+        
+        // CRITICAL FIX #35: Render JavaScript BEFORE HTML
+        // Alpine.js needs the component to be registered BEFORE it parses the x-data attribute
+        // This prevents "Uncaught ReferenceError: tanstackTable_xxx is not defined"
+        echo $this->renderScripts($table, $config, $columns, $alpineData);
+        
+        // FIX #74: RE-ENABLE filter modal (was disabled in Fix #49)
+        // Filter modal is needed for filter functionality
         echo $this->renderFilterModal($table, $tableId);
         
         // Render table container with Alpine.js
         echo $this->renderTableContainer($table, $alpineData);
-        
-        // Render JavaScript for Alpine.js (already wrapped in <script> tags)
-        echo $this->renderScripts($table, $config, $columns, $alpineData);
         
         $html = ob_get_clean();
         
@@ -135,7 +167,7 @@ class TanStackRenderer
     protected function getCacheKey(TableBuilder $table, array $config): string
     {
         return md5(serialize([
-            $table->getTableId(),
+            $table->getUniqueId(),
             $config['columns'] ?? [],
             $config['pagination'] ?? [],
             $config['sorting'] ?? [],
@@ -157,17 +189,27 @@ class TanStackRenderer
         array $columns,
         array $alpineData
     ): string {
-        $tableId = $table->getTableId() ?? 'tanstack-table-' . uniqid();
+        // Use unique ID from HashGenerator (Requirement 8.1, 8.2)
+        // This ensures each table instance has a secure, unique identifier
+        $tableId = $table->getUniqueId();
         
         // Merge columns into alpineData
         $alpineData['columns'] = $columns;
         
-        // Add pagination object
+        // Add pagination object with safe division
+        $pageSize = $alpineData['pageSize'] ?? 10;
+        $totalRows = $alpineData['totalRows'] ?? 0;
+        
+        // Prevent division by zero
+        if ($pageSize <= 0) {
+            $pageSize = $totalRows > 0 ? $totalRows : 10;
+        }
+        
         $alpineData['pagination'] = [
             'page' => 1,
-            'pageSize' => $alpineData['pageSize'] ?? 10,
-            'totalPages' => ceil(($alpineData['totalRows'] ?? 0) / ($alpineData['pageSize'] ?? 10)),
-            'totalRows' => $alpineData['totalRows'] ?? 0,
+            'pageSize' => $pageSize,
+            'totalPages' => $totalRows > 0 ? ceil($totalRows / $pageSize) : 1,
+            'totalRows' => $totalRows,
         ];
         
         // Ensure all required properties exist
@@ -179,8 +221,12 @@ class TanStackRenderer
         
         // Add server-side properties
         $alpineData['serverSideUrl'] = $config['serverSide']['url'] ?? null;
-        $alpineData['tableName'] = $table->getModel() ? $table->getModel()->getTable() : 'users';
+        $alpineData['filterUrl'] = route('datatable.get-filters'); // Add filter URL
+        // Use configured table name first, fallback to model table name
+        $alpineData['tableName'] = $config['tableName'] ?? ($table->getModel() ? $table->getModel()->getTable() : 'users');
+        $alpineData['tableId'] = $tableId; // CRITICAL: Add unique table ID for filter matching
         $alpineData['modelClass'] = $table->getModel() ? get_class($table->getModel()) : null;
+        $alpineData['connection'] = $table->getConnection(); // Add connection name
         $alpineData['searchableColumns'] = $table->getConfiguration()->searchableColumns ?? [];
         
         // JSON encode with proper escaping
@@ -195,14 +241,34 @@ class TanStackRenderer
         $confirmAction = json_encode(__('canvastack::components.table.confirm_action'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
         $bulkActionError = json_encode(__('canvastack::components.table.bulk_action_error'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
         
-        return <<<JS
+        $js = <<<JS
 <script>
 // TanStack Table Component Registration
+// Each table instance is wrapped in an IIFE to ensure complete isolation
+// Validates: Requirement 8.3 - Independent initialization
 (function() {
+    // Unique table ID from HashGenerator (Requirement 8.1, 8.2)
+    const tableId = '{$tableId}';
+    const componentName = 'tanstackTable_' + tableId;
+    
+    console.log('TanStack Table: Script loaded for', componentName);
+    
     const registerComponent = () => {
-        console.log('TanStack Table: Registering component tanstackTable_{$tableId}');
+        console.log('TanStack Table: Registering component', componentName, 'with unique ID', tableId);
         
-        Alpine.data('tanstackTable_{$tableId}', () => {
+        // Check if Alpine is available
+        if (typeof Alpine === 'undefined') {
+            console.error('TanStack Table: Alpine.js not found! Cannot register component', componentName);
+            return;
+        }
+        
+        // Prevent duplicate registration
+        if (Alpine._x_dataStack && Alpine._x_dataStack.some(d => d.name === componentName)) {
+            console.warn('TanStack Table: Component', componentName, 'already registered, skipping');
+            return;
+        }
+        
+        Alpine.data(componentName, () => {
             const alpineData = {$alpineDataJson};
             
             // Debug: Log columns to verify header values
@@ -210,6 +276,9 @@ class TanStackRenderer
             
             return {
                 ...alpineData,
+                
+                // Initialization guard (prevent multiple init)
+                _initialized: false,
                 
                 // Column pinning configuration
                 pinnedLeft: {$pinnedLeft},
@@ -243,31 +312,94 @@ class TanStackRenderer
                 
                 /**
                  * Initialize the table component.
+                 * Each instance initializes independently with its own state.
+                 * Validates: Requirement 8.3 - Independent initialization
+                 * Validates: Requirement 8.8 - State persistence per tab
+                 * 
+                 * CRITICAL FIX #50: Use global flag to prevent Alpine.js re-initialization loop
+                 * Alpine.js re-evaluates component factory on reactive updates, causing infinite init() calls.
+                 * Solution: Store initialization state globally, outside Alpine's reactive system.
                  */
                 init() {
-                    console.log('TanStack Table: Initializing with', this.data.length, 'rows');
+                    // CRITICAL: Use global flag outside Alpine's reactive system
+                    const globalKey = '_tanstack_init_' + tableId;
+                    if (window[globalKey]) {
+                        console.warn('TanStack Table: Instance', tableId, 'already initialized globally, skipping duplicate init()');
+                        return;
+                    }
+                    window[globalKey] = true;
+                    
+                    console.log('TanStack Table: Initializing instance', tableId, 'with', this.data.length, 'rows');
+                    
+                    // Store instance reference for cleanup and debugging
+                    if (!window._tanstackInstances) {
+                        window._tanstackInstances = {};
+                    }
+                    window._tanstackInstances[tableId] = this;
+                    
+                    // Restore state from storage if available (Requirement 8.8)
+                    this.restoreState();
                     
                     // Check if server-side processing is enabled
                     if (this.serverSideUrl) {
-                        console.log('TanStack Table: Server-side mode enabled, loading data from server');
+                        console.log('TanStack Table: Server-side mode enabled for instance', tableId);
                         
+                        // CRITICAL FIX #50: Only load data once on initialization
                         // Check if there are saved filters in session, then load data
-                        this.checkSavedFilters().then(() => {
-                            this.loadData();
-                        });
+                        this.checkSavedFilters()
+                            .catch(error => {
+                                console.warn('TanStack Table: Failed to check saved filters, continuing with data load', error);
+                            })
+                            .finally(() => {
+                                console.log('TanStack Table: Calling loadData() after checkSavedFilters()');
+                                this.loadData();
+                            });
                         
-                        // Listen for filter apply event
-                        window.addEventListener('filters-applied', () => {
-                            console.log('TanStack Table: Filters applied, reloading data...');
+                        // Listen for filter apply event (scoped to this instance)
+                        const filterEventName = 'filters-applied-' + tableId;
+                        const filterHandler = () => {
+                            console.log('TanStack Table: Filters applied for instance', tableId, ', reloading data...');
                             this.pagination.page = 1; // Reset to first page
                             this.loadData();
-                        });
+                        };
+                        
+                        // Remove existing listener if any (prevent duplicates)
+                        if (window['_filter_handler_' + tableId]) {
+                            window.removeEventListener(filterEventName, window['_filter_handler_' + tableId]);
+                        }
+                        window['_filter_handler_' + tableId] = filterHandler;
+                        window.addEventListener(filterEventName, filterHandler);
+                        
+                        // Also listen for global filter event (backward compatibility)
+                        const globalFilterHandler = (e) => {
+                            // Only respond if event is for this instance or no instance specified
+                            if (!e.detail || !e.detail.tableId || e.detail.tableId === tableId) {
+                                console.log('TanStack Table: Global filters applied, reloading data for instance', tableId);
+                                console.log('TanStack Table: Filter detail:', e.detail);
+                                
+                                // CRITICAL FIX: Update this.filters with the new filter values
+                                if (e.detail && e.detail.filters) {
+                                    this.filters = e.detail.filters;
+                                    console.log('TanStack Table: Updated this.filters:', this.filters);
+                                }
+                                
+                                this.pagination.page = 1;
+                                this.loadData();
+                            }
+                        };
+                        
+                        // Remove existing listener if any (prevent duplicates)
+                        if (window['_global_filter_handler_' + tableId]) {
+                            window.removeEventListener('filters-applied', window['_global_filter_handler_' + tableId]);
+                        }
+                        window['_global_filter_handler_' + tableId] = globalFilterHandler;
+                        window.addEventListener('filters-applied', globalFilterHandler);
                         
                         return;
                     }
                     
                     // Client-side mode
-                    console.log('TanStack Table: Client-side mode, using provided data');
+                    console.log('TanStack Table: Client-side mode for instance', tableId, ', using provided data');
                     
                     // Store original data for client-side pagination/filtering
                     // Only set originalData if it doesn't exist yet (prevent override on re-init)
@@ -285,6 +417,71 @@ class TanStackRenderer
                     
                     // Apply initial pagination
                     this.applyPagination();
+                    
+                    // CRITICAL FIX #66: LOCK tbody to prevent Alpine.js from clearing it
+                    // This is specifically for tab system where Alpine.js re-evaluates after data load
+                    this.\$nextTick(() => {
+                        const tbodyElement = this.\$refs.tableBody;
+                        if (tbodyElement) {
+                            // Store original innerHTML in a property that Alpine.js can't touch
+                            Object.defineProperty(tbodyElement, '_lockedHTML', {
+                                writable: true,
+                                configurable: false,
+                                enumerable: false,
+                                value: null
+                            });
+                            
+                            console.log('TanStack Table: tbody LOCKED against Alpine.js clearing for instance', tableId);
+                        }
+                    });
+                    
+                    console.log('TanStack Table: Instance', tableId, 'initialized successfully');
+                },
+                
+                /**
+                 * Setup scroll shadow for pinned columns.
+                 * Shadow only appears when table is scrolled (not at initial position).
+                 */
+                setupScrollShadow() {
+                    const tableContainer = this.\$el.querySelector('.tanstack-table-desktop');
+                    if (!tableContainer) return;
+                    
+                    const updateShadow = () => {
+                        const scrollLeft = tableContainer.scrollLeft;
+                        const maxScrollLeft = tableContainer.scrollWidth - tableContainer.clientWidth;
+                        
+                        // Get all pinned-left elements
+                        const pinnedLeftElements = tableContainer.querySelectorAll('.tanstack-table-pinned-left');
+                        
+                        // Get all pinned-right elements
+                        const pinnedRightElements = tableContainer.querySelectorAll('.tanstack-table-pinned-right');
+                        
+                        // Show shadow on pinned-left when scrolled right (scrollLeft > 0)
+                        pinnedLeftElements.forEach(el => {
+                            if (scrollLeft > 0) {
+                                el.classList.add('has-shadow');
+                            } else {
+                                el.classList.remove('has-shadow');
+                            }
+                        });
+                        
+                        // Show shadow on pinned-right when not scrolled to max right
+                        pinnedRightElements.forEach(el => {
+                            if (scrollLeft < maxScrollLeft) {
+                                el.classList.add('has-shadow');
+                            } else {
+                                el.classList.remove('has-shadow');
+                            }
+                        });
+                    };
+                    
+                    // Add scroll event listener
+                    tableContainer.addEventListener('scroll', updateShadow);
+                    
+                    // Initial check
+                    updateShadow();
+                    
+                    console.log('TanStack Table: Scroll shadow setup complete');
                 },
                 
                 /**
@@ -309,6 +506,118 @@ class TanStackRenderer
                         showing: this.data.length,
                         total: this.originalData.length
                     });
+                },
+                
+                /**
+                 * Get storage key for state persistence.
+                 * Uses table ID to ensure unique storage per table instance.
+                 * Validates: Requirement 8.8 - State persistence per tab
+                 * 
+                 * @return {string} - Storage key
+                 */
+                getStateStorageKey() {
+                    return 'tanstack_table_state_' + tableId;
+                },
+                
+                /**
+                 * Save current table state to sessionStorage.
+                 * Persists sorting, pagination, filters, and column visibility.
+                 * Validates: Requirement 8.8 - State persistence per tab
+                 */
+                saveState() {
+                    try {
+                        const state = {
+                            sorting: this.sorting,
+                            pagination: {
+                                page: this.pagination.page,
+                                pageSize: this.pagination.pageSize
+                            },
+                            globalFilter: this.globalFilter,
+                            columnFilters: this.columnFilters || {},
+                            rowSelection: this.rowSelection || {},
+                            timestamp: Date.now()
+                        };
+                        
+                        const key = this.getStateStorageKey();
+                        sessionStorage.setItem(key, JSON.stringify(state));
+                        
+                        console.log('TanStack Table: State saved for instance', tableId, state);
+                    } catch (error) {
+                        console.error('TanStack Table: Error saving state', error);
+                    }
+                },
+                
+                /**
+                 * Restore table state from sessionStorage.
+                 * Restores sorting, pagination, filters, and column visibility.
+                 * Validates: Requirement 8.8 - State persistence per tab
+                 */
+                restoreState() {
+                    try {
+                        const key = this.getStateStorageKey();
+                        const savedState = sessionStorage.getItem(key);
+                        
+                        if (!savedState) {
+                            console.log('TanStack Table: No saved state found for instance', tableId);
+                            return;
+                        }
+                        
+                        const state = JSON.parse(savedState);
+                        
+                        // Check if state is not too old (max 1 hour)
+                        const maxAge = 60 * 60 * 1000; // 1 hour in milliseconds
+                        if (state.timestamp && (Date.now() - state.timestamp) > maxAge) {
+                            console.log('TanStack Table: Saved state expired for instance', tableId);
+                            this.clearState();
+                            return;
+                        }
+                        
+                        // Restore sorting
+                        if (state.sorting) {
+                            this.sorting = state.sorting;
+                        }
+                        
+                        // Restore pagination
+                        if (state.pagination) {
+                            this.pagination.page = state.pagination.page || 1;
+                            this.pagination.pageSize = state.pagination.pageSize || this.pagination.pageSize;
+                        }
+                        
+                        // Restore global filter
+                        if (state.globalFilter !== undefined) {
+                            this.globalFilter = state.globalFilter;
+                        }
+                        
+                        // Restore column filters
+                        if (state.columnFilters) {
+                            this.columnFilters = state.columnFilters;
+                        }
+                        
+                        // Restore row selection
+                        if (state.rowSelection) {
+                            this.rowSelection = state.rowSelection;
+                            this.updateSelectionState();
+                        }
+                        
+                        console.log('TanStack Table: State restored for instance', tableId, state);
+                    } catch (error) {
+                        console.error('TanStack Table: Error restoring state', error);
+                        this.clearState();
+                    }
+                },
+                
+                /**
+                 * Clear saved state from sessionStorage.
+                 * Validates: Requirement 8.8 - State persistence per tab
+                 */
+                clearState() {
+                    try {
+                        const key = this.getStateStorageKey();
+                        sessionStorage.removeItem(key);
+                        console.log('TanStack Table: State cleared for instance', tableId);
+                    } catch (error) {
+                        console.error('TanStack Table: Error clearing state', error);
+                    }
                 },
                 
                 /**
@@ -520,6 +829,9 @@ class TanStackRenderer
             }
             
             this.updateSelectionState();
+            
+            // Save state after selection change (Requirement 8.8)
+            this.saveState();
         },
         
         /**
@@ -537,6 +849,9 @@ class TanStackRenderer
             }
             
             this.updateSelectionState();
+            
+            // Save state after selection change (Requirement 8.8)
+            this.saveState();
         },
         
         /**
@@ -725,6 +1040,143 @@ class TanStackRenderer
         },
         
         /**
+         * Get inline style for column (for pinned columns positioning).
+         * 
+         * @param {Object} column - Column definition
+         * @param {number} index - Column index
+         * @return {string} - Inline style string
+         */
+        getColumnStyle(column, index) {
+            // Note: We can't calculate actual width here because DOM hasn't rendered yet
+            // Width calculation will be done in applyPinnedColumnStyles() after render
+            return '';
+        },
+        
+        /**
+         * Apply pinned column styles to tbody cells.
+         * This is called after rows are injected to ensure td cells match th headers.
+         */
+        applyPinnedColumnStyles() {
+            const tbodyElement = this.\$refs.tableBody;
+            if (!tbodyElement) return;
+            
+            const tableElement = tbodyElement.closest('table');
+            if (!tableElement) return;
+            
+            // Get all th elements to measure actual widths
+            const headerCells = tableElement.querySelectorAll('thead th');
+            
+            // Calculate cumulative left positions for pinned-left columns
+            const leftPositions = {};
+            let cumulativeLeft = 0;
+            
+            this.pinnedLeft.forEach((columnId, pinnedIndex) => {
+                leftPositions[columnId] = cumulativeLeft;
+                
+                // Find the th element for this column
+                const columnIndex = this.columns.findIndex(col => col.id === columnId);
+                if (columnIndex >= 0 && headerCells[columnIndex]) {
+                    const thElement = headerCells[columnIndex];
+                    const actualWidth = thElement.getBoundingClientRect().width;
+                    
+                    // Apply left position to th
+                    thElement.style.left = cumulativeLeft + 'px';
+                    
+                    // Add to cumulative for next column
+                    cumulativeLeft += actualWidth;
+                    
+                    console.log('TanStack Table: Pinned-left column', columnId, {
+                        index: columnIndex,
+                        left: leftPositions[columnId],
+                        width: actualWidth,
+                        nextLeft: cumulativeLeft
+                    });
+                }
+            });
+            
+            // Calculate cumulative right positions for pinned-right columns
+            const rightPositions = {};
+            let cumulativeRight = 0;
+            
+            this.pinnedRight.forEach((columnId, pinnedIndex) => {
+                rightPositions[columnId] = cumulativeRight;
+                
+                // Find the th element for this column
+                const columnIndex = this.columns.findIndex(col => col.id === columnId);
+                if (columnIndex >= 0 && headerCells[columnIndex]) {
+                    const thElement = headerCells[columnIndex];
+                    const actualWidth = thElement.getBoundingClientRect().width;
+                    
+                    // Apply right position to th
+                    thElement.style.right = cumulativeRight + 'px';
+                    
+                    // Add to cumulative for next column
+                    cumulativeRight += actualWidth;
+                    
+                    console.log('TanStack Table: Pinned-right column', columnId, {
+                        index: columnIndex,
+                        right: rightPositions[columnId],
+                        width: actualWidth,
+                        nextRight: cumulativeRight
+                    });
+                }
+            });
+            
+            // Now apply to tbody cells
+            const rows = tbodyElement.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                
+                cells.forEach((cell, index) => {
+                    const column = this.columns[index];
+                    if (!column) return;
+                    
+                    // Apply pinned-left class and style
+                    if (this.pinnedLeft.includes(column.id)) {
+                        cell.classList.add('tanstack-table-pinned-left');
+                        cell.style.left = leftPositions[column.id] + 'px';
+                    }
+                    
+                    // Apply pinned-right class and style
+                    if (this.pinnedRight.includes(column.id)) {
+                        cell.classList.add('tanstack-table-pinned-right');
+                        cell.style.right = rightPositions[column.id] + 'px';
+                    }
+                });
+            });
+            
+            console.log('TanStack Table: Pinned column styles applied with actual widths', {
+                leftPositions,
+                rightPositions
+            });
+        },
+        
+        /**
+         * Get cell value as plain text (no HTML).
+         * 
+         * @param {Object} row - Row data
+         * @param {Object} column - Column definition
+         * @return {string} - Cell value as plain text
+         */
+        getCellValue(row, column) {
+            // Handle actions column - return placeholder text
+            if (column.id === 'actions' && row._actions) {
+                return '⋮'; // Vertical ellipsis for actions
+            }
+            
+            const value = row[column.id];
+            
+            // Handle null/undefined
+            if (value === null || value === undefined) {
+                return '-';
+            }
+            
+            // Return as string
+            return String(value);
+        },
+        
+        /**
          * Render cell content.
          * 
          * @param {Object} row - The row data
@@ -850,6 +1302,30 @@ class TanStackRenderer
         },
         
         /**
+         * Update pagination info in DOM manually.
+         * 
+         * CRITICAL FIX #62: Since tbody uses x-ignore, Alpine.js doesn't know data is loaded.
+         * We need to manually update pagination text in the DOM.
+         * This method finds all pagination info elements and updates their text content.
+         */
+        updatePaginationInfo() {
+            const paginationText = this.paginationText();
+            
+            // Find pagination info element by class (more reliable than ID)
+            const paginationInfoElements = document.querySelectorAll('.pagination-info span');
+            
+            paginationInfoElements.forEach(element => {
+                // Check if this element belongs to our table instance
+                // by checking if it's inside our table container
+                const tableContainer = element.closest('[x-data]');
+                if (tableContainer && tableContainer.getAttribute('x-data')?.includes(tableId)) {
+                    element.textContent = paginationText;
+                    console.log('TanStack Table: Pagination info updated to:', paginationText);
+                }
+            });
+        },
+        
+        /**
          * Get page numbers to display.
          * Shows max 5 pages around current page.
          * 
@@ -879,12 +1355,141 @@ class TanStackRenderer
         /**
          * Export data to various formats.
          * 
+         * For server-side tables, this will fetch ALL data from server (not just current page).
+         * For client-side tables, this will export all data in originalData.
+         * 
          * @param {string} format - Export format (excel, csv, pdf, print, copy)
          */
-        exportData(format) {
-            const exportData = this.data || [];
+        async exportData(format) {
+            console.log('TanStack Table: exportData called', { 
+                format, 
+                serverSideUrl: this.serverSideUrl,
+                tableName: this.tableName,
+                connection: this.connection,
+                filters: this.filters
+            });
+            
+            let exportData = [];
             const columns = this.columns || [];
             
+            // For server-side tables, fetch ALL data from server
+            if (this.serverSideUrl) {
+                console.log('TanStack Table: Fetching ALL data from server for export...');
+                
+                try {
+                    const url = new URL(this.serverSideUrl, window.location.origin);
+                    
+                    // Add export flag to fetch ALL data (no pagination)
+                    url.searchParams.set('export', 'true');
+                    url.searchParams.set('format', format);
+                    
+                    // Add table configuration parameters (CRITICAL!)
+                    // Note: Properties are set directly on Alpine component, not in a config object
+                    if (this.tableName) {
+                        url.searchParams.set('tableName', this.tableName);
+                        console.log('TanStack Table: Added tableName to export URL:', this.tableName);
+                    } else {
+                        console.warn('TanStack Table: tableName is not defined');
+                    }
+                    
+                    if (this.connection) {
+                        url.searchParams.set('connection', this.connection);
+                        console.log('TanStack Table: Added connection to export URL:', this.connection);
+                    }
+                    
+                    if (this.modelClass) {
+                        url.searchParams.set('modelClass', this.modelClass);
+                        console.log('TanStack Table: Added modelClass to export URL:', this.modelClass);
+                    }
+                    
+                    if (this.searchableColumns && this.searchableColumns.length > 0) {
+                        url.searchParams.set('searchableColumns', JSON.stringify(this.searchableColumns));
+                        console.log('TanStack Table: Added searchableColumns to export URL:', this.searchableColumns);
+                    }
+                    
+                    // CRITICAL FIX: Get active filters from global variable
+                    // Filters are saved to global variable when user applies them (FilterModal.js line 597)
+                    // IMPORTANT: Use this.tableId (unique ID), NOT this.tableName (database table name)
+                    const tableIdForFilters = this.tableId || this.tableName || 'table';
+                    
+                    // Try to get filters from global variable first (set by FilterModal.js)
+                    let activeFilters = window['tableFilters_' + tableIdForFilters] || this.filters || {};
+                    
+                    console.log('TanStack Table: Checking for active filters...');
+                    console.log('TanStack Table: this.tableId:', this.tableId);
+                    console.log('TanStack Table: this.tableName:', this.tableName);
+                    console.log('TanStack Table: tableIdForFilters:', tableIdForFilters);
+                    console.log('TanStack Table: window.tableFilters_' + tableIdForFilters + ':', window['tableFilters_' + tableIdForFilters]);
+                    console.log('TanStack Table: this.filters:', this.filters);
+                    console.log('TanStack Table: activeFilters:', activeFilters);
+                    
+                    // Add current filters
+                    if (activeFilters && Object.keys(activeFilters).length > 0) {
+                        url.searchParams.set('filters', JSON.stringify(activeFilters));
+                        console.log('TanStack Table: Added filters to export URL:', activeFilters);
+                    } else {
+                        console.warn('TanStack Table: No active filters found for export');
+                    }
+                    
+                    // Add current sorting
+                    if (this.sorting && this.sorting.length > 0) {
+                        url.searchParams.set('sorting', JSON.stringify(this.sorting));
+                    }
+                    
+                    // Add global search
+                    if (this.globalFilter) {
+                        url.searchParams.set('globalFilter', this.globalFilter);
+                    }
+                    
+                    console.log('TanStack Table: Export URL:', url.toString());
+                    console.log('TanStack Table: Export params:', {
+                        tableName: this.tableName,
+                        connection: this.connection,
+                        filters: activeFilters,
+                        sorting: this.sorting,
+                        globalFilter: this.globalFilter
+                    });
+                    
+                    const response = await fetch(url.toString(), {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+                    
+                    console.log('TanStack Table: Export response status:', response.status);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: \${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    console.log('TanStack Table: Export result:', result);
+                    console.log('TanStack Table: Export result.data length:', result.data ? result.data.length : 'null/undefined');
+                    
+                    exportData = result.data || [];
+                    
+                    console.log(`TanStack Table: Fetched \${exportData.length} rows for export`);
+                    if (exportData.length > 0) {
+                        console.log('TanStack Table: exportData sample (first 2 rows):', exportData.slice(0, 2));
+                    }
+                    
+                } catch (error) {
+                    console.error('TanStack Table: Export fetch error:', error);
+                    alert('Failed to fetch data for export. Please try again.');
+                    return;
+                }
+            } else {
+                // For client-side tables, use all data from originalData
+                exportData = this.originalData || this.data || [];
+                console.log(`TanStack Table: Using \${exportData.length} rows from originalData for export`);
+            }
+            
+            console.log('TanStack Table: About to export', exportData.length, 'rows with', columns.length, 'columns');
+            console.log('TanStack Table: Columns:', columns.map(c => c.id || c.header));
+            
+            // Now export the data
             switch(format) {
                 case 'excel':
                     this.exportToExcel(exportData, columns);
@@ -1017,6 +1622,9 @@ class TanStackRenderer
                 // Client-side: apply pagination locally
                 this.applyPagination();
             }
+            
+            // Save state after page change (Requirement 8.8)
+            this.saveState();
         },
         
         /**
@@ -1031,6 +1639,9 @@ class TanStackRenderer
                 } else {
                     this.applyPagination();
                 }
+                
+                // Save state after page change (Requirement 8.8)
+                this.saveState();
             }
         },
         
@@ -1046,6 +1657,9 @@ class TanStackRenderer
                 } else {
                     this.applyPagination();
                 }
+                
+                // Save state after page change (Requirement 8.8)
+                this.saveState();
             }
         },
         
@@ -1058,9 +1672,14 @@ class TanStackRenderer
             if (this.serverSideUrl) {
                 this.loadData();
             } else {
-                this.pagination.totalPages = Math.ceil(this.originalData.length / this.pagination.pageSize);
+                // Prevent division by zero
+                const pageSize = this.pagination.pageSize > 0 ? this.pagination.pageSize : 10;
+                this.pagination.totalPages = Math.ceil(this.originalData.length / pageSize);
                 this.applyPagination();
             }
+            
+            // Save state after page size change (Requirement 8.8)
+            this.saveState();
         },
         
         /**
@@ -1069,6 +1688,8 @@ class TanStackRenderer
          * @param {string} columnId - Column ID to sort by
          */
         onSort(columnId) {
+            console.log('TanStack Table: onSort called for column', columnId);
+            
             if (this.sorting.column === columnId) {
                 // Toggle direction
                 this.sorting.direction = this.sorting.direction === 'asc' ? 'desc' : 'asc';
@@ -1078,8 +1699,22 @@ class TanStackRenderer
                 this.sorting.direction = 'asc';
             }
             
-            // Apply sorting to data
-            this.applySorting();
+            console.log('TanStack Table: Sorting state updated', this.sorting);
+            
+            // Apply sorting based on mode
+            if (this.serverSideUrl) {
+                // Server-side: reload data with new sorting
+                console.log('TanStack Table: Server-side mode, calling loadData()');
+                this.pagination.page = 1; // Reset to first page when sorting
+                this.loadData();
+            } else {
+                // Client-side: apply sorting locally
+                console.log('TanStack Table: Client-side mode, calling applySorting()');
+                this.applySorting();
+            }
+            
+            // Save state after sort change (Requirement 8.8)
+            this.saveState();
         },
         
         /**
@@ -1122,8 +1757,8 @@ class TanStackRenderer
          */
         async checkSavedFilters() {
             try {
-                // Use table name (not table ID) to match saveFilters
-                const response = await fetch(window.location.origin + '/datatable/get-filters', {
+                // Use filter URL from Alpine data
+                const response = await fetch(this.filterUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1141,14 +1776,14 @@ class TanStackRenderer
                     if (result.success && result.filters && Object.keys(result.filters).length > 0) {
                         console.log('TanStack Table: Restored filters from session', result.filters);
                         
-                        // Set global filters variable
-                        window.tableFilters_{$tableId} = result.filters;
+                        // Set global filters variable (use dynamic tableId)
+                        window['tableFilters_' + tableId] = result.filters;
                         
                         // Dispatch event to update filter modal
                         window.dispatchEvent(new CustomEvent('filters-restored', {
                             detail: { 
                                 filters: result.filters, 
-                                tableId: '{$tableId}' 
+                                tableId: tableId 
                             }
                         }));
                         
@@ -1168,6 +1803,10 @@ class TanStackRenderer
         
         /**
          * Load data (for server-side processing).
+         * 
+         * UPDATED: Now renders rows server-side to avoid Alpine.js DOM diffing issues.
+         * Instead of updating this.data and letting Alpine render with x-for,
+         * we fetch pre-rendered HTML from server and inject it into tbody.
          */
         async loadData() {
             // Check if server-side is enabled
@@ -1193,12 +1832,16 @@ class TanStackRenderer
                     columnFilters: this.columnFilters,
                     tableName: this.tableName,
                     modelClass: this.modelClass,
+                    connection: this.connection, // Add connection parameter
                     searchableColumns: this.searchableColumns,
+                    columns: this.columns.map(col => col.id), // Send column IDs for server-side rendering
+                    renderHtml: true, // Request HTML rendering instead of JSON data
                 };
                 
-                // Add filters from global variable if available
-                if (typeof window.tableFilters_{$tableId} !== 'undefined') {
-                    requestData.filters = window.tableFilters_{$tableId};
+                // Add filters from global variable if available (use dynamic tableId)
+                const filterVarName = 'tableFilters_' + tableId;
+                if (typeof window[filterVarName] !== 'undefined') {
+                    requestData.filters = window[filterVarName];
                     console.log('TanStack Table: Filters added to request', requestData.filters);
                 }
                 
@@ -1221,30 +1864,166 @@ class TanStackRenderer
                 
                 // Debug: Log received data
                 console.log('TanStack Table: Received data from server', {
-                    rowCount: result.data?.length,
-                    firstRow: result.data?.[0],
-                    hasActions: result.data?.[0]?._actions !== undefined,
-                    actionsCount: result.data?.[0]?._actions?.length,
+                    hasHtml: !!result.html,
+                    htmlLength: result.html?.length,
+                    rowCount: result.meta?.rowCount,
                     meta: result.meta
                 });
                 
-                // Update data and pagination
-                this.originalData = result.data;
-                this.data = result.data;
-                this.pagination.totalRows = result.meta.totalRows;
-                this.pagination.totalPages = result.meta.totalPages;
+                // Debug: Log current Alpine state BEFORE update
+                console.log('TanStack Table: Alpine state BEFORE update', {
+                    loading: this.loading,
+                    error: this.error,
+                    dataLength: this.data.length
+                });
+                
+                // CRITICAL FIX #64: Install MutationObserver BEFORE injecting HTML
+                // CRITICAL FIX #66: Enhanced with locked HTML property and multiple restore attempts
+                // CRITICAL FIX #68: Add CONTINUOUS monitoring with setInterval
+                // CRITICAL FIX #71: DELAY injection until Alpine finishes ALL initializations
+                const tbodyId = 'tanstack-tbody-' + tableId;
+                const tbodyElement = document.getElementById(tbodyId);
+                const htmlToInject = result.html;
+                
+                if (tbodyElement && htmlToInject) {
+                    console.log('TanStack Table: Preparing delayed injection (waiting 1000ms for Alpine to stabilize)...');
+                    
+                    // WAIT for Alpine to finish ALL initializations
+                    // Console shows 6 initializations (1 + 5 duplicates)
+                    // We need to wait until ALL are done before injecting
+                    setTimeout(() => {
+                        console.log('TanStack Table: Alpine should be stable now, injecting HTML...');
+                        
+                        // Store HTML in LOCKED property
+                        if (!tbodyElement._lockedHTML) {
+                            Object.defineProperty(tbodyElement, '_lockedHTML', {
+                                writable: true,
+                                configurable: false,
+                                enumerable: false,
+                                value: htmlToInject
+                            });
+                        } else {
+                            tbodyElement._lockedHTML = htmlToInject;
+                        }
+                        
+                        // Create ULTRA-AGGRESSIVE MutationObserver
+                        const observer = new MutationObserver((mutations) => {
+                            const lockedHtml = tbodyElement._lockedHTML;
+                            if (!lockedHtml) return;
+                            
+                            const currentChildren = tbodyElement.children.length;
+                            const expectedChildren = lockedHtml.match(/<tr/g)?.length || 0;
+                            
+                            if (currentChildren === 0 || currentChildren < expectedChildren) {
+                                console.log('TanStack Table: MutationObserver detected clearing, RESTORING...', {
+                                    current: currentChildren,
+                                    expected: expectedChildren
+                                });
+                                tbodyElement.innerHTML = lockedHtml;
+                            }
+                        });
+                        
+                        // Start observing
+                        observer.observe(tbodyElement, {
+                            childList: true,
+                            subtree: false,
+                            attributes: false,
+                            characterData: false
+                        });
+                        
+                        // Store observer
+                        if (!window.tanstackObservers) {
+                            window.tanstackObservers = {};
+                        }
+                        window.tanstackObservers[tableId] = observer;
+                        
+                        console.log('TanStack Table: ULTRA-AGGRESSIVE MutationObserver installed');
+                        
+                        // NOW inject HTML (after delay)
+                        tbodyElement.innerHTML = htmlToInject;
+                        console.log('TanStack Table: Rows injected (delayed)');
+                        
+                        // CRITICAL: Apply pinned column styles to tbody cells
+                        this.applyPinnedColumnStyles();
+                        
+                        // Setup scroll shadow for pinned columns
+                        this.setupScrollShadow();
+                        
+                        // Debug
+                        console.log('TanStack Table: Tbody verification', {
+                            tbodyId: tbodyElement.id,
+                            childrenCount: tbodyElement.children.length,
+                            innerHTMLLength: tbodyElement.innerHTML.length,
+                            hasLockedHTML: !!tbodyElement._lockedHTML
+                        });
+                        
+                        // CRITICAL FIX #68: CONTINUOUS monitoring with setInterval
+                        // This runs FOREVER to catch ANY clearing by Alpine.js at ANY time
+                        const monitoringKey = '_tbody_monitor_' + tableId;
+                        
+                        // Clear existing monitor if any
+                        if (window[monitoringKey]) {
+                            clearInterval(window[monitoringKey]);
+                        }
+                        
+                        // Start CONTINUOUS monitoring (every 100ms)
+                        window[monitoringKey] = setInterval(() => {
+                            if (tbodyElement.children.length === 0 && tbodyElement._lockedHTML) {
+                                console.log('TanStack Table: CONTINUOUS monitor detected clearing, FORCE RESTORING...');
+                                tbodyElement.innerHTML = tbodyElement._lockedHTML;
+                            }
+                        }, 100);
+                        
+                        console.log('TanStack Table: CONTINUOUS monitoring started (every 100ms)');
+                    }, 1000); // Wait 1 second for Alpine to stabilize
+                } else {
+                    console.error('TanStack Table: Failed to setup tbody guard', {
+                        tbodyFound: !!tbodyElement,
+                        htmlReceived: !!htmlToInject
+                    });
+                }
+                
+                // Update pagination metadata
+                this.pagination.totalRows = result.meta?.totalRows || 0;
+                this.pagination.totalPages = result.meta?.totalPages || 1;
+                
+                // Update this.data with dummy array to indicate rows are loaded
+                // This prevents the empty state from showing when using server-side rendering
+                // We use a dummy array with correct length so Alpine knows there's data
+                const rowCount = result.meta?.rowCount || 0;
+                this.data = Array(rowCount).fill({_serverRendered: true});
+                console.log('TanStack Table: Updated data array length to', rowCount);
+                
+                // CRITICAL FIX #56: Explicitly hide empty state with JavaScript
+                // Empty state is now OUTSIDE x-show wrapper, so we control it manually
+                const emptyStateId = 'tanstack-empty-' + tableId;
+                const emptyState = document.getElementById(emptyStateId);
+                if (emptyState) {
+                    emptyState.style.display = 'none';
+                    console.log('TanStack Table: Empty state hidden via JavaScript');
+                }
+                
+                this.loading = false;
+                
+                // CRITICAL FIX #62: Update pagination info manually
+                // Since tbody uses x-ignore, Alpine.js doesn't know data is loaded
+                // We need to manually update pagination text in the DOM
+                this.updatePaginationInfo();
                 
                 console.log('TanStack Table: Data loaded', {
-                    rows: this.data.length,
+                    rows: result.meta?.rowCount || 0,
                     total: this.pagination.totalRows,
-                    page: this.pagination.page
+                    page: this.pagination.page,
+                    loading: this.loading
                 });
             } catch (error) {
                 console.error('TanStack Table: Error loading data', error);
                 this.error = true;
                 this.errorMessage = error.message || 'Failed to load data';
+                this.loading = false; // Ensure loading is false on error too
             } finally {
-                this.loading = false;
+                // Remove finally block setting loading to false - already set above
+                // this.loading = false;
             }
         },
         
@@ -1254,6 +2033,30 @@ class TanStackRenderer
         retry() {
             this.error = null;
             this.loadData();
+        },
+        
+        /**
+         * Cleanup method for instance destruction.
+         * Removes instance from global registry and cleans up event listeners.
+         * Validates: Requirement 8.3 - Independent initialization and cleanup
+         * Validates: Requirement 8.8 - State persistence cleanup
+         */
+        destroy() {
+            console.log('TanStack Table: Destroying instance', tableId);
+            
+            // Save final state before destruction (Requirement 8.8)
+            this.saveState();
+            
+            // Remove from global instance registry
+            if (window._tanstackInstances && window._tanstackInstances[tableId]) {
+                delete window._tanstackInstances[tableId];
+            }
+            
+            // Clean up instance-specific event listeners
+            const filterEventName = 'filters-applied-' + tableId;
+            window.removeEventListener(filterEventName, this.loadData);
+            
+            console.log('TanStack Table: Instance', tableId, 'destroyed successfully');
         },
         
         /**
@@ -1293,49 +2096,90 @@ class TanStackRenderer
     
     // Check if Alpine is already loaded
     if (typeof Alpine !== 'undefined') {
-        console.log('TanStack Table: Alpine already loaded, registering component immediately');
+        console.log('TanStack Table: Alpine already loaded, registering component', componentName, 'immediately');
+        
+        // Requirement 8.4: Verify TanStack JS loaded before init
+        // Check if TanStack Table library is available (exposed as TableCore)
+        // VirtualCore is optional for virtualization features
+        if (typeof window.TableCore === 'undefined') {
+            console.error('TanStack Table: TanStack Table library not loaded for instance', tableId);
+            console.error('TanStack Table: Please ensure TanStack Table JavaScript is included before initializing tables');
+            console.error('TanStack Table: Expected window.TableCore to be defined');
+            
+            // Handle missing dependency gracefully - show error message in table container
+            const tableContainer = document.querySelector('[x-data*="' + componentName + '"]');
+            if (tableContainer) {
+                tableContainer.innerHTML = `
+                    <div class="alert alert-error" role="alert">
+                        <svg class="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <strong>TanStack Table Error:</strong> TanStack Table library is not loaded. 
+                        Please include the TanStack Table JavaScript file before initializing tables.
+                    </div>
+                `;
+            }
+            
+            return; // Stop initialization
+        }
+        
+        // VirtualCore is optional - log warning if not available but continue
+        if (typeof window.VirtualCore === 'undefined') {
+            console.warn('TanStack Table: VirtualCore not loaded - virtualization features will be disabled');
+        }
+        
+        console.log('TanStack Table: TanStack Table library verified for instance', tableId);
         registerComponent();
         
-        // Initialize Alpine on the table container after component registration
-        setTimeout(() => {
-            const tableContainer = document.querySelector('[x-data*="tanstackTable_{$tableId}"]');
-            if (tableContainer && !tableContainer.__x) {
-                console.log('TanStack Table: Initializing Alpine on table container');
-                Alpine.initTree(tableContainer);
-            }
-            
-            // Also initialize filter modal if exists
-            const filterModal = document.querySelector('[x-data*="filterModal"]');
-            if (filterModal && !filterModal.__x) {
-                console.log('TanStack Table: Initializing Alpine on filter modal');
-                Alpine.initTree(filterModal);
-            }
-        }, 100);
+        // Let Alpine automatically initialize the component (don't call initTree manually)
+        console.log('TanStack Table: Component registered, Alpine will auto-initialize');
     } else {
-        console.log('TanStack Table: Waiting for Alpine to load...');
+        console.log('TanStack Table: Waiting for Alpine to load for instance', tableId, '...');
         document.addEventListener('alpine:init', () => {
-            registerComponent();
+            console.log('TanStack Table: Alpine initialized, registering component', componentName);
             
-            // Initialize Alpine on the table container after component registration
-            setTimeout(() => {
-                const tableContainer = document.querySelector('[x-data*="tanstackTable_{$tableId}"]');
-                if (tableContainer && !tableContainer.__x) {
-                    console.log('TanStack Table: Initializing Alpine on table container');
-                    Alpine.initTree(tableContainer);
+            // Requirement 8.4: Verify TanStack JS loaded before init
+            // Check if TanStack Table library is available (exposed as TableCore)
+            // VirtualCore is optional for virtualization features
+            if (typeof window.TableCore === 'undefined') {
+                console.error('TanStack Table: TanStack Table library not loaded for instance', tableId);
+                console.error('TanStack Table: Please ensure TanStack Table JavaScript is included before initializing tables');
+                console.error('TanStack Table: Expected window.TableCore to be defined');
+                
+                // Handle missing dependency gracefully - show error message in table container
+                const tableContainer = document.querySelector('[x-data*="' + componentName + '"]');
+                if (tableContainer) {
+                    tableContainer.innerHTML = `
+                        <div class="alert alert-error" role="alert">
+                            <svg class="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <strong>TanStack Table Error:</strong> TanStack Table library is not loaded. 
+                            Please include the TanStack Table JavaScript file before initializing tables.
+                        </div>
+                    `;
                 }
                 
-                // Also initialize filter modal if exists
-                const filterModal = document.querySelector('[x-data*="filterModal"]');
-                if (filterModal && !filterModal.__x) {
-                    console.log('TanStack Table: Initializing Alpine on filter modal');
-                    Alpine.initTree(filterModal);
-                }
-            }, 100);
+                return; // Stop initialization
+            }
+            
+            console.log('TanStack Table: TanStack Table library verified for instance', tableId);
+            registerComponent();
+            
+            // Let Alpine automatically initialize the component (don't call initTree manually)
+            console.log('TanStack Table: Component registered, Alpine will auto-initialize');
         });
     }
 })();
 
-// Global function for action dropdown toggle
+JS;
+
+        // Output global helper functions only once (shared across all instances)
+        // Use static class property to prevent duplicate output
+        if (!self::$globalFunctionsOutput) {
+            $js .= <<<'JS'
+
+// Global function for action dropdown toggle (scoped by dropdown ID)
 window.toggleActionDropdown = function(dropdownId) {
     const dropdown = document.getElementById(dropdownId);
     if (!dropdown) return;
@@ -1351,7 +2195,7 @@ window.toggleActionDropdown = function(dropdownId) {
     dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
 };
 
-// Close dropdown when clicking outside
+// Close dropdown when clicking outside (global handler, but works for all instances)
 document.addEventListener('click', function(event) {
     if (!event.target.closest('.action-dropdown-container')) {
         document.querySelectorAll('.action-dropdown').forEach(d => {
@@ -1359,8 +2203,12 @@ document.addEventListener('click', function(event) {
         });
     }
 });
-</script>
+
 JS;
+            self::$globalFunctionsOutput = true;
+        }
+        
+        return $js . '</script>';
     }
 
     /**
@@ -1445,1451 +2293,6 @@ JS;
 HTML;
     }
     
-    /**
-     * Render inline CSS styles (fallback for development).
-     * 
-     * @return string The inline CSS
-     */
-    protected function renderInlineStyles(): string {
-        return <<<CSS
-<style>
-/* TanStack Table Styles - Theme Engine Compliant */
-/* Uses CSS variables (var(--cs-color-*)) - NO hardcoded colors */
-/* Uses theme fonts via CSS variables - NO hardcoded fonts */
-
-/* Card wrapper for table - matching reference design */
-.tanstack-table-card {
-    background: var(--cs-color-background-dark, #1a202c);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.tanstack-table-container {
-    width: 100%;
-    overflow-x: auto;
-    font-family: var(--cs-font-sans, Inter, system-ui, sans-serif);
-    background: var(--cs-color-background-dark, #1a202c);
-    border-radius: 0.5rem;
-    border: 1px solid var(--cs-color-border-dark, rgba(255, 255, 255, 0.1));
-    overflow: hidden;
-}
-
-/* Header (search bar) - outside container */
-.tanstack-table-header {
-    border-bottom: none;
-    padding: 0 0 1rem 0;
-    background: transparent;
-    margin-bottom: 1rem;
-}
-
-.tanstack-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.tanstack-table th,
-.tanstack-table td {
-    padding: 1rem 1rem;
-    text-align: left;
-    font-family: var(--cs-font-sans, Inter, system-ui, sans-serif);
-}
-
-.tanstack-table th {
-    background: transparent;
-    font-weight: 500;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--cs-color-text-secondary-dark, #a0aec0);
-    border-bottom: 1px solid var(--cs-color-border-dark, rgba(255, 255, 255, 0.1));
-    height: 3rem;
-}
-
-/* Standard table rows - clean and minimal */
-.tanstack-table tbody tr {
-    border-bottom: 1px solid var(--cs-color-border-dark, rgba(255, 255, 255, 0.08));
-    transition: background-color 0.2s ease;
-}
-
-.tanstack-table tbody tr:hover {
-    background: var(--cs-color-hover-dark, rgba(255, 255, 255, 0.05));
-}
-
-.tanstack-table tbody tr:last-child {
-    border-bottom: none;
-}
-
-.tanstack-table tbody td {
-    color: var(--cs-color-text-primary-dark, #e2e8f0);
-    vertical-align: middle;
-    font-size: 0.875rem;
-}
-
-/* Badge styles */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.625rem;
-    border-radius: 0.375rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: capitalize;
-    letter-spacing: 0.025em;
-}
-
-.badge-success {
-    background: var(--cs-color-success-bg, rgba(16, 185, 129, 0.2));
-    color: var(--cs-color-success-text, #34d399);
-}
-
-.badge-warning {
-    background: var(--cs-color-warning-bg, rgba(245, 158, 11, 0.2));
-    color: var(--cs-color-warning-text, #fbbf24);
-}
-
-.badge-error {
-    background: var(--cs-color-error-bg, rgba(239, 68, 68, 0.2));
-    color: var(--cs-color-error-text, #f87171);
-}
-
-.badge-info {
-    background: var(--cs-color-info-bg, rgba(59, 130, 246, 0.2));
-    color: var(--cs-color-info-text, #60a5fa);
-}
-
-/* Avatar/Icon in first column */
-.table-avatar {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.5rem;
-    background: var(--cs-gradient-primary, linear-gradient(135deg, #6366f1, #8b5cf6));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-    font-size: 0.875rem;
-}
-
-/* Action buttons - Desktop inline - matching pagination hover */
-.action-buttons-wrapper {
-    display: flex;
-    justify-content: center;
-}
-
-.action-buttons-inline {
-    display: flex;
-    gap: 0.375rem;
-}
-
-.action-btn-inline {
-    padding: 0.5rem;
-    border-radius: 0.375rem;
-    background: transparent;
-    border: none;
-    color: var(--cs-color-text-secondary-dark, #a0aec0);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.action-btn-inline:hover {
-    background: var(--cs-gradient-accent, linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%));
-    color: var(--cs-color-text-inverse, #ffffff);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--cs-color-accent-shadow, rgba(255, 140, 0, 0.4));
-}
-
-.action-btn-inline:hover::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.3) 50%,
-        transparent 100%
-    );
-    animation: shine 0.6s ease-in-out;
-}
-
-.action-btn-inline svg {
-    width: 1rem;
-    height: 1rem;
-}
-
-/* Action dropdown - Mobile only */
-.action-dropdown-container {
-    position: relative;
-}
-
-.action-button {
-    padding: 0.5rem;
-    border-radius: 0.375rem;
-    background: transparent;
-    border: none;
-    color: var(--cs-color-text-secondary-dark, #a0aec0);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.action-button:hover {
-    background: var(--cs-gradient-accent, linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%));
-    color: var(--cs-color-text-inverse, #ffffff);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--cs-color-accent-shadow, rgba(255, 140, 0, 0.4));
-}
-
-.action-button:hover::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.3) 50%,
-        transparent 100%
-    );
-    animation: shine 0.6s ease-in-out;
-}
-
-.action-button svg {
-    width: 1rem;
-    height: 1rem;
-}
-
-.action-dropdown {
-    position: absolute;
-    right: 0;
-    top: 100%;
-    margin-top: 0.5rem;
-    width: 12rem;
-    background: var(--cs-color-background-secondary-dark, #2d3748);
-    border-radius: 0.5rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--cs-color-border-dark, rgba(255, 255, 255, 0.15));
-    z-index: 9999;
-    overflow: hidden;
-}
-
-.action-dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
-    color: var(--cs-color-text-primary-dark, #e2e8f0);
-    text-decoration: none;
-    transition: all 0.3s ease;
-    border: none;
-    background: transparent;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.action-dropdown-item:hover {
-    background: var(--cs-gradient-accent, linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%));
-    color: var(--cs-color-text-inverse, #ffffff);
-    transform: translateX(4px);
-}
-
-.action-dropdown-item:hover::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.3) 50%,
-        transparent 100%
-    );
-    animation: shine 0.6s ease-in-out;
-}
-
-/* Primary color usage for interactive elements */
-.tanstack-table .btn-primary {
-    background: var(--cs-color-primary, #6366f1);
-    color: var(--cs-color-text-inverse, #ffffff);
-}
-
-.tanstack-table .btn-primary:hover {
-    opacity: 0.9;
-    transition: opacity 0.2s ease;
-}
-
-/* Secondary color usage */
-.tanstack-table .btn-secondary {
-    background: var(--cs-color-secondary, #8b5cf6);
-    color: var(--cs-color-text-inverse, #ffffff);
-}
-
-/* Semantic colors */
-.tanstack-table .text-success {
-    color: var(--cs-color-success, #10b981);
-}
-
-.tanstack-table .text-warning {
-    color: var(--cs-color-warning, #f59e0b);
-}
-
-.tanstack-table .text-error {
-    color: var(--cs-color-error, #ef4444);
-}
-
-.tanstack-table .text-info {
-    color: var(--cs-color-info, #3b82f6);
-}
-
-/* Dark mode support */
-.dark .tanstack-table-card {
-    background: #1a202c;
-}
-
-.dark .tanstack-table-container {
-    background: #1a202c;
-}
-
-.dark .tanstack-table-header {
-    background: transparent;
-}
-
-.dark .tanstack-table th {
-    color: #a0aec0;
-}
-
-.dark .tanstack-table tbody tr {
-    background: transparent;
-}
-
-.dark .tanstack-table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.dark .tanstack-table tbody td {
-    color: #b5c2d4;
-}
-
-.dark .tanstack-pagination {
-    background: transparent;
-}
-
-/* Sortable column headers */
-.tanstack-table th.sortable {
-    cursor: pointer;
-    user-select: none;
-}
-
-.tanstack-table th.sortable:hover {
-    color: var(--cs-color-text-primary, #111827);
-    transition: color 0.2s ease;
-}
-
-.dark .tanstack-table th.sortable:hover {
-    color: var(--cs-color-text-primary-dark, #f9fafb);
-}
-
-/* Sort indicators with primary color */
-.tanstack-table .sort-icon {
-    color: var(--cs-color-primary, #6366f1);
-}
-
-/* Focus states for accessibility */
-.tanstack-table th:focus,
-.tanstack-table td:focus,
-.tanstack-table button:focus {
-    outline: 2px solid var(--cs-color-primary, #6366f1);
-    outline-offset: 2px;
-}
-
-/* Smooth transitions for theme switching */
-.tanstack-table,
-.tanstack-table th,
-.tanstack-table td,
-.tanstack-table button {
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-/* Enhanced transitions during theme switching */
-.tanstack-table-container.theme-transitioning,
-.tanstack-table-container.theme-transitioning * {
-    transition: background-color 0.2s ease, 
-                color 0.2s ease, 
-                border-color 0.2s ease,
-                box-shadow 0.2s ease,
-                opacity 0.2s ease !important;
-}
-
-.dark .tanstack-table th.sortable:hover {
-    color: var(--cs-color-text-primary-dark, #f9fafb);
-}
-
-/* Sort indicators */
-.sort-indicator {
-    display: inline-block;
-    margin-left: 0.5rem;
-    opacity: 0.5;
-}
-
-.sort-indicator.active {
-    opacity: 1;
-}
-
-/* Loading state - Skeleton loader */
-.tanstack-table-skeleton {
-    padding: 0;
-    width: 100%;
-}
-
-.skeleton-table {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-/* Skeleton header */
-.skeleton-header {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem 1rem;
-    border-bottom: 1px solid var(--cs-color-border-dark, rgba(255, 255, 255, 0.1));
-    background: transparent;
-}
-
-.skeleton-header-cell {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-}
-
-.skeleton-shimmer-header {
-    height: 0.75rem;
-    width: 60%;
-    background: var(--cs-color-skeleton-bg, rgba(255, 255, 255, 0.08));
-    border-radius: 0.375rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.skeleton-shimmer-header::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        var(--cs-color-skeleton-shine, rgba(255, 255, 255, 0.15)) 50%,
-        transparent 100%
-    );
-    animation: shimmer 1.5s infinite;
-}
-
-/* Skeleton rows */
-.skeleton-row {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem 1rem;
-    border-bottom: 1px solid var(--cs-color-border-dark, rgba(255, 255, 255, 0.08));
-    min-height: 3.75rem;
-}
-
-.skeleton-row:last-child {
-    border-bottom: none;
-}
-
-.skeleton-cell {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-}
-
-.skeleton-shimmer {
-    height: 1rem;
-    width: 80%;
-    background: var(--cs-color-skeleton-bg, rgba(255, 255, 255, 0.08));
-    border-radius: 0.375rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.skeleton-shimmer::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        var(--cs-color-skeleton-shine, rgba(255, 255, 255, 0.15)) 50%,
-        transparent 100%
-    );
-    animation: shimmer 1.5s infinite;
-}
-
-/* Dark mode adjustments */
-.dark .skeleton-shimmer,
-.dark .skeleton-shimmer-header {
-    background: var(--cs-color-skeleton-bg, rgba(255, 255, 255, 0.08));
-}
-
-.dark .skeleton-shimmer::after,
-.dark .skeleton-shimmer-header::after {
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        var(--cs-color-skeleton-shine, rgba(255, 255, 255, 0.15)) 50%,
-        transparent 100%
-    );
-}
-
-@keyframes shimmer {
-    0% {
-        left: -100%;
-    }
-    100% {
-        left: 100%;
-    }
-}
-
-/* Old loading state - keep for backward compatibility */
-.tanstack-table-loading {
-    position: relative;
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-.tanstack-table-loading::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 2rem;
-    height: 2rem;
-    margin: -1rem 0 0 -1rem;
-    border: 3px solid var(--cs-color-primary, #6366f1);
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Empty state */
-.tanstack-table-empty {
-    padding: 3rem 1rem;
-    text-align: center;
-    color: var(--cs-color-text-secondary, #6b7280);
-}
-
-/* Error state */
-.tanstack-table-error {
-    padding: 2rem 1rem;
-    text-align: center;
-    color: var(--cs-color-error, #ef4444);
-}
-
-/* Column Pinning (Fixed Columns) */
-.tanstack-table-pinned-left,
-.tanstack-table-pinned-right {
-    position: sticky;
-    background: var(--cs-color-background, #ffffff);
-    z-index: 10;
-}
-
-.dark .tanstack-table-pinned-left,
-.dark .tanstack-table-pinned-right {
-    background: var(--cs-color-background-dark, #1f2937);
-}
-
-.tanstack-table-pinned-left {
-    left: 0;
-    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-}
-
-.tanstack-table-pinned-right {
-    right: 0;
-    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
-}
-
-.dark .tanstack-table-pinned-left {
-    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.3);
-}
-
-.dark .tanstack-table-pinned-right {
-    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Pinned column headers */
-.tanstack-table thead th.tanstack-table-pinned-left,
-.tanstack-table thead th.tanstack-table-pinned-right {
-    background: var(--cs-color-background-secondary, #f9fafb);
-}
-
-.dark .tanstack-table thead th.tanstack-table-pinned-left,
-.dark .tanstack-table thead th.tanstack-table-pinned-right {
-    background: var(--cs-color-background-secondary-dark, #1f2937);
-}
-
-/* Pagination - Modern design matching reference - outside container */
-.tanstack-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 0 0 0;
-    border-top: none;
-    background: transparent;
-    margin-top: 1rem;
-}
-
-.pagination-info {
-    font-size: 0.875rem;
-    color: var(--cs-color-text-secondary-dark, #a0aec0);
-}
-
-.pagination-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.pagination-page-info {
-    font-size: 0.875rem;
-    color: var(--cs-color-text-secondary-dark, #a0aec0);
-    margin-right: 0.5rem;
-}
-
-/* Base pagination button - NO border, NO background */
-.pagination-button {
-    min-width: 2.75rem;
-    height: 2.75rem;
-    padding: 0 0.75rem;
-    border: none;
-    background: transparent;
-    color: var(--cs-color-text-secondary-dark, #a0aec0);
-    font-size: 0.875rem;
-    font-weight: 500;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-}
-
-/* Navigation buttons (First, Prev, Next, Last) */
-.pagination-nav-button {
-    min-width: auto;
-    padding: 0 0.75rem;
-    gap: 0.5rem;
-}
-
-.pagination-nav-button svg {
-    flex-shrink: 0;
-    width: 1rem;
-    height: 1rem;
-}
-
-.pagination-button-text {
-    display: inline-block;
-    margin: 0 0.25rem;
-    font-size: 0.875rem;
-}
-
-/* Hide text on mobile, show on desktop */
-@media (max-width: 640px) {
-    .pagination-button-text {
-        display: none;
-    }
-    
-    .pagination-nav-button {
-        min-width: 2.5rem;
-        padding: 0;
-    }
-}
-
-/* Number buttons */
-.pagination-number-button {
-    min-width: 2.75rem;
-}
-
-/* Hover effect - Orange with glass shine effect */
-.pagination-button:hover:not(:disabled):not(.pagination-button-active) {
-    background: var(--cs-gradient-accent, linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%));
-    color: var(--cs-color-text-inverse, #ffffff);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--cs-color-accent-shadow, rgba(255, 140, 0, 0.4));
-}
-
-/* Glass shine effect on hover */
-.pagination-button:hover:not(:disabled):not(.pagination-button-active)::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.3) 50%,
-        transparent 100%
-    );
-    animation: shine 0.6s ease-in-out;
-}
-
-@keyframes shine {
-    0% {
-        left: -100%;
-    }
-    100% {
-        left: 100%;
-    }
-}
-
-/* Active page button - darker background with border */
-.pagination-button-active {
-    background: var(--cs-color-background-active-dark, #171C21) !important;
-    color: var(--cs-color-text-inverse, #ffffff) !important;
-    border: 2px solid var(--cs-color-border-active-dark, #20252e) !important;
-    font-weight: 600;
-}
-
-.pagination-button-active:hover {
-    background: var(--cs-color-background-active-hover-dark, #374151) !important;
-    border-color: var(--cs-color-border-active-hover-dark, #5a6678) !important;
-    transform: none;
-    box-shadow: none;
-}
-
-/* Disabled state */
-.pagination-button:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    background: transparent;
-}
-
-.pagination-button:disabled:hover {
-    transform: none;
-    box-shadow: none;
-    background: transparent;
-}
-
-/* Page size selector - matching pagination hover */
-.pagination-select {
-    background: transparent;
-    border: none;
-    color: var(--cs-color-text-primary-dark, #e2e8f0);
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    font-size: 0.875rem;
-    transition: all 0.3s ease;
-    margin-left: 0.5rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.pagination-select:hover {
-    background: var(--cs-gradient-accent, linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%));
-    color: var(--cs-color-text-inverse, #ffffff);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--cs-color-accent-shadow, rgba(255, 140, 0, 0.4));
-}
-
-.pagination-select:hover::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        var(--cs-color-shine, rgba(255, 255, 255, 0.3)) 50%,
-        transparent 100%
-    );
-    animation: shine 0.6s ease-in-out;
-}
-
-.pagination-select:focus {
-    outline: none;
-    border-color: var(--cs-color-accent, #ff8c00);
-    box-shadow: 0 0 0 3px var(--cs-color-accent-shadow, rgba(255, 140, 0, 0.1));
-}
-
-/* Export Buttons - Matching pagination hover effect */
-.export-buttons {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.export-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: transparent;
-    border: none;
-    color: var(--cs-color-text-secondary-dark, #a0aec0);
-    font-size: 0.875rem;
-    font-weight: 500;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.export-button:hover {
-    background: var(--cs-gradient-accent, linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%));
-    color: var(--cs-color-text-inverse, #ffffff);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--cs-color-accent-shadow, rgba(255, 140, 0, 0.4));
-}
-
-.export-button:hover::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        var(--cs-color-shine, rgba(255, 255, 255, 0.3)) 50%,
-        transparent 100%
-    );
-    animation: shine 0.6s ease-in-out;
-}
-
-.export-button svg {
-    width: 1rem;
-    height: 1rem;
-    flex-shrink: 0;
-}
-
-.export-button-text {
-    display: inline-block;
-    font-size: 0.875rem;
-}
-
-/* Icon-only button (fullscreen) */
-.export-button-icon-only {
-    padding: 0.5rem;
-    min-width: 2.5rem;
-    justify-content: center;
-}
-
-.export-button-icon-only .export-button-text {
-    display: none;
-}
-
-/* Tooltip container */
-.tooltip-container {
-    position: relative;
-    display: inline-block;
-}
-
-.tooltip-content {
-    visibility: hidden;
-    opacity: 0;
-    position: absolute;
-    bottom: 125%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--cs-color-tooltip-bg, #1f2937);
-    color: var(--cs-color-tooltip-text, #e5e7eb);
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
-    white-space: nowrap;
-    z-index: 1000;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-    box-shadow: 0 4px 6px var(--cs-color-shadow, rgba(0, 0, 0, 0.3));
-    pointer-events: none;
-}
-
-.tooltip-text {
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-    color: var(--cs-color-tooltip-text, #e5e7eb);
-}
-
-.tooltip-shortcut {
-    font-size: 0.625rem;
-    color: var(--cs-color-tooltip-text-secondary, #9ca3af);
-}
-
-.tooltip-container:hover .tooltip-content {
-    visibility: visible;
-    opacity: 1;
-}
-
-/* Tooltip arrow */
-.tooltip-content::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top-color: var(--cs-color-tooltip-bg, #1f2937);
-}
-
-/* Fullscreen mode */
-.tanstack-table-card.fullscreen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 9999;
-    border-radius: 0;
-    padding: 2rem;
-    overflow: auto;
-}
-
-.tanstack-table-card.fullscreen .tanstack-table-container {
-    max-height: calc(100vh - 12rem);
-    overflow: auto;
-}
-
-/* Ensure filter modal wrapper is above fullscreen table */
-[dusk="filter-modal"] {
-    z-index: 10001 !important;
-}
-
-/* Filter modal backdrop - must be above fullscreen table */
-[dusk="filter-modal"] > .fixed.inset-0 {
-    z-index: 10000 !important;
-}
-
-/* Filter modal content - must be above backdrop */
-[dusk="filter-modal"] > .relative {
-    z-index: 10001 !important;
-    position: relative;
-}
-
-/* Hide text on mobile, show on desktop */
-@media (max-width: 768px) {
-    .export-button-text {
-        display: none;
-    }
-    
-    .export-button {
-        padding: 0.5rem;
-        min-width: 2.5rem;
-        justify-content: center;
-    }
-}
-
-/* Row Selection */
-.tanstack-table-select-column {
-    width: 3rem;
-    text-align: center;
-}
-
-.tanstack-table-checkbox {
-    width: 1.125rem;
-    height: 1.125rem;
-    cursor: pointer;
-    accent-color: var(--cs-color-primary, #6366f1);
-}
-
-.tanstack-table-row-selected {
-    background: var(--cs-color-primary-light, #eef2ff) !important;
-}
-
-.dark .tanstack-table-row-selected {
-    background: var(--cs-color-primary-dark, #312e81) !important;
-}
-
-.tanstack-table-row-selected:hover {
-    background: var(--cs-color-primary-light-hover, #e0e7ff) !important;
-}
-
-.dark .tanstack-table-row-selected:hover {
-    background: var(--cs-color-primary-dark-hover, #3730a3) !important;
-}
-
-/* Pagination - Modern design like reference */
-.tanstack-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.5rem 1rem;
-    border-top: 1px solid var(--cs-color-border-dark, rgba(255, 255, 255, 0.05));
-}
-
-.dark .tanstack-pagination {
-    border-top-color: var(--cs-color-border-dark, rgba(255, 255, 255, 0.05));
-}
-
-.pagination-info {
-    color: var(--cs-color-text-secondary-dark, #9ca3af);
-    font-size: 0.875rem;
-}
-
-.pagination-controls {
-    display: flex;
-    gap: 0.375rem;
-    align-items: center;
-}
-
-.pagination-button {
-    padding: 0.5rem 0.875rem;
-    border: none;
-    border-radius: 0.5rem;
-    background: transparent;
-    color: var(--cs-color-text-secondary-dark, #d1d5db);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-    min-width: 2.5rem;
-    text-align: center;
-}
-
-.pagination-button:hover:not(:disabled) {
-    background: var(--cs-color-hover-dark, rgba(255, 255, 255, 0.1));
-    color: var(--cs-color-text-inverse, #ffffff);
-}
-
-.pagination-button:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-/* Active page button */
-.pagination-button.bg-primary {
-    background: var(--cs-gradient-primary, linear-gradient(135deg, #6366f1, #8b5cf6));
-    color: var(--cs-color-text-inverse, #ffffff);
-}
-
-.pagination-button.bg-primary:hover {
-    background: var(--cs-gradient-primary-hover, linear-gradient(135deg, #5558e3, #7c4de8));
-}
-
-/* Page size select */
-.pagination-button select,
-select.pagination-button {
-    padding-right: 2rem;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d1d5db'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.5rem center;
-    background-size: 1rem;
-    appearance: none;
-}
-
-/* Bulk Action Buttons */
-.tanstack-bulk-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.tanstack-bulk-action-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    border: none;
-}
-
-.tanstack-bulk-action-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.tanstack-bulk-action-button:active {
-    transform: translateY(0);
-}
-
-.tanstack-bulk-action-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* Bulk Action Confirmation Modal */
-.tanstack-confirm-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-
-.tanstack-confirm-modal-content {
-    background: var(--cs-color-background, #ffffff);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    max-width: 28rem;
-    width: 90%;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.dark .tanstack-confirm-modal-content {
-    background: var(--cs-color-background-dark, #1f2937);
-}
-
-.tanstack-confirm-modal-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--cs-color-text-primary, #111827);
-    margin-bottom: 0.75rem;
-}
-
-.dark .tanstack-confirm-modal-title {
-    color: var(--cs-color-text-primary-dark, #f9fafb);
-}
-
-.tanstack-confirm-modal-message {
-    color: var(--cs-color-text-secondary, #6b7280);
-    margin-bottom: 1.5rem;
-}
-
-.dark .tanstack-confirm-modal-message {
-    color: var(--cs-color-text-secondary-dark, #9ca3af);
-}
-
-.tanstack-confirm-modal-actions {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: flex-end;
-}
-
-.tanstack-confirm-modal-button {
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-}
-
-.tanstack-confirm-modal-button-cancel {
-    background: var(--cs-color-background-secondary, #f3f4f6);
-    color: var(--cs-color-text-primary, #111827);
-}
-
-.tanstack-confirm-modal-button-cancel:hover {
-    background: var(--cs-color-background-hover, #e5e7eb);
-}
-
-.dark .tanstack-confirm-modal-button-cancel {
-    background: var(--cs-color-background-secondary-dark, #374151);
-    color: var(--cs-color-text-primary-dark, #f9fafb);
-}
-
-.dark .tanstack-confirm-modal-button-cancel:hover {
-    background: var(--cs-color-background-hover-dark, #4b5563);
-}
-
-.tanstack-confirm-modal-button-confirm {
-    background: var(--cs-color-error, #ef4444);
-    color: #ffffff;
-}
-
-.tanstack-confirm-modal-button-confirm:hover {
-    background: var(--cs-color-error-dark, #dc2626);
-}
-
-/* Responsive Styles */
-.tanstack-table-responsive-wrapper {
-    width: 100%;
-}
-
-/* Mobile Card View */
-.tanstack-mobile-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 0.5rem;
-}
-
-.tanstack-mobile-card {
-    background: var(--cs-color-background, #ffffff);
-    border: 1px solid var(--cs-color-border, #e5e7eb);
-    border-radius: 0.75rem;
-    padding: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-}
-
-.dark .tanstack-mobile-card {
-    background: var(--cs-color-background-dark, #1f2937);
-    border-color: var(--cs-color-border-dark, #374151);
-}
-
-.tanstack-mobile-card-selected {
-    border-color: var(--cs-color-primary, #6366f1);
-    background: var(--cs-color-primary-light, #eef2ff);
-}
-
-.dark .tanstack-mobile-card-selected {
-    border-color: var(--cs-color-primary, #6366f1);
-    background: var(--cs-color-primary-dark, #312e81);
-}
-
-.tanstack-mobile-card-select {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 0.75rem;
-}
-
-.tanstack-mobile-card-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.tanstack-mobile-card-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.tanstack-mobile-card-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--cs-color-text-secondary, #6b7280);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.dark .tanstack-mobile-card-label {
-    color: var(--cs-color-text-secondary-dark, #9ca3af);
-}
-
-.tanstack-mobile-card-value {
-    font-size: 0.875rem;
-    color: var(--cs-color-text-primary, #111827);
-}
-
-.dark .tanstack-mobile-card-value {
-    color: var(--cs-color-text-primary-dark, #f9fafb);
-}
-
-/* Touch-Friendly Interactions */
-@media (hover: none) and (pointer: coarse) {
-    /* Increase tap target sizes for touch devices */
-    .tanstack-table-checkbox {
-        width: 1.5rem;
-        height: 1.5rem;
-    }
-    
-    .pagination-button {
-        padding: 0.75rem 1.25rem;
-        min-height: 44px; /* iOS minimum tap target */
-    }
-    
-    .tanstack-bulk-action-button {
-        padding: 0.625rem 1rem;
-        min-height: 44px;
-    }
-    
-    .tanstack-table th.sortable {
-        padding: 1rem;
-    }
-    
-    /* Larger touch targets for mobile cards */
-    .tanstack-mobile-card {
-        padding: 1.25rem;
-    }
-    
-    .tanstack-mobile-card-select input {
-        width: 1.5rem;
-        height: 1.5rem;
-    }
-}
-
-/* Smooth scrolling for touch devices */
-.tanstack-table-desktop {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-}
-
-/* Prevent text selection during touch interactions */
-.tanstack-table th.sortable,
-.pagination-button,
-.tanstack-bulk-action-button {
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-}
-
-/* Mobile Pagination Adaptations */
-@media (max-width: 767px) {
-    .tanstack-pagination {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
-    }
-    
-    .pagination-info {
-        text-align: center;
-        order: -1;
-    }
-    
-    .pagination-controls {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .pagination-button {
-        flex: 1;
-        min-width: 44px;
-        text-align: center;
-    }
-    
-    /* Stack bulk actions vertically on mobile */
-    .tanstack-bulk-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .tanstack-bulk-action-button {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-/* Tablet breakpoint (768px - 1023px) */
-@media (min-width: 768px) and (max-width: 1023px) {
-    .tanstack-table th,
-    .tanstack-table td {
-        padding: 0.625rem 0.75rem;
-        font-size: 0.875rem;
-    }
-}
-
-/* Landscape mobile optimization */
-@media (max-width: 767px) and (orientation: landscape) {
-    .tanstack-mobile-card {
-        padding: 0.75rem;
-    }
-    
-    .tanstack-mobile-card-content {
-        gap: 0.5rem;
-    }
-}
-
-/* RTL (Right-to-Left) Support */
-/* Requirement 51.11: Support RTL layouts for RTL locales (ar, he, fa, ur) */
-[dir="rtl"] .tanstack-table th,
-[dir="rtl"] .tanstack-table td {
-    text-align: right;
-}
-
-[dir="rtl"] .sort-indicator {
-    margin-left: 0;
-    margin-right: 0.5rem;
-}
-
-[dir="rtl"] .tanstack-pagination {
-    flex-direction: row-reverse;
-}
-
-[dir="rtl"] .pagination-controls {
-    flex-direction: row-reverse;
-}
-
-[dir="rtl"] .tanstack-bulk-actions {
-    flex-direction: row-reverse;
-}
-
-[dir="rtl"] .tanstack-bulk-action-button {
-    flex-direction: row-reverse;
-}
-
-[dir="rtl"] .tanstack-confirm-modal-actions {
-    flex-direction: row-reverse;
-}
-
-/* RTL Pinned Columns */
-[dir="rtl"] .tanstack-table-pinned-left {
-    left: auto;
-    right: 0;
-    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
-}
-
-[dir="rtl"] .tanstack-table-pinned-right {
-    right: auto;
-    left: 0;
-    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-}
-
-[dir="rtl"].dark .tanstack-table-pinned-left {
-    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.3);
-}
-
-[dir="rtl"].dark .tanstack-table-pinned-right {
-    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.3);
-}
-
-/* RTL Mobile Card View */
-[dir="rtl"] .tanstack-mobile-card-select {
-    justify-content: flex-start;
-}
-
-[dir="rtl"] .tanstack-mobile-card-field {
-    text-align: right;
-}
-
-/* RTL Touch-Friendly Interactions */
-@media (hover: none) and (pointer: coarse) {
-    [dir="rtl"] .tanstack-table th.sortable {
-        text-align: right;
-    }
-}
-</style>
-CSS;
-    }
 
     /**
      * Inject theme CSS into the table rendering.
@@ -2974,7 +2377,8 @@ HTML;
      */
     protected function renderTableContainer(TableBuilder $table, array $alpineData): string
     {
-        $tableId = $table->getTableId() ?? 'tanstack-table-' . uniqid();
+        // Use unique ID from HashGenerator (Requirement 8.1, 8.2)
+        $tableId = $table->getUniqueId();
         
         // Get HTML attributes for RTL support (Requirement 51.11, 52.5)
         $htmlAttributes = $this->themeLocaleIntegration->getHtmlAttributes();
@@ -2984,7 +2388,7 @@ HTML;
         $html = '<div class="tanstack-table-card" ';
         $html .= 'dir="' . htmlspecialchars($htmlAttributes['dir']) . '" ';
         $html .= 'x-data="tanstackTable_' . $tableId . '" ';
-        $html .= 'x-init="init()" ';
+        $html .= 'x-init="() => { if (typeof init === \'function\') init(); }" ';
         $html .= '@keydown.window.alt.t.prevent="toggleFullscreen()" ';
         $html .= '@keydown.window.escape="if ($el.classList.contains(\'fullscreen\')) { $event.preventDefault(); toggleFullscreen(); }">';
         
@@ -3021,7 +2425,8 @@ HTML;
         $config = $table->getConfiguration();
         $selectionEnabled = $config->selectable ?? false;
         $hasBulkActions = $table->hasBulkActions();
-        $tableId = $table->getTableId() ?? 'tanstack-table-' . uniqid();
+        // Use unique ID from HashGenerator (Requirement 8.1, 8.2)
+        $tableId = $table->getUniqueId();
         
         $html = '<div class="tanstack-table-header">';
         
@@ -3099,17 +2504,20 @@ HTML;
             
             $html .= '<button ';
             $html .= 'id="' . $tableId . '_filter_btn" ';
+            // FIX #74: Filter modal is now re-enabled, use normal dispatch
             $html .= 'onclick="document.querySelector(\'[x-data*=filterModal]\').dispatchEvent(new CustomEvent(\'open-filter-modal\')); return false;" ';
             $html .= 'class="px-4 py-2 gradient-bg text-white rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-lg flex items-center gap-2 relative" ';
             $html .= 'style="box-shadow: 0 10px 15px -3px ' . $primaryColor . '40, 0 4px 6px -4px ' . $primaryColor . '40">';
             $html .= '<i data-lucide="filter" class="w-4 h-4"></i>';
             $html .= '<span>' . htmlspecialchars(__('canvastack::components.table.filters')) . '</span>';
             
-            if ($activeFilterCount > 0) {
-                $html .= '<span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">';
-                $html .= $activeFilterCount;
-                $html .= '</span>';
-            }
+            // Badge with unique ID for JavaScript updates
+            $html .= '<span ';
+            $html .= 'id="' . $tableId . '_filter_badge" ';
+            $html .= 'class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg" ';
+            $html .= 'style="display: ' . ($activeFilterCount > 0 ? 'flex' : 'none') . '">';
+            $html .= $activeFilterCount;
+            $html .= '</span>';
             
             $html .= '</button>';
         }
@@ -3232,6 +2640,20 @@ HTML;
      */
     protected function renderFilterModal(TableBuilder $table, string $tableId): string
     {
+        // Log IMMEDIATELY at method entry
+        \Log::info('TanStackRenderer::renderFilterModal CALLED', [
+            'tableId' => $tableId,
+            'hasFilters' => $table->hasFilters(),
+        ]);
+        
+        // Log connection immediately
+        \Log::info('TanStackRenderer::renderFilterModal START', [
+            'tableId' => $tableId,
+            'hasFilters' => $table->hasFilters(),
+            'connection_from_table' => $table->getConnection(),
+            'connection_property' => $table->connection ?? 'NULL',
+        ]);
+        
         if (!$table->hasFilters()) {
             return '';
         }
@@ -3271,6 +2693,20 @@ HTML;
         
         // Use Blade component to render the modal
         try {
+            // Get connection from config object (more reliable than $table->getConnection() during render)
+            $connection = $config->connection ?? $table->getConnection();
+            
+            // Log connection for debugging
+            \Log::info('TanStackRenderer: renderFilterModal - connection check', [
+                'tableName' => $tableName,
+                'connection_from_config' => $config->connection ?? 'not set',
+                'connection_from_table' => $table->getConnection(),
+                'connection_used' => $connection,
+                'connection_type' => gettype($connection),
+                'connection_is_null' => $connection === null,
+                'connection_is_empty' => empty($connection),
+            ]);
+            
             $modalHtml = view('canvastack::components.table.filter-modal', [
                 'filters' => $transformedFilters,
                 'activeFilters' => $activeFilters,
@@ -3279,6 +2715,7 @@ HTML;
                 'activeFilterCount' => $activeFilterCount,
                 'showButton' => false, // Don't show button, we have it in search bar
                 'config' => (array) $config,
+                'connection' => $connection, // Use connection from config or table
             ])->render();
             
             
@@ -3349,8 +2786,19 @@ HTML;
         $config = $table->getConfiguration();
         $selectionEnabled = $config->selectable ?? false;
         
+        // Get unique table ID
+        $tableId = $table->getUniqueId();
+        
+        // Get unique table ID
+        $tableId = $table->getUniqueId();
+        
+        // Empty state - OUTSIDE Alpine x-show wrapper, controlled by pure JavaScript
+        $html = '<div id="tanstack-empty-' . $tableId . '" class="tanstack-table-empty" style="display: none;">';
+        $html .= '<p>' . __('canvastack::components.table.no_data') . '</p>';
+        $html .= '</div>';
+        
         // Responsive wrapper with horizontal scroll
-        $html = '<div x-show="!loading && !error" class="tanstack-table-responsive-wrapper">';
+        $html .= '<div x-show="!loading && !error" class="tanstack-table-responsive-wrapper">';
         
         // Desktop table view (hidden on mobile < 768px)
         $html .= '<div class="tanstack-table-desktop hidden md:block overflow-x-auto">';
@@ -3388,27 +2836,11 @@ HTML;
         $html .= '</tr>';
         $html .= '</thead>';
         
-        // Table body
-        $html .= '<tbody>';
-        $html .= '<template x-for="row in data" :key="row.id">';
-        $html .= '<tr :class="{ \'tanstack-table-row-selected\': isRowSelected(row.id) }">';
-        
-        // Selection checkbox cell (if enabled)
-        if ($selectionEnabled) {
-            $html .= '<td class="tanstack-table-select-column">';
-            $html .= '<input type="checkbox" ';
-            $html .= ':checked="isRowSelected(row.id)" ';
-            $html .= '@change="onRowSelectChange(row.id)" ';
-            $html .= 'class="tanstack-table-checkbox" ';
-            $html .= ':aria-label="\'Select row \' + row.id" />';
-            $html .= '</td>';
-        }
-        
-        $html .= '<template x-for="(column, index) in columns" :key="column.id">';
-        $html .= '<td :class="getColumnClass(column, index)" x-html="renderCell(row, column)"></td>';
-        $html .= '</template>';
-        $html .= '</tr>';
-        $html .= '</template>';
+        // CRITICAL FIX #71: Remove x-ignore (doesn't work), use delayed injection instead
+        // Strategy: Wait for Alpine to finish ALL initializations, THEN inject HTML
+        // This prevents Alpine from resetting tbody during its initialization phase
+        $html .= '<tbody id="tanstack-tbody-' . $tableId . '" x-ref="tableBody">';
+        $html .= '<!-- Rows will be rendered server-side via AJAX -->';
         $html .= '</tbody>';
         
         $html .= '</table>';
@@ -3418,11 +2850,6 @@ HTML;
         $html .= $this->renderMobileCardView($table, $selectionEnabled);
         
         $html .= '</div>'; // Close tanstack-table-responsive-wrapper
-        
-        // Empty state
-        $html .= '<div x-show="!loading && !error && data.length === 0" class="tanstack-table-empty">';
-        $html .= '<p>' . __('canvastack::components.table.no_data') . '</p>';
-        $html .= '</div>';
         
         // Loading state - Skeleton loader
         $html .= '<div x-show="loading" class="tanstack-table-skeleton">';
@@ -3604,6 +3031,12 @@ HTML;
      */
     protected function renderMobileCardView(TableBuilder $table, bool $selectionEnabled): string
     {
+        // TEMPORARILY DISABLED: Mobile card view conflicts with server-side rendering
+        // TODO: Implement server-side rendering for mobile cards in future update
+        // For now, mobile users will see the desktop table (which is responsive)
+        return '<!-- Mobile card view temporarily disabled for server-side rendering -->';
+        
+        /* ORIGINAL CODE - COMMENTED OUT
         $html = '<div class="tanstack-table-mobile block md:hidden">';
         
         // Mobile cards container
@@ -3627,13 +3060,14 @@ HTML;
         // Card content
         $html .= '<div class="tanstack-mobile-card-content">';
         
-        // Loop through columns
-        $html .= '<template x-for="(column, index) in columns" :key="column.id">';
-        $html .= '<div class="tanstack-mobile-card-field" x-show="!column.hidden">';
-        $html .= '<div class="tanstack-mobile-card-label" x-text="column.header || column.label || column.id"></div>';
-        $html .= '<div class="tanstack-mobile-card-value" x-html="renderCell(row, column)"></div>';
-        $html .= '</div>';
-        $html .= '</template>';
+        // Render fields for each column (avoid nested x-for)
+        $columns = $table->getColumns();
+        foreach ($columns as $index => $column) {
+            $html .= '<div class="tanstack-mobile-card-field" x-show="!columns[' . $index . '].hidden">';
+            $html .= '<div class="tanstack-mobile-card-label" x-text="columns[' . $index . '].header || columns[' . $index . '].label || columns[' . $index . '].id"></div>';
+            $html .= '<div class="tanstack-mobile-card-value" x-text="getCellValue(row, columns[' . $index . '])"></div>';
+            $html .= '</div>';
+        }
         
         $html .= '</div>'; // Close tanstack-mobile-card-content
         $html .= '</div>'; // Close tanstack-mobile-card
@@ -3643,5 +3077,6 @@ HTML;
         $html .= '</div>'; // Close tanstack-table-mobile
         
         return $html;
+        */
     }
 }

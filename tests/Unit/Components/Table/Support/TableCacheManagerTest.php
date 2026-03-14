@@ -316,7 +316,7 @@ class TableCacheManagerTest extends TestCase
      */
     public function test_build_table_cache_tags_includes_model_specific_tags(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheManagerTestModel::class;
         
         $tags = $this->cacheManager->buildTableCacheTags($modelClass);
         
@@ -357,7 +357,7 @@ class TableCacheManagerTest extends TestCase
      */
     public function test_clear_model_cache_clears_model_specific_cache(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheManagerTestModel::class;
         $cacheKey = 'test.model.key';
         $cacheTags = $this->cacheManager->buildTableCacheTags($modelClass);
         $cacheTime = 300;
@@ -383,7 +383,7 @@ class TableCacheManagerTest extends TestCase
      */
     public function test_clear_model_cache_accepts_model_instance(): void
     {
-        $model = new TestModel();
+        $model = new CacheManagerTestModel();
         
         // Should not throw exception
         $this->cacheManager->clearModelCache($model);
@@ -398,7 +398,7 @@ class TableCacheManagerTest extends TestCase
      */
     public function test_clear_filter_cache_clears_filter_specific_cache(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheManagerTestModel::class;
         $filterName = 'status';
         $cacheTime = 300;
         $options = ['active' => 'Active'];
@@ -427,7 +427,7 @@ class TableCacheManagerTest extends TestCase
      */
     public function test_clear_relationship_cache_clears_relationship_specific_cache(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheManagerTestModel::class;
         $relationName = 'posts';
         $cacheTime = 300;
         $data = collect([['id' => 1]]);
@@ -672,7 +672,7 @@ class TableCacheManagerTest extends TestCase
 /**
  * Test model for cache manager tests.
  */
-class TestModel extends Model
+class CacheManagerTestModel extends Model
 {
     protected $table = 'test_models';
 }

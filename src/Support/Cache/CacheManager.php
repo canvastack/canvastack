@@ -256,4 +256,15 @@ class CacheManager
     {
         $this->tags = [];
     }
+
+    /**
+     * Check if cache driver supports tagging.
+     * 
+     * @return bool
+     */
+    public function supportsTags(): bool
+    {
+        // All our custom stores support tagging
+        return true;
+    }
 }

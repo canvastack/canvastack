@@ -76,60 +76,87 @@ class FilterOptionsProvider
      * @param string $table Table name
      * @param string $column Column name
      * @param array $parentFilters Parent filter values for cascading
+     * @param string|null $connection Database connection name (null = default)
      * @return array
      */
-    public function getOptions(string $table, string $column, array $parentFilters = []): array
+    public function getOptions(string $table, string $column, array $parentFilters = [], ?string $connection = null): array
     {
-        // Generate cache key
-        $cacheKey = $this->generateCacheKey($table, $column, $parentFilters);
+        // Log the connection parameter for debugging
+        \Log::info('FilterOptionsProvider::getOptions called', [
+            'table' => $table,
+            'column' => $column,
+            'connection' => $connection,
+            'parentFilters' => $parentFilters,
+        ]);
+        
+        // Generate cache key (include connection in key)
+        $cacheKey = $this->generateCacheKey($table, $column, $parentFilters, $connection);
 
         // Try to get from cache
         if ($this->cacheEnabled) {
             $cached = Cache::get($cacheKey);
             if ($cached !== null) {
+                \Log::info('FilterOptionsProvider: Returning cached options', [
+                    'table' => $table,
+                    'column' => $column,
+                    'count' => count($cached),
+                ]);
                 return $cached;
             }
         }
 
-        // Build optimized query
-        $query = DB::table($table)
-            ->select($column)
-            ->distinct()
-            ->whereNotNull($column)
-            ->where($column, '!=', ''); // Exclude empty strings
+        try {
+            // Build optimized query with connection support
+            $query = DB::connection($connection)->table($table)
+                ->select($column)
+                ->distinct()
+                ->whereNotNull($column)
+                ->where($column, '!=', ''); // Exclude empty strings
 
-        // Apply parent filters with indexed columns
-        foreach ($parentFilters as $col => $value) {
-            if ($value !== null && $value !== '') {
-                $query->where($col, $value);
+            // Apply parent filters with indexed columns
+            foreach ($parentFilters as $col => $value) {
+                if ($value !== null && $value !== '') {
+                    $query->where($col, $value);
+                }
             }
+
+            // Optimization: Limit result set to prevent memory issues
+            // Most filter dropdowns don't need more than configured max options
+            if ($this->optimizationEnabled) {
+                $query->limit($this->maxOptions);
+            }
+
+            // Get options with optimized query
+            $options = $query
+                ->orderBy($column)
+                ->pluck($column)
+                ->map(function ($value) {
+                    return [
+                        'value' => $value,
+                        'label' => $value,
+                    ];
+                })
+                ->values()
+                ->toArray();
+
+            // Cache the result
+            if ($this->cacheEnabled) {
+                Cache::put($cacheKey, $options, $this->cacheTtl);
+            }
+
+            return $options;
+        } catch (\Exception $e) {
+            // Log error for debugging
+            \Log::error('FilterOptionsProvider error', [
+                'table' => $table,
+                'column' => $column,
+                'connection' => $connection,
+                'error' => $e->getMessage()
+            ]);
+            
+            // Return empty array on error
+            return [];
         }
-
-        // Optimization: Limit result set to prevent memory issues
-        // Most filter dropdowns don't need more than configured max options
-        if ($this->optimizationEnabled) {
-            $query->limit($this->maxOptions);
-        }
-
-        // Get options with optimized query
-        $options = $query
-            ->orderBy($column)
-            ->pluck($column)
-            ->map(function ($value) {
-                return [
-                    'value' => $value,
-                    'label' => $value,
-                ];
-            })
-            ->values()
-            ->toArray();
-
-        // Cache the result
-        if ($this->cacheEnabled) {
-            Cache::put($cacheKey, $options, $this->cacheTtl);
-        }
-
-        return $options;
     }
 
     /**
@@ -185,18 +212,36 @@ class FilterOptionsProvider
      */
     public function clearCache(string $table, string $column): void
     {
-        // Use cache tags if available (Redis/Memcached)
-        $tags = config('canvastack.cache.filter_options.tags', []);
-        
-        if (!empty($tags) && Cache::getStore() instanceof \Illuminate\Cache\TaggableStore) {
-            // Clear tagged cache entries
-            Cache::tags($tags)->flush();
-        } else {
-            // Fallback: Clear specific cache key patterns
-            // This is a simplified approach - in production you might want to track keys
+        try {
+            // Use cache tags if available (Redis/Memcached)
+            $tags = config('canvastack.cache.filter_options.tags', []);
+            
+            // Check if cache driver supports tagging
+            $store = Cache::getStore();
+            $supportsTagging = $store instanceof \Illuminate\Cache\TaggableStore;
+            
+            if (!empty($tags) && $supportsTagging) {
+                // Clear tagged cache entries
+                Cache::tags($tags)->flush();
+            } else {
+                // Fallback: Clear specific cache key patterns
+                // This is a simplified approach - in production you might want to track keys
+                $baseKey = "{$this->cachePrefix}:{$table}:{$column}";
+                
+                // Try to clear common cache key variations
+                $patterns = [
+                    $this->generateCacheKey($table, $column, []),
+                    $this->generateCacheKey($table, $column . '_count', []),
+                ];
+                
+                foreach ($patterns as $key) {
+                    Cache::forget($key);
+                }
+            }
+        } catch (\BadMethodCallException $e) {
+            // Cache driver doesn't support tagging, use fallback
             $baseKey = "{$this->cachePrefix}:{$table}:{$column}";
             
-            // Try to clear common cache key variations
             $patterns = [
                 $this->generateCacheKey($table, $column, []),
                 $this->generateCacheKey($table, $column . '_count', []),
@@ -215,15 +260,24 @@ class FilterOptionsProvider
      */
     public function clearAllCache(): void
     {
-        // Use cache tags if available (Redis/Memcached)
-        $tags = config('canvastack.cache.filter_options.tags', []);
-        
-        if (!empty($tags) && Cache::getStore() instanceof \Illuminate\Cache\TaggableStore) {
-            // Clear all tagged cache entries
-            Cache::tags($tags)->flush();
-        } else {
-            // Fallback: Clear entire cache (not recommended for production)
-            // In production, you should track filter cache keys or use tags
+        try {
+            // Use cache tags if available (Redis/Memcached)
+            $tags = config('canvastack.cache.filter_options.tags', []);
+            
+            // Check if cache driver supports tagging
+            $store = Cache::getStore();
+            $supportsTagging = $store instanceof \Illuminate\Cache\TaggableStore;
+            
+            if (!empty($tags) && $supportsTagging) {
+                // Clear all tagged cache entries
+                Cache::tags($tags)->flush();
+            } else {
+                // Fallback: Clear entire cache (not recommended for production)
+                // In production, you should track filter cache keys or use tags
+                Cache::flush();
+            }
+        } catch (\BadMethodCallException $e) {
+            // Cache driver doesn't support tagging, use fallback
             Cache::flush();
         }
     }
@@ -234,12 +288,14 @@ class FilterOptionsProvider
      * @param string $table Table name
      * @param string $column Column name
      * @param array $parentFilters Parent filter values
+     * @param string|null $connection Database connection name
      * @return string
      */
-    public function generateCacheKey(string $table, string $column, array $parentFilters): string
+    public function generateCacheKey(string $table, string $column, array $parentFilters, ?string $connection = null): string
     {
         $filterHash = md5(json_encode($parentFilters));
-        return "{$this->cachePrefix}:{$table}:{$column}:{$filterHash}";
+        $connStr = $connection ? ":{$connection}" : '';
+        return "{$this->cachePrefix}:{$table}:{$column}{$connStr}:{$filterHash}";
     }
 
     /**
@@ -484,13 +540,22 @@ class FilterOptionsProvider
             return null;
         }
 
-        $tags = config('canvastack.cache.filter_options.tags', []);
-        
-        if (!empty($tags) && Cache::getStore() instanceof \Illuminate\Cache\TaggableStore) {
-            return Cache::tags($tags)->get($key);
+        try {
+            $tags = config('canvastack.cache.filter_options.tags', []);
+            
+            // Check if cache driver supports tagging
+            $store = Cache::getStore();
+            $supportsTagging = $store instanceof \Illuminate\Cache\TaggableStore;
+            
+            if (!empty($tags) && $supportsTagging) {
+                return Cache::tags($tags)->get($key);
+            }
+            
+            return Cache::get($key);
+        } catch (\BadMethodCallException $e) {
+            // Cache driver doesn't support tagging, use regular cache
+            return Cache::get($key);
         }
-        
-        return Cache::get($key);
     }
 
     /**
@@ -507,12 +572,22 @@ class FilterOptionsProvider
             return;
         }
 
-        $ttl = $ttl ?? $this->cacheTtl;
-        $tags = config('canvastack.cache.filter_options.tags', []);
-        
-        if (!empty($tags) && Cache::getStore() instanceof \Illuminate\Cache\TaggableStore) {
-            Cache::tags($tags)->put($key, $value, $ttl);
-        } else {
+        try {
+            $ttl = $ttl ?? $this->cacheTtl;
+            $tags = config('canvastack.cache.filter_options.tags', []);
+            
+            // Check if cache driver supports tagging
+            $store = Cache::getStore();
+            $supportsTagging = $store instanceof \Illuminate\Cache\TaggableStore;
+            
+            if (!empty($tags) && $supportsTagging) {
+                Cache::tags($tags)->put($key, $value, $ttl);
+            } else {
+                Cache::put($key, $value, $ttl);
+            }
+        } catch (\BadMethodCallException $e) {
+            // Cache driver doesn't support tagging, use regular cache
+            $ttl = $ttl ?? $this->cacheTtl;
             Cache::put($key, $value, $ttl);
         }
     }

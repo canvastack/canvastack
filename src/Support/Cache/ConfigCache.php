@@ -52,12 +52,25 @@ class ConfigCache
 
         // Check persistent cache
         $cacheKey = "config:{$key}";
-        $value = $this->cache->tags(['config'])->get($cacheKey);
+        
+        // Check if cache driver supports tagging
+        if ($this->cache->supportsTags()) {
+            $value = $this->cache->tags(['config'])->get($cacheKey);
 
-        if ($value === null) {
-            // Cache miss - get from config and cache it
-            $value = Config::get($key, $default);
-            $this->cache->tags(['config'])->put($cacheKey, $value, 3600);
+            if ($value === null) {
+                // Cache miss - get from config and cache it
+                $value = Config::get($key, $default);
+                $this->cache->tags(['config'])->put($cacheKey, $value, 3600);
+            }
+        } else {
+            // Fallback to non-tagged cache
+            $value = $this->cache->get($cacheKey);
+
+            if ($value === null) {
+                // Cache miss - get from config and cache it
+                $value = Config::get($key, $default);
+                $this->cache->put($cacheKey, $value, 3600);
+            }
         }
 
         // Store in memory cache for this request
@@ -76,7 +89,16 @@ class ConfigCache
     {
         $cacheKey = "config:all:{$namespace}";
 
-        return $this->cache->tags(['config'])->remember(
+        if ($this->cache->supportsTags()) {
+            return $this->cache->tags(['config'])->remember(
+                $cacheKey,
+                3600,
+                fn () => Config::get($namespace, [])
+            );
+        }
+
+        // Fallback to non-tagged cache
+        return $this->cache->remember(
             $cacheKey,
             3600,
             fn () => Config::get($namespace, [])
@@ -96,7 +118,12 @@ class ConfigCache
             unset(static::$memoryCache[$key]);
             $cacheKey = "config:{$key}";
 
-            return $this->cache->tags(['config'])->forget($cacheKey);
+            if ($this->cache->supportsTags()) {
+                return $this->cache->tags(['config'])->forget($cacheKey);
+            }
+
+            // Fallback to non-tagged cache
+            return $this->cache->forget($cacheKey);
         }
 
         // Clear all config cache

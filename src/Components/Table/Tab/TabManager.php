@@ -5,54 +5,71 @@ declare(strict_types=1);
 namespace Canvastack\Canvastack\Components\Table\Tab;
 
 /**
- * TabManager - Manages multiple tabs for TableBuilder
- * 
+ * TabManager - Manages multiple tabs for TableBuilder.
+ *
  * This class handles the creation, management, and state of tabs in the TableBuilder.
  * It supports multiple tables per tab, custom content, and configuration isolation.
- * 
- * @package Canvastack\Canvastack\Components\Table\Tab
+ *
  * @version 1.0.0
  */
 class TabManager
 {
     /**
-     * Array of Tab instances
-     * 
+     * Array of Tab instances.
+     *
      * @var array<string, Tab>
      */
     protected array $tabs = [];
 
     /**
-     * Currently active tab ID
-     * 
+     * Currently active tab ID.
+     *
      * @var string|null
      */
     protected ?string $activeTab = null;
 
     /**
-     * Current tab being built (for openTab/closeTab workflow)
-     * 
+     * Current tab being built (for openTab/closeTab workflow).
+     *
      * @var Tab|null
      */
     protected ?Tab $currentTab = null;
 
     /**
-     * Tab content buffer (for addContent calls)
-     * 
+     * Lazy loading enabled globally for all tabs.
+     *
+     * @var bool
+     */
+    protected bool $lazyLoadEnabled;
+
+    /**
+     * Tab content buffer (for addContent calls).
+     *
      * @var array<string, array<string>>
      */
     protected array $tabContent = [];
 
     /**
-     * Tab configuration buffer
-     * 
+     * Tab configuration buffer.
+     *
      * @var array<string, array>
      */
     protected array $tabConfig = [];
 
     /**
-     * Open a new tab or switch to existing tab
-     * 
+     * Constructor.
+     *
+     * Initializes lazy loading from configuration (Requirement 6.10, 9.4).
+     */
+    public function __construct()
+    {
+        // Read lazy loading setting from config with default true
+        $this->lazyLoadEnabled = config('canvastack.table.tabs.lazy_load_enabled', true);
+    }
+
+    /**
+     * Open a new tab or switch to existing tab.
+     *
      * @param string $name Tab display name
      * @return void
      */
@@ -87,13 +104,20 @@ class TabManager
     }
 
     /**
-     * Close the current tab
-     * 
+     * Close the current tab.
+     *
      * @return void
      */
     public function closeTab(): void
-    {
-        if ($this->currentTab !== null) {
+        {
+            // Validate that a tab is currently open
+            if ($this->currentTab === null) {
+                throw new \LogicException(
+                    'Cannot close tab: No tab is currently open. ' .
+                    'You must call openTab() before calling closeTab().'
+                );
+            }
+
             // Apply buffered content to the tab
             $tabId = $this->currentTab->getId();
             if (isset($this->tabContent[$tabId]) && !empty($this->tabContent[$tabId])) {
@@ -110,11 +134,10 @@ class TabManager
             // Clear current tab reference
             $this->currentTab = null;
         }
-    }
 
     /**
-     * Add HTML content to the current tab
-     * 
+     * Add HTML content to the current tab.
+     *
      * @param string $html HTML content to add
      * @return void
      * @throws \RuntimeException if no tab is currently open
@@ -130,8 +153,8 @@ class TabManager
     }
 
     /**
-     * Add a table instance to the current tab
-     * 
+     * Add a table instance to the current tab.
+     *
      * @param TableInstance $table Table instance to add
      * @return void
      * @throws \RuntimeException if no tab is currently open
@@ -146,8 +169,36 @@ class TabManager
     }
 
     /**
-     * Add chart to current tab
-     * 
+     * Add table configuration to the current tab.
+     *
+     * This method allows adding table configuration as an array,
+     * which will be stored and can be used later for rendering.
+     * Implements Requirement 4.4: Support for table configuration storage.
+     *
+     * @param array $config Table configuration array
+     * @return void
+     * @throws \RuntimeException if no tab is currently open
+     */
+    public function addTableConfig(array $config): void
+    {
+        if ($this->currentTab === null) {
+            throw new \RuntimeException('Cannot add table config: No tab is currently open. Call openTab() first.');
+        }
+
+        $tabId = $this->currentTab->getId();
+        
+        // Initialize tables array in config if not exists
+        if (!isset($this->tabConfig[$tabId]['tables'])) {
+            $this->tabConfig[$tabId]['tables'] = [];
+        }
+        
+        // Add the table configuration
+        $this->tabConfig[$tabId]['tables'][] = $config;
+    }
+
+    /**
+     * Add chart to current tab.
+     *
      * @param \Canvastack\Canvastack\Components\Chart\ChartBuilder $chart Chart instance
      * @return void
      * @throws \RuntimeException if no tab is currently open
@@ -162,8 +213,8 @@ class TabManager
     }
 
     /**
-     * Clear configuration for the current tab
-     * 
+     * Clear configuration for the current tab.
+     *
      * @return void
      */
     public function clearConfig(): void
@@ -176,8 +227,8 @@ class TabManager
     }
 
     /**
-     * Set configuration for the current tab
-     * 
+     * Set configuration for the current tab.
+     *
      * @param array $config Configuration array
      * @return void
      */
@@ -193,8 +244,8 @@ class TabManager
     }
 
     /**
-     * Get all tabs
-     * 
+     * Get all tabs.
+     *
      * @return array<string, Tab>
      */
     public function getTabs(): array
@@ -203,8 +254,8 @@ class TabManager
     }
 
     /**
-     * Get tabs as array for JSON serialization
-     * 
+     * Get tabs as array for JSON serialization.
+     *
      * @return array
      */
     public function getTabsArray(): array
@@ -213,12 +264,13 @@ class TabManager
         foreach ($this->tabs as $id => $tab) {
             $result[] = $tab->toArray();
         }
+
         return $result;
     }
 
     /**
-     * Get the active tab ID
-     * 
+     * Get the active tab ID.
+     *
      * @return string|null
      */
     public function getActiveTab(): ?string
@@ -227,8 +279,8 @@ class TabManager
     }
 
     /**
-     * Set the active tab
-     * 
+     * Set the active tab.
+     *
      * @param string $tabId Tab ID to set as active
      * @return void
      * @throws \InvalidArgumentException if tab ID doesn't exist
@@ -243,8 +295,8 @@ class TabManager
     }
 
     /**
-     * Set active tab from URL parameter (Requirement 32.4)
-     * 
+     * Set active tab from URL parameter (Requirement 32.4).
+     *
      * @param string|null $tabId Tab ID from URL
      * @return bool True if tab was set, false if tab doesn't exist
      */
@@ -255,12 +307,13 @@ class TabManager
         }
 
         $this->activeTab = $tabId;
+
         return true;
     }
 
     /**
-     * Get active tab for URL persistence (Requirement 32.4)
-     * 
+     * Get active tab for URL persistence (Requirement 32.4).
+     *
      * @return string|null Active tab ID for URL parameter
      */
     public function getActiveTabForUrl(): ?string
@@ -269,8 +322,8 @@ class TabManager
     }
 
     /**
-     * Get the current tab being built
-     * 
+     * Get the current tab being built.
+     *
      * @return Tab|null
      */
     public function getCurrentTab(): ?Tab
@@ -279,18 +332,47 @@ class TabManager
     }
 
     /**
-     * Check if any tabs exist
-     * 
+     * Check if any tabs exist.
+     *
      * @return bool
      */
     public function hasTabs(): bool
     {
         return !empty($this->tabs);
     }
+    /**
+     * Validate that all tabs have content.
+     *
+     * @throws \LogicException If any tab is empty
+     * @return void
+     */
+    public function validateTabs(): void
+    {
+        if (empty($this->tabs)) {
+            throw new \LogicException(
+                'Cannot render tabs: No tabs have been defined. ' .
+                'You must call openTab() and add content before rendering.'
+            );
+        }
+
+        foreach ($this->tabs as $tab) {
+            if (!$tab->hasContent() && !$tab->hasTables() && !$tab->hasCharts()) {
+                throw new \LogicException(
+                    sprintf(
+                        'Cannot render tabs: Tab "%s" is empty. ' .
+                        'Each tab must have at least one table, chart, or custom content. ' .
+                        'Add content using addContent(), addTableToCurrentTab(), or addChart().',
+                        $tab->getName()
+                    )
+                );
+            }
+        }
+    }
+
 
     /**
-     * Get the number of tabs
-     * 
+     * Get the number of tabs.
+     *
      * @return int
      */
     public function count(): int
@@ -299,8 +381,8 @@ class TabManager
     }
 
     /**
-     * Clear all tabs
-     * 
+     * Clear all tabs.
+     *
      * @return void
      */
     public function clearAll(): void
@@ -313,8 +395,8 @@ class TabManager
     }
 
     /**
-     * Generate a unique tab ID from the tab name
-     * 
+     * Generate a unique tab ID from the tab name.
+     *
      * @param string $name Tab name
      * @return string Unique tab ID
      */
@@ -330,8 +412,8 @@ class TabManager
     }
 
     /**
-     * Get a specific tab by ID
-     * 
+     * Get a specific tab by ID.
+     *
      * @param string $tabId Tab ID
      * @return Tab|null
      */
@@ -341,8 +423,8 @@ class TabManager
     }
 
     /**
-     * Check if a tab exists
-     * 
+     * Check if a tab exists.
+     *
      * @param string $tabId Tab ID
      * @return bool
      */
@@ -352,8 +434,8 @@ class TabManager
     }
 
     /**
-     * Remove a tab
-     * 
+     * Remove a tab.
+     *
      * @param string $tabId Tab ID to remove
      * @return void
      */
@@ -377,14 +459,44 @@ class TabManager
     }
 
     /**
-     * Get JavaScript for keyboard navigation (Requirement 32.5)
-     * 
+     * Set lazy loading enabled/disabled globally.
+     *
+     * This method allows runtime override of the lazy loading configuration.
+     * Implements Requirement 6.10: Configurable lazy loading.
+     * Implements Requirement 9.4: Configuration management for lazy loading.
+     *
+     * @param bool $enabled Whether lazy loading is enabled
+     * @return void
+     */
+    public function setLazyLoading(bool $enabled): void
+    {
+        $this->lazyLoadEnabled = $enabled;
+    }
+
+    /**
+     * Check if lazy loading is enabled globally.
+     *
+     * Returns the current lazy loading state, which is read from configuration
+     * by default but can be overridden at runtime via setLazyLoading().
+     * Implements Requirement 6.10: Configurable lazy loading.
+     * Implements Requirement 9.4: Configuration management for lazy loading.
+     *
+     * @return bool
+     */
+    public function isLazyLoadingEnabled(): bool
+    {
+        return $this->lazyLoadEnabled;
+    }
+
+    /**
+     * Get JavaScript for keyboard navigation (Requirement 32.5).
+     *
      * Implements ARIA keyboard navigation pattern:
      * - Arrow Left/Right: Navigate between tabs
      * - Home: Go to first tab
      * - End: Go to last tab
      * - Enter/Space: Activate focused tab
-     * 
+     *
      * @param string $containerId Container element ID
      * @return string JavaScript code
      */
@@ -445,8 +557,8 @@ JS;
     }
 
     /**
-     * Get Alpine.js data for keyboard navigation (Requirement 32.5)
-     * 
+     * Get Alpine.js data for keyboard navigation (Requirement 32.5).
+     *
      * @return array Alpine.js data object
      */
     public function getAlpineKeyboardData(): array
@@ -493,8 +605,8 @@ JS;
     }
 
     /**
-     * Enable lazy loading for a specific tab (Requirement 32.7)
-     * 
+     * Enable lazy loading for a specific tab (Requirement 32.7).
+     *
      * @param string $tabId Tab ID
      * @param string $url AJAX URL to load content from
      * @return void
@@ -510,8 +622,8 @@ JS;
     }
 
     /**
-     * Get lazy loading script for tabs (Requirement 32.7)
-     * 
+     * Get lazy loading script for tabs (Requirement 32.7).
+     *
      * @param string $containerId Container element ID
      * @return string JavaScript code for lazy loading
      */
@@ -576,8 +688,8 @@ JS;
     }
 
     /**
-     * Get Alpine.js data for lazy loading (Requirement 32.7)
-     * 
+     * Get Alpine.js data for lazy loading (Requirement 32.7).
+     *
      * @return array Alpine.js data object
      */
     public function getAlpineLazyLoadData(): array
@@ -620,8 +732,8 @@ JS;
     }
 
     /**
-     * Check if any tabs have lazy loading enabled (Requirement 32.7)
-     * 
+     * Check if any tabs have lazy loading enabled (Requirement 32.7).
+     *
      * @return bool
      */
     public function hasLazyLoadedTabs(): bool
@@ -631,6 +743,7 @@ JS;
                 return true;
             }
         }
+
         return false;
     }
 }

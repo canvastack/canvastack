@@ -1,163 +1,85 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import { resolve } from 'path';
-import fs from 'fs';
-import viteCompression from 'vite-plugin-compression';
-import viteImagemin from 'vite-plugin-imagemin';
-import tailwindcss from 'tailwindcss';
-import autoprefixer from 'autoprefixer';
-import cssnano from 'cssnano';
-
-// Check if generated Tailwind config exists, otherwise use default
-const tailwindConfig = fs.existsSync(resolve(__dirname, 'tailwind.config.generated.js'))
-  ? resolve(__dirname, 'tailwind.config.generated.js')
-  : resolve(__dirname, 'tailwind.config.js');
+import path from 'path';
 
 export default defineConfig({
     plugins: [
         laravel({
-            input: [
-                'resources/css/canvastack.css',
-                'resources/css/tanstack-table.css',
-                'resources/js/canvastack.js',
-                'resources/js/tanstack-table.js',
-            ],
+            input: ['resources/js/app.js'],
             refresh: true,
+            buildDirectory: 'build',
         }),
-        // Gzip compression
-        viteCompression({
-            algorithm: 'gzip',
-            ext: '.gz',
-            threshold: 10240, // Only compress files > 10kb
-            deleteOriginFile: false,
-        }),
-        // Brotli compression (better compression than gzip)
-        viteCompression({
-            algorithm: 'brotliCompress',
-            ext: '.br',
-            threshold: 10240,
-            deleteOriginFile: false,
-        }),
-        // Image optimization (only in production)
-        ...(process.env.NODE_ENV === 'production' ? [
-            viteImagemin({
-                gifsicle: {
-                    optimizationLevel: 7,
-                    interlaced: false,
-                },
-                optipng: {
-                    optimizationLevel: 7,
-                },
-                mozjpeg: {
-                    quality: 80,
-                },
-                pngquant: {
-                    quality: [0.8, 0.9],
-                    speed: 4,
-                },
-                svgo: {
-                    plugins: [
-                        {
-                            name: 'removeViewBox',
-                            active: false,
-                        },
-                        {
-                            name: 'removeEmptyAttrs',
-                            active: true,
-                        },
-                    ],
-                },
-                webp: {
-                    quality: 80,
-                },
-            }),
-        ] : []),
     ],
-    resolve: {
-        alias: {
-            '@': resolve(__dirname, 'resources/js'),
-            '@css': resolve(__dirname, 'resources/css'),
-            '@themes': resolve(__dirname, 'resources/themes'),
-        },
-    },
-    css: {
-        postcss: {
-            plugins: [
-                tailwindcss(tailwindConfig),
-                autoprefixer(),
-                // Minify CSS in production
-                ...(process.env.NODE_ENV === 'production' ? [
-                    cssnano({
-                        preset: ['default', {
-                            discardComments: {
-                                removeAll: true,
-                            },
-                            normalizeWhitespace: true,
-                            colormin: true,
-                            minifyFontValues: true,
-                            minifySelectors: true,
-                        }],
-                    }),
-                ] : []),
-            ],
-        },
-    },
+    
     build: {
+        // Output directory (relative to package root)
         outDir: 'public/build',
+        
+        // Generate manifest for Laravel
         manifest: true,
-        // Production optimizations
+        
+        // Minification
         minify: 'terser',
         terserOptions: {
             compress: {
-                drop_console: true,
-                drop_debugger: true,
-                pure_funcs: ['console.log', 'console.info', 'console.debug'],
-            },
-            format: {
-                comments: false,
+                drop_console: true, // Remove console.log in production
             },
         },
-        // Source maps for production debugging (optional)
-        sourcemap: process.env.VITE_SOURCEMAP === 'true',
+        
+        // Source maps for debugging
+        sourcemap: true,
+        
+        // Rollup options
         rollupOptions: {
             output: {
+                // Manual chunks for better caching
                 manualChunks: {
-                    'vendor': ['alpinejs', 'apexcharts'],
-                    'tanstack': ['@tanstack/table-core', '@tanstack/virtual-core'],
-                    'animation': ['gsap'],
-                    'icons': ['lucide'],
-                    'datepicker': ['flatpickr'],
+                    'filter-components': [
+                        './resources/js/components/filter/FilterModal.js',
+                        './resources/js/components/filter/FilterCache.js',
+                        './resources/js/components/filter/FilterCascade.js',
+                        './resources/js/components/filter/FilterFlatpickr.js',
+                    ],
+                    'utils': [
+                        './resources/js/utils/debounce.js',
+                        './resources/js/utils/fetch.js',
+                    ],
+                    'vendor': [
+                        'flatpickr',
+                    ],
                 },
-                // Optimize CSS output
-                assetFileNames: (assetInfo) => {
-                    if (assetInfo.name.endsWith('.css')) {
-                        return 'css/[name]-[hash][extname]';
-                    }
-                    if (/\.(png|jpe?g|gif|svg|webp|avif)$/.test(assetInfo.name)) {
-                        return 'images/[name]-[hash][extname]';
-                    }
-                    if (/\.(woff2?|eot|ttf|otf)$/.test(assetInfo.name)) {
-                        return 'fonts/[name]-[hash][extname]';
-                    }
-                    return 'assets/[name]-[hash][extname]';
-                },
-                // Optimize chunk naming
-                chunkFileNames: 'js/[name]-[hash].js',
-                entryFileNames: 'js/[name]-[hash].js',
             },
         },
-        // Enable CSS code splitting for better caching
-        cssCodeSplit: true,
-        // Optimize chunk size
-        chunkSizeWarningLimit: 1000,
-        // Optimize asset inlining
-        assetsInlineLimit: 4096, // 4kb
-        // Report compressed size
-        reportCompressedSize: true,
-        // Target modern browsers for smaller bundles
-        target: 'es2020',
     },
+    
+    // Resolve aliases
+    resolve: {
+        alias: {
+            '@canvastack': path.resolve(__dirname, 'resources/js'),
+            '@canvastack/components': path.resolve(__dirname, 'resources/js/components'),
+            '@canvastack/utils': path.resolve(__dirname, 'resources/js/utils'),
+        },
+    },
+    
+    // Server options for development
+    server: {
+        host: 'localhost',
+        port: 5173,
+        strictPort: true,
+        
+        // HMR options
+        hmr: {
+            host: 'localhost',
+        },
+        
+        // CORS for development
+        cors: true,
+    },
+    
+    // Optimizations
     optimizeDeps: {
-        include: ['alpinejs', 'apexcharts', 'gsap', 'flatpickr', '@tanstack/table-core', '@tanstack/virtual-core'],
+        include: [
+            'flatpickr',
+        ],
     },
 });

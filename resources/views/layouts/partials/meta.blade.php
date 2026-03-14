@@ -14,15 +14,20 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-{{-- Vite CSS --}}
-@vite(['resources/css/app.css'])
+{{-- Vite CSS & JS --}}
+@vite(['resources/css/app.css', 'resources/js/app.js'])
+
+{{-- CanvaStack Main CSS --}}
+{{-- Note: CanvaStack CSS loaded via <link> tag in meta.blade.php --}}
+{{-- Note: Layout styles (gradient, filter modal, etc.) loaded via <link> tag --}}
+<link rel="stylesheet" href="{{ asset('vendor/canvastack/css/canvastack.css') }}">
 
 {{-- CanvaStack Layout CSS (gradient, filter modal, etc.) --}}
 <link rel="stylesheet" href="{{ asset('vendor/canvastack/css/canvastack-layout.css') }}">
 
 {{-- Conditional DataTables Loading - Only load if NOT using TanStack engine --}}
 @php
-    \Log::info('Meta.blade.php: $table_engine = ' . (isset($table_engine) ? $table_engine : 'NOT SET'));
+    \Log::info('Meta.blade.php (VENDOR): $table_engine = ' . (isset($table_engine) ? $table_engine : 'NOT SET'));
 @endphp
 @if(!isset($table_engine) || $table_engine !== 'tanstack')
 {{-- jQuery (required for DataTables) --}}
@@ -36,15 +41,13 @@
 <script src="https://cdn.datatables.net/2.0.0/js/dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/fixedcolumns/5.0.0/js/dataTables.fixedColumns.min.js"></script>
 
-{{-- DataTables Buttons Extension (Phase 8: P2 Features - Export Buttons) --}}
+{{-- DataTables Buttons Extension (compatible with DataTables 2.0) --}}
 <script src="https://cdn.datatables.net/buttons/3.0.0/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/3.0.0/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/3.0.0/js/buttons.print.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.0/css/buttons.dataTables.min.css">
 @endif
 
@@ -58,8 +61,7 @@
 {{-- Additional Styles --}}
 @stack('styles')
 
-{{-- DataTables Custom Styles - Only load if NOT using TanStack engine --}}
+{{-- DataTables Specific Styles - Only load if NOT using TanStack engine --}}
 @if(!isset($table_engine) || $table_engine !== 'tanstack')
 <link rel="stylesheet" href="{{ asset('vendor/canvastack/css/datatables-custom.css') }}">
 @endif
-

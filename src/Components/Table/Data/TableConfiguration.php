@@ -25,6 +25,8 @@ class TableConfiguration
     public ?Model $model = null;
     public ?Collection $collection = null;
     public ?array $data = null;
+    public ?string $connection = null; // Database connection name
+    public ?string $tableName = null; // Table name (for non-model queries)
 
     // Column configuration
     public array $fields = [];

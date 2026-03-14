@@ -43,7 +43,22 @@ class DataTableController extends Controller
             $sorting = $request->input('sorting', []);
             $globalFilter = $request->input('globalFilter', '');
             $columnFilters = $request->input('columnFilters', []);
-            $filters = $request->input('filters', []); // Custom filters from filter modal
+            
+            // CRITICAL FIX: Decode filters JSON string to array
+            $filtersInput = $request->input('filters', []);
+            if (is_string($filtersInput)) {
+                $filters = json_decode($filtersInput, true) ?? [];
+                \Log::info('TanStack Table: Decoded filters from JSON string', [
+                    'input' => $filtersInput,
+                    'decoded' => $filters,
+                ]);
+            } else {
+                $filters = $filtersInput;
+            }
+            
+            // Check if this is an export request
+            $isExport = $request->input('export', false) === 'true';
+            $exportFormat = $request->input('format', 'csv');
             
             // Log incoming request for debugging
             \Log::info('TanStack Table getData request', [
@@ -52,24 +67,34 @@ class DataTableController extends Controller
                 'globalFilter' => $globalFilter,
                 'columnFilters' => $columnFilters,
                 'filters' => $filters,
+                'isExport' => $isExport,
+                'exportFormat' => $exportFormat,
             ]);
             
             // Get table/model information
             $tableName = $request->input('tableName', 'users');
             $modelClass = $request->input('modelClass');
+            $connection = $request->input('connection'); // Get connection from request
             
-            // Build query - prefer model over raw table
-            if ($modelClass && class_exists($modelClass)) {
-                $query = $modelClass::query();
-            } else {
-                $query = DB::table($tableName);
-            }
+            \Log::info('TanStack Table getData - received params', [
+                'tableName' => $tableName,
+                'modelClass' => $modelClass,
+                'connection' => $connection,
+            ]);
             
-            // Get total count before filtering
-            if ($modelClass && class_exists($modelClass)) {
-                $totalRecords = $modelClass::count();
+            // Build query - use tableName if provided, otherwise use model
+            if ($tableName && $tableName !== 'users') {
+                // Use specified table name with connection
+                $query = $connection ? DB::connection($connection)->table($tableName) : DB::table($tableName);
+                $totalRecords = $connection ? DB::connection($connection)->table($tableName)->count() : DB::table($tableName)->count();
+            } elseif ($modelClass && class_exists($modelClass)) {
+                // Use model class
+                $query = $connection ? $modelClass::on($connection) : $modelClass::query();
+                $totalRecords = $connection ? $modelClass::on($connection)->count() : $modelClass::count();
             } else {
-                $totalRecords = DB::table($tableName)->count();
+                // Fallback to users table
+                $query = $connection ? DB::connection($connection)->table('users') : DB::table('users');
+                $totalRecords = $connection ? DB::connection($connection)->table('users')->count() : DB::table('users')->count();
             }
             
             // Apply global filter
@@ -127,22 +152,79 @@ class DataTableController extends Controller
                 $query->orderBy($sortColumn, $sortDirection);
             }
             
-            // Apply pagination
+            // For export, fetch ALL data (no pagination)
+            if ($isExport) {
+                \Log::info('TanStack Table: Export request - fetching ALL data', [
+                    'filteredRecords' => $filteredRecords,
+                    'format' => $exportFormat,
+                ]);
+                
+                // Log the SQL query for debugging
+                \Log::info('TanStack Table: Export SQL query', [
+                    'sql' => $query->toSql(),
+                    'bindings' => $query->getBindings(),
+                ]);
+                
+                // Get ALL filtered data (no pagination)
+                $data = $query->get();
+                
+                \Log::info('TanStack Table: Export data fetched', [
+                    'rowCount' => $data->count(),
+                    'firstRow' => $data->first(),
+                    'lastRow' => $data->last(),
+                ]);
+                
+                // Return all data for export
+                return response()->json([
+                    'data' => $data,
+                    'meta' => [
+                        'totalRows' => $filteredRecords,
+                        'exportFormat' => $exportFormat,
+                        'isExport' => true,
+                    ],
+                ]);
+            }
+            
+            // Apply pagination (only for non-export requests)
             $offset = ($page - 1) * $pageSize;
             $query->skip($offset)->take($pageSize);
             
             // Get data
-            $data = $query->get()->toArray();
+            $data = $query->get();
+            
+            // Check if HTML rendering is requested
+            $renderHtml = $request->input('renderHtml', false);
+            
+            if ($renderHtml) {
+                // Render rows as HTML (server-side rendering to avoid Alpine.js issues)
+                $html = $this->renderTableRows($data, $request);
+                
+                return response()->json([
+                    'html' => $html,
+                    'meta' => [
+                        'page' => $page,
+                        'pageSize' => $pageSize,
+                        'totalRows' => $filteredRecords,
+                        'totalPages' => ceil($filteredRecords / $pageSize),
+                        'filteredRows' => $filteredRecords,
+                        'totalRecordsBeforeFilter' => $totalRecords,
+                        'rowCount' => $data->count(),
+                    ],
+                ]);
+            }
             
             // Add actions to each row (simple implementation)
             // In production, actions should be configured via TableBuilder
-            foreach ($data as &$row) {
-                $row['_actions'] = $this->buildSimpleActions($row);
+            $dataArray = [];
+            foreach ($data as $row) {
+                $rowArray = (array) $row; // Cast stdClass to array
+                $rowArray['_actions'] = $this->buildSimpleActions($rowArray);
+                $dataArray[] = $rowArray;
             }
             
             // Return TanStack Table response
             return response()->json([
-                'data' => $data,
+                'data' => $dataArray,
                 'meta' => [
                     'page' => $page,
                     'pageSize' => $pageSize,
@@ -170,6 +252,87 @@ class DataTableController extends Controller
                 ],
                 'error' => 'Error loading data: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Render table rows as HTML (server-side rendering).
+     * 
+     * This avoids Alpine.js DOM diffing issues by rendering rows on the server.
+     *
+     * @param \Illuminate\Support\Collection $data
+     * @param Request $request
+     * @return string
+     */
+    protected function renderTableRows($data, Request $request): string
+    {
+        if ($data->isEmpty()) {
+            return '<tr><td colspan="100" class="text-center py-8 text-gray-500">No data available</td></tr>';
+        }
+        
+        // Get columns from request (if provided)
+        $columns = $request->input('columns', []);
+        
+        $html = '';
+        
+        foreach ($data as $row) {
+            // Convert Eloquent model to array properly
+            if (is_object($row) && method_exists($row, 'toArray')) {
+                $rowArray = $row->toArray();
+            } else {
+                $rowArray = (array) $row;
+            }
+            
+            $html .= '<tr class="hover:bg-gray-50 dark:hover:bg-gray-800">';
+            
+            // If columns are specified, only render those columns in order
+            if (!empty($columns)) {
+                foreach ($columns as $column) {
+                    $value = $rowArray[$column] ?? null;
+                    $html .= '<td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">';
+                    $html .= htmlspecialchars($this->formatValue($value), ENT_QUOTES, 'UTF-8');
+                    $html .= '</td>';
+                }
+            } else {
+                // Render all columns (fallback)
+                foreach ($rowArray as $key => $value) {
+                    // Skip internal keys
+                    if (str_starts_with($key, '_')) {
+                        continue;
+                    }
+                    
+                    $html .= '<td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">';
+                    $html .= htmlspecialchars($this->formatValue($value), ENT_QUOTES, 'UTF-8');
+                    $html .= '</td>';
+                }
+            }
+            
+            $html .= '</tr>';
+        }
+        
+        return $html;
+    }
+    
+    /**
+     * Format a value for display.
+     * 
+     * @param mixed $value
+     * @return string
+     */
+    protected function formatValue($value): string
+    {
+        // Handle different value types (Fix #44: Array to string conversion)
+        if (is_array($value) || is_object($value)) {
+            // Convert arrays/objects to JSON
+            return json_encode($value);
+        } elseif (is_bool($value)) {
+            // Convert boolean to Yes/No
+            return $value ? 'Yes' : 'No';
+        } elseif ($value === null) {
+            return '-';
+        } else {
+            // Convert to string
+            return (string) $value;
         }
     }
 
@@ -345,15 +508,30 @@ class DataTableController extends Controller
      */
     public function getFilterOptions(Request $request): JsonResponse
     {
+        // Log raw request for debugging
+        \Log::info('DataTableController::getFilterOptions RAW REQUEST', [
+            'all_data' => $request->all(),
+            'has_table' => $request->has('table'),
+            'has_column' => $request->has('column'),
+            'table_value' => $request->input('table'),
+            'column_value' => $request->input('column'),
+        ]);
+        
         // Validate request
         $validator = Validator::make($request->all(), [
             'table' => 'required|string|max:255',
             'column' => 'required|string|max:255',
             'parentFilters' => 'sometimes|array',
             'type' => 'sometimes|string|in:selectbox,inputbox,datebox,daterangebox',
+            'connection' => 'nullable|string|max:255', // Allow null for DataTable engine (SQLite)
         ]);
 
         if ($validator->fails()) {
+            \Log::error('DataTableController::getFilterOptions VALIDATION FAILED', [
+                'errors' => $validator->errors()->toArray(),
+                'request_data' => $request->all(),
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
@@ -365,11 +543,22 @@ class DataTableController extends Controller
         $column = $request->input('column');
         $parentFilters = $request->input('parentFilters', []);
         $type = $request->input('type', 'selectbox');
+        $connection = $request->input('connection'); // Get connection from request
+
+        // Log what we received
+        \Log::info('DataTableController::getFilterOptions called', [
+            'table' => $table,
+            'column' => $column,
+            'connection' => $connection,
+            'connection_type' => gettype($connection),
+            'connection_empty' => empty($connection),
+            'connection_is_null' => is_null($connection),
+        ]);
 
         try {
             // For date columns, return min/max range
             if ($type === 'datebox' || $type === 'daterangebox') {
-                $range = $this->getDateRange($table, $column, $parentFilters);
+                $range = $this->getDateRange($table, $column, $parentFilters, $connection);
                 
                 return response()->json([
                     'success' => true,
@@ -382,7 +571,7 @@ class DataTableController extends Controller
             }
             
             // For other types, return options list
-            $options = $this->filterOptionsProvider->getOptions($table, $column, $parentFilters);
+            $options = $this->filterOptionsProvider->getOptions($table, $column, $parentFilters, $connection);
 
             return response()->json([
                 'success' => true,
@@ -404,11 +593,12 @@ class DataTableController extends Controller
      * @param string $table
      * @param string $column
      * @param array $parentFilters
+     * @param string|null $connection Database connection name
      * @return array
      */
-    protected function getDateRange(string $table, string $column, array $parentFilters = []): array
+    protected function getDateRange(string $table, string $column, array $parentFilters = [], ?string $connection = null): array
     {
-        $query = DB::table($table)
+        $query = DB::connection($connection)->table($table)
             ->whereNotNull($column);
 
         // Apply parent filters
@@ -423,7 +613,7 @@ class DataTableController extends Controller
             ->first();
 
         // Get list of distinct dates (for custom date picker)
-        $distinctDates = DB::table($table)
+        $distinctDates = DB::connection($connection)->table($table)
             ->whereNotNull($column);
         
         // Apply same parent filters

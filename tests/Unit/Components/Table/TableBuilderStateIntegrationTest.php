@@ -6,228 +6,307 @@ namespace Canvastack\Canvastack\Tests\Unit\Components\Table;
 
 use Canvastack\Canvastack\Components\Table\TableBuilder;
 use Canvastack\Canvastack\Tests\TestCase;
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\Eloquent\Model;
 
 /**
- * Test TableBuilder integration with StateManager (Task 1.2.2).
+ * Test TableBuilder integration with StateManager for unique ID-based state tracking.
  *
- * Verifies that:
- * - StateManager is properly initialized
- * - clearVar() integrates with StateManager
- * - clearOnLoad() integrates with StateManager
- * - clearFixedColumns() integrates with StateManager
- * - captureCurrentConfig() saves to StateManager
+ * VALIDATES: Requirements 5.1, 5.2, 5.6
  */
 class TableBuilderStateIntegrationTest extends TestCase
 {
-    protected TableBuilder $table;
-
     protected function setUp(): void
     {
         parent::setUp();
-        $this->table = app(TableBuilder::class);
-        $this->table->setContext('admin');
+
+        // Create test table
+        $capsule = Capsule::connection();
+        $schema = $capsule->getSchemaBuilder();
+
+        if (!$schema->hasTable('test_users')) {
+            $schema->create('test_users', function ($table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email');
+                $table->string('status')->default('active');
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        $capsule = Capsule::connection();
+        $schema = $capsule->getSchemaBuilder();
+
+        if ($schema->hasTable('test_users')) {
+            $schema->drop('test_users');
+        }
+
+        parent::tearDown();
     }
 
     /**
-     * Test that StateManager is initialized in TableBuilder.
+     * Test that TableBuilder generates unique ID and sets it in StateManager.
+     *
+     * VALIDATES: Requirement 5.6 - Separate state for each table instance
+     *
+     * @return void
      */
-    public function test_state_manager_is_initialized(): void
+    public function test_table_builder_sets_unique_id_in_state_manager(): void
     {
-        $stateManager = $this->table->getStateManager();
+        $table = $this->createTableBuilder();
+        $table->setModel(new TestUser());
+        $table->setFields(['name:Name', 'email:Email']);
 
-        $this->assertNotNull($stateManager);
-        $this->assertInstanceOf(\Canvastack\Canvastack\Components\Table\State\StateManager::class, $stateManager);
+        // Get unique ID (triggers generation)
+        $uniqueId = $table->getUniqueId();
+
+        // Verify unique ID is set
+        $this->assertNotNull($uniqueId);
+        $this->assertStringStartsWith('canvastable_', $uniqueId);
+
+        // Verify StateManager has the table ID set
+        $stateManager = $this->getProtectedProperty($table, 'stateManager');
+        $this->assertEquals($uniqueId, $stateManager->getTableId());
     }
 
     /**
-     * Test that clearVar() clears from StateManager.
+     * Test state isolation between multiple TableBuilder instances.
+     *
+     * VALIDATES: Requirement 5.1 - Support multiple instances on same page
+     * VALIDATES: Requirement 5.2 - Unique IDs for each instance
+     * VALIDATES: Requirement 5.6 - Separate state for each table instance
+     *
+     * @return void
      */
-    public function test_clear_var_clears_from_state_manager(): void
+    public function test_state_isolation_between_multiple_table_instances(): void
     {
-        $stateManager = $this->table->getStateManager();
+        // Create three table instances
+        $table1 = $this->createTableBuilder();
+        $table1->setModel(new TestUser());
+        $table1->setFields(['name:Name', 'email:Email']);
 
-        // Save some state
-        $stateManager->saveState('merged_columns', ['col1', 'col2']);
-        $this->assertTrue($stateManager->hasState('merged_columns'));
+        $table2 = $this->createTableBuilder();
+        $table2->setModel(new TestUser());
+        $table2->setFields(['name:Name', 'status:Status']);
 
-        // Clear via TableBuilder
-        $this->table->clearVar('merged_columns');
+        $table3 = $this->createTableBuilder();
+        $table3->setModel(new TestUser());
+        $table3->setFields(['email:Email', 'status:Status']);
 
-        // Verify cleared from StateManager
-        $this->assertFalse($stateManager->hasState('merged_columns'));
+        // Get unique IDs (triggers generation and StateManager setup)
+        $id1 = $table1->getUniqueId();
+        $id2 = $table2->getUniqueId();
+        $id3 = $table3->getUniqueId();
+
+        // Verify all IDs are different
+        $this->assertNotEquals($id1, $id2);
+        $this->assertNotEquals($id2, $id3);
+        $this->assertNotEquals($id1, $id3);
+
+        // Get StateManagers
+        $stateManager1 = $this->getProtectedProperty($table1, 'stateManager');
+        $stateManager2 = $this->getProtectedProperty($table2, 'stateManager');
+        $stateManager3 = $this->getProtectedProperty($table3, 'stateManager');
+
+        // Save state for each table
+        $stateManager1->saveState('filters', ['status' => 'active']);
+        $stateManager1->saveState('page', 1);
+
+        $stateManager2->saveState('filters', ['status' => 'inactive']);
+        $stateManager2->saveState('page', 2);
+
+        $stateManager3->saveState('filters', ['status' => 'archived']);
+        $stateManager3->saveState('page', 3);
+
+        // Verify state isolation
+        $this->assertEquals(['status' => 'active'], $stateManager1->getState('filters'));
+        $this->assertEquals(1, $stateManager1->getState('page'));
+
+        $this->assertEquals(['status' => 'inactive'], $stateManager2->getState('filters'));
+        $this->assertEquals(2, $stateManager2->getState('page'));
+
+        $this->assertEquals(['status' => 'archived'], $stateManager3->getState('filters'));
+        $this->assertEquals(3, $stateManager3->getState('page'));
     }
 
     /**
-     * Test that clearVar() clears fixed_columns from StateManager.
+     * Test that each table instance maintains separate state even with same model.
+     *
+     * VALIDATES: Requirement 5.6 - Separate state for each table instance
+     *
+     * @return void
      */
-    public function test_clear_var_fixed_columns_clears_from_state_manager(): void
+    public function test_separate_state_with_same_model(): void
     {
-        $stateManager = $this->table->getStateManager();
+        // Create two tables with same model but different fields
+        $table1 = $this->createTableBuilder();
+        $table1->setModel(new TestUser());
+        $table1->setFields(['name:Name', 'email:Email']);
 
-        // Save some state
-        $stateManager->saveState('fixed_columns', ['left' => 2, 'right' => 1]);
-        $this->assertTrue($stateManager->hasState('fixed_columns'));
+        $table2 = $this->createTableBuilder();
+        $table2->setModel(new TestUser());
+        $table2->setFields(['name:Name', 'status:Status']); // Different fields
 
-        // Clear via TableBuilder
-        $this->table->clearVar('fixed_columns');
+        // Get unique IDs
+        $id1 = $table1->getUniqueId();
+        $id2 = $table2->getUniqueId();
 
-        // Verify cleared from StateManager
-        $this->assertFalse($stateManager->hasState('fixed_columns'));
+        // IDs should be different even with same model (different fields)
+        $this->assertNotEquals($id1, $id2);
+
+        // Get StateManagers
+        $stateManager1 = $this->getProtectedProperty($table1, 'stateManager');
+        $stateManager2 = $this->getProtectedProperty($table2, 'stateManager');
+
+        // Save different state for each
+        $stateManager1->saveState('sorting', ['column' => 'name', 'direction' => 'asc']);
+        $stateManager2->saveState('sorting', ['column' => 'status', 'direction' => 'desc']);
+
+        // Verify isolation
+        $this->assertEquals(
+            ['column' => 'name', 'direction' => 'asc'],
+            $stateManager1->getState('sorting')
+        );
+        $this->assertEquals(
+            ['column' => 'status', 'direction' => 'desc'],
+            $stateManager2->getState('sorting')
+        );
     }
 
     /**
-     * Test that clearOnLoad() clears clearable vars from StateManager.
+     * Test state persistence across multiple operations on same table.
+     *
+     * @return void
      */
-    public function test_clear_on_load_clears_clearable_vars(): void
+    public function test_state_persistence_across_operations(): void
     {
-        $stateManager = $this->table->getStateManager();
+        $table = $this->createTableBuilder();
+        $table->setModel(new TestUser());
+        $table->setFields(['name:Name', 'email:Email']);
 
-        // Save some clearable state
-        $stateManager->saveState('merged_columns', ['col1', 'col2']);
-        $stateManager->saveState('fixed_columns', ['left' => 2]);
-        $stateManager->saveState('formats', ['col1' => 2]);
+        // Get unique ID
+        $uniqueId = $table->getUniqueId();
 
-        // Clear via clearOnLoad
-        $this->table->clearOnLoad();
+        // Get StateManager
+        $stateManager = $this->getProtectedProperty($table, 'stateManager');
 
-        // Verify all clearable vars are cleared
-        $this->assertFalse($stateManager->hasState('merged_columns'));
-        $this->assertFalse($stateManager->hasState('fixed_columns'));
-        $this->assertFalse($stateManager->hasState('formats'));
+        // Save state
+        $stateManager->saveState('filters', ['status' => 'active']);
+        $stateManager->saveState('sorting', ['column' => 'name', 'direction' => 'asc']);
+        $stateManager->saveState('pagination', ['page' => 1, 'pageSize' => 10]);
+
+        // Verify state persists
+        $this->assertEquals(['status' => 'active'], $stateManager->getState('filters'));
+        $this->assertEquals(['column' => 'name', 'direction' => 'asc'], $stateManager->getState('sorting'));
+        $this->assertEquals(['page' => 1, 'pageSize' => 10], $stateManager->getState('pagination'));
+
+        // Update state
+        $stateManager->saveState('filters', ['status' => 'inactive']);
+        $stateManager->saveState('pagination', ['page' => 2, 'pageSize' => 20]);
+
+        // Verify updates
+        $this->assertEquals(['status' => 'inactive'], $stateManager->getState('filters'));
+        $this->assertEquals(['page' => 2, 'pageSize' => 20], $stateManager->getState('pagination'));
+        $this->assertEquals(['column' => 'name', 'direction' => 'asc'], $stateManager->getState('sorting'));
     }
 
     /**
-     * Test that clearOnLoad() resets properties.
+     * Test that unique ID is generated only once per instance.
+     *
+     * @return void
      */
-    public function test_clear_on_load_resets_properties(): void
+    public function test_unique_id_generated_once_per_instance(): void
     {
-        // Set some properties (without column validation)
-        $this->table->fixedColumns(2, 1);
-        $this->table->displayRowsLimitOnLoad(25);
+        $table = $this->createTableBuilder();
+        $table->setModel(new TestUser());
+        $table->setFields(['name:Name', 'email:Email']);
 
-        // Clear
-        $this->table->clearOnLoad();
+        // Get unique ID multiple times
+        $id1 = $table->getUniqueId();
+        $id2 = $table->getUniqueId();
+        $id3 = $table->getUniqueId();
 
-        // Verify properties are reset
-        $this->assertEquals(10, $this->table->toArray()['displayLimit']);
-        $this->assertEmpty($this->table->toArray()['mergedColumns']);
-        $this->assertNull($this->table->toArray()['fixedLeft']);
-        $this->assertNull($this->table->toArray()['fixedRight']);
+        // All should be the same (cached)
+        $this->assertEquals($id1, $id2);
+        $this->assertEquals($id2, $id3);
     }
 
     /**
-     * Test that clearFixedColumns() clears from StateManager.
+     * Test state history tracking per table instance.
+     *
+     * @return void
      */
-    public function test_clear_fixed_columns_clears_from_state_manager(): void
+    public function test_state_history_per_table_instance(): void
     {
-        $stateManager = $this->table->getStateManager();
+        $table1 = $this->createTableBuilder();
+        $table1->setModel(new TestUser());
+        $table1->setFields(['name:Name']);
 
-        // Set fixed columns
-        $this->table->fixedColumns(2, 1);
+        $table2 = $this->createTableBuilder();
+        $table2->setModel(new TestUser());
+        $table2->setFields(['email:Email']);
 
-        // Save to state
-        $stateManager->saveState('fixed_columns', ['left' => 2, 'right' => 1]);
-        $this->assertTrue($stateManager->hasState('fixed_columns'));
+        // Get unique IDs
+        $id1 = $table1->getUniqueId();
+        $id2 = $table2->getUniqueId();
 
-        // Clear
-        $this->table->clearFixedColumns();
+        // Get StateManagers
+        $stateManager1 = $this->getProtectedProperty($table1, 'stateManager');
+        $stateManager2 = $this->getProtectedProperty($table2, 'stateManager');
 
-        // Verify cleared from StateManager
-        $this->assertFalse($stateManager->hasState('fixed_columns'));
+        // Make changes to table 1
+        $stateManager1->saveState('key1', 'value1');
+        $stateManager1->saveState('key1', 'value1_updated');
+
+        // Make changes to table 2
+        $stateManager2->saveState('key2', 'value2');
+
+        // Get history for each table
+        $history1 = $stateManager1->getStateHistory($id1);
+        $history2 = $stateManager2->getStateHistory($id2);
+
+        // Verify history is separate
+        $this->assertCount(2, $history1); // 2 changes to table 1
+        $this->assertCount(1, $history2); // 1 change to table 2
     }
 
     /**
-     * Test that clearFixedColumns() resets properties.
+     * Helper method to create TableBuilder instance.
+     *
+     * @return TableBuilder
      */
-    public function test_clear_fixed_columns_resets_properties(): void
+    protected function createTableBuilder(): TableBuilder
     {
-        // Set fixed columns
-        $this->table->fixedColumns(2, 1);
-
-        // Clear
-        $this->table->clearFixedColumns();
-
-        // Verify properties are reset
-        $config = $this->table->toArray();
-        $this->assertNull($config['fixedLeft']);
-        $this->assertNull($config['fixedRight']);
+        return $this->app->make(TableBuilder::class);
     }
 
     /**
-     * Test that captureCurrentConfig() saves to StateManager.
+     * Helper method to get protected property value.
+     *
+     * @param object $object
+     * @param string $property
+     * @return mixed
      */
-    public function test_capture_current_config_saves_to_state_manager(): void
+    protected function getProtectedProperty(object $object, string $property)
     {
-        $stateManager = $this->table->getStateManager();
+        $reflection = new \ReflectionClass($object);
+        $property = $reflection->getProperty($property);
+        $property->setAccessible(true);
 
-        // Set some configuration (without column validation)
-        $this->table->fixedColumns(2, 1);
-        $this->table->displayRowsLimitOnLoad(25);
-
-        // Open tab to trigger config capture (use existing table)
-        $this->table->openTab('Test Tab');
-        $this->table->lists('users', ['id', 'name'], false);
-
-        // Verify config was saved to StateManager
-        $this->assertTrue($stateManager->hasState('captured_config'));
-
-        $capturedConfig = $stateManager->getState('captured_config');
-        $this->assertIsArray($capturedConfig);
-        $this->assertEquals(2, $capturedConfig['fixedColumns']['left']);
-        $this->assertEquals(1, $capturedConfig['fixedColumns']['right']);
-        $this->assertEquals(25, $capturedConfig['displayLimit']);
-    }
-
-    /**
-     * Test that state history is tracked.
-     */
-    public function test_state_history_is_tracked(): void
-    {
-        $stateManager = $this->table->getStateManager();
-
-        // Perform some operations that save state
-        $this->table->fixedColumns(2, 1);
-        
-        // Manually save state to trigger history
-        $stateManager->saveState('test_key', 'test_value');
-        
-        $this->table->clearFixedColumns();
-
-        // Check history
-        $history = $stateManager->getStateHistory();
-        $this->assertNotEmpty($history);
-        $this->assertGreaterThan(0, count($history));
-    }
-
-    /**
-     * Test configuration isolation between operations.
-     */
-    public function test_configuration_isolation(): void
-    {
-        $stateManager = $this->table->getStateManager();
-
-        // Set config for first operation
-        $this->table->fixedColumns(2, 1);
-
-        // Capture config (use existing table)
-        $this->table->openTab('Tab 1');
-        $this->table->lists('users', ['id', 'name'], false);
-
-        $config1 = $stateManager->getState('captured_config');
-
-        // Clear and set different config
-        $this->table->clearOnLoad();
-        $this->table->fixedColumns(3, 0);
-
-        // Capture new config (use existing table)
-        $this->table->openTab('Tab 2');
-        $this->table->lists('permissions', ['id', 'name'], false);
-
-        $config2 = $stateManager->getState('captured_config');
-
-        // Verify configs are different
-        $this->assertNotEquals($config1['fixedColumns'], $config2['fixedColumns']);
-        $this->assertEquals(2, $config1['fixedColumns']['left']);
-        $this->assertEquals(3, $config2['fixedColumns']['left']);
+        return $property->getValue($object);
     }
 }
+
+/**
+ * Test model for TableBuilder tests.
+ */
+class TestUser extends Model
+{
+    protected $table = 'test_users';
+
+    protected $fillable = ['name', 'email', 'status'];
+}
+

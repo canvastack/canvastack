@@ -29,6 +29,105 @@
     display: none !important;
 }
 
+/* Glassmorphism effect for modal */
+.modal-glassmorphism {
+    /* Light mode - balance antara glassmorphism dan readability */
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: all 0.3s ease-out;
+}
+
+.dark .modal-glassmorphism {
+    /* Dark mode - lebih solid untuk readability */
+    background: rgba(31, 41, 55, 0.95);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* Ensure text is readable on glassmorphism background */
+
+.dark .modal-glassmorphism .text-gray-100 {
+    color: #f3f4f6 !important;
+}
+
+.modal-glassmorphism .text-gray-700 {
+    color: #374151 !important;
+}
+
+.dark .modal-glassmorphism .text-gray-300 {
+    color: #d1d5db !important;
+}
+
+/* Fix label text visibility in dark mode */
+.dark .modal-glassmorphism label,
+.dark .modal-glassmorphism .text-gray-700,
+.dark .modal-glassmorphism .text-sm {
+    color: #e5e7eb !important;
+}
+
+/* Fix all text colors in modal for dark mode */
+.dark .modal-glassmorphism {
+    color: #f3f4f6;
+}
+
+.dark .modal-glassmorphism .text-gray-400 {
+    color: #9ca3af !important;
+}
+
+.dark .modal-glassmorphism .text-gray-500 {
+    color: #6b7280 !important;
+}
+
+.dark .modal-glassmorphism .text-gray-600 {
+    color: #4b5563 !important;
+}
+
+/* Smooth transitions for glassmorphism */
+@media (prefers-reduced-motion: no-preference) {
+    .modal-glassmorphism {
+        transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+    }
+}
+
+/* Backdrop blur effect for modal */
+.backdrop-blur-sm {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    /* Fallback for browsers that don't support backdrop-filter */
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.backdrop-blur-none {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* Button cursor pointer */
+.btn,
+button {
+    cursor: pointer;
+}
+
+.btn:disabled,
+button:disabled {
+    cursor: not-allowed;
+}
+
+/* Filter button hover effect */
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
 /* Custom scrollbar for modal */
 .filter-modal-content::-webkit-scrollbar {
     width: 8px;

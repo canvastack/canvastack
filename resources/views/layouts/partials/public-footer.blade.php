@@ -11,7 +11,7 @@
                     <span class="text-xl font-bold gradient-text">{{ config('app.name', 'CanvaStack') }}</span>
                 </a>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 max-w-md">
-                    A modern Laravel CMS package with powerful components, theme system, and i18n support.
+                    A modern CanvaStack CMS package with powerful components, theme system, and i18n support.
                 </p>
                 <div class="flex items-center gap-3">
                     <a href="#" class="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition">

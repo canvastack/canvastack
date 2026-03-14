@@ -151,6 +151,27 @@ return [
             // Show cascade indicators
             'show_cascade_indicators' => env('CANVASTACK_SHOW_CASCADE_INDICATORS', true),
         ],
+        
+        // Connection override warning system
+        'connection_warning' => [
+            // Enable/disable connection override warnings
+            'enabled' => env('CANVASTACK_CONNECTION_WARNING', true),
+            
+            // Warning method: 'log', 'toast', or 'both'
+            'method' => env('CANVASTACK_CONNECTION_WARNING_METHOD', 'log'),
+        ],
+        
+        // Tab system configuration (Requirement 6.10, 9.4)
+        'tabs' => [
+            // Enable lazy loading for tabs (first tab loads immediately, others load on-demand)
+            'lazy_load_enabled' => env('CANVASTACK_TAB_LAZY_LOAD', true),
+            
+            // Cache tab content after loading
+            'cache_enabled' => env('CANVASTACK_TAB_CACHE_ENABLED', true),
+            
+            // Tab content cache TTL (seconds)
+            'cache_ttl' => env('CANVASTACK_TAB_CACHE_TTL', 300),
+        ],
     ],
 
     /*

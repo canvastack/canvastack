@@ -11,16 +11,16 @@
 <section class="pt-32 pb-20 px-4 gradient-bg-subtle">
     <div class="max-w-7xl mx-auto text-center">
         <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-full text-sm font-medium mb-6">
-            <i data-lucide="sparkles" class="w-4 h-4"></i> Modern Laravel CMS Package
+            <i data-lucide="sparkles" class="w-4 h-4"></i> Modern CanvaStack CMS Package
         </div>
         <h1 class="text-5xl md:text-7xl font-black mb-6 leading-tight">
             Build Powerful<br><span class="gradient-text">Admin Panels</span>
         </h1>
         <p class="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-10">
-            A beautifully crafted Laravel CMS package with dark mode, theme system, i18n support, and all the components you need to build your admin panel.
+            A beautifully crafted CanvaStack CMS package with dark mode, theme system, i18n support, and all the components you need to build your admin panel.
         </p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="{{ route('test.dashboard') }}" class="px-8 py-3.5 gradient-bg text-white rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-indigo-500/25 flex items-center gap-2">
+            <a href="{{ route('page.dashboard') }}" class="px-8 py-3.5 gradient-bg text-white rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-indigo-500/25 flex items-center gap-2">
                 <i data-lucide="rocket" class="w-4 h-4"></i> View Dashboard
             </a>
             <a href="{{ route('about') }}" class="px-8 py-3.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
@@ -90,7 +90,7 @@
         <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Get <span class="gradient-text">Started</span>?</h2>
         <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">Start building your admin panel with CanvaStack today.</p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="{{ route('test.dashboard') }}" class="px-8 py-3.5 gradient-bg text-white rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-indigo-500/25 flex items-center gap-2">
+            <a href="{{ route('page.dashboard') }}" class="px-8 py-3.5 gradient-bg text-white rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-indigo-500/25 flex items-center gap-2">
                 <i data-lucide="rocket" class="w-4 h-4"></i> View Dashboard
             </a>
             <a href="https://github.com" target="_blank" class="px-8 py-3.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2">

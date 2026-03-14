@@ -255,17 +255,24 @@ class TanStackEngine implements TableEngineInterface
     protected function getTanStackConfig(TableBuilder $table): array
     {
         $config = $table->getConfiguration();
+        
+        // Convert stdClass to array for easier access
+        $configArray = (array) $config;
 
         return [
             // Core configuration
             'columns' => $this->getColumnDefinitions($table),
             'data' => [], // Data will be loaded via AJAX or provided directly
             
+            // Table metadata
+            'tableName' => $configArray['tableName'] ?? null,
+            'connection' => $table->getConnection(),
+            
             // Pagination
             'pagination' => [
                 'enabled' => true,
-                'pageSize' => $config->pageSize,
-                'pageSizeOptions' => $config->pageSizeOptions,
+                'pageSize' => $configArray['pageSize'] ?? 10,
+                'pageSizeOptions' => $configArray['pageSizeOptions'] ?? [10, 25, 50, 100],
             ],
             
             // Sorting
@@ -273,23 +280,23 @@ class TanStackEngine implements TableEngineInterface
                 'enabled' => true,
                 'multiSort' => true,
                 'defaultSort' => [
-                    'column' => $config->orderByColumn,
-                    'direction' => $config->orderByDirection,
+                    'column' => $configArray['orderByColumn'] ?? null,
+                    'direction' => $configArray['orderByDirection'] ?? 'asc',
                 ],
             ],
             
             // Searching
             'searching' => [
-                'enabled' => $config->searchable,
+                'enabled' => $configArray['searchable'] ?? true,
                 'debounce' => 300, // 300ms debounce
-                'searchableColumns' => $config->searchableColumns,
+                'searchableColumns' => $configArray['searchableColumns'] ?? [],
             ],
             
             // Filtering
             'filtering' => [
-                'enabled' => !empty($config->filterGroups),
-                'filterGroups' => $config->filterGroups,
-                'activeFilters' => $config->activeFilters,
+                'enabled' => !empty($configArray['filterGroups']),
+                'filterGroups' => $configArray['filterGroups'] ?? [],
+                'activeFilters' => $configArray['activeFilters'] ?? [],
             ],
             
             // Column pinning (fixed columns)
@@ -300,8 +307,8 @@ class TanStackEngine implements TableEngineInterface
             
             // Row selection
             'rowSelection' => [
-                'enabled' => $config->selectable,
-                'mode' => $config->selectionMode,
+                'enabled' => $configArray['selectable'] ?? false,
+                'mode' => $configArray['selectionMode'] ?? 'multiple',
             ],
             
             // Virtual scrolling
@@ -309,12 +316,12 @@ class TanStackEngine implements TableEngineInterface
             
             // Server-side processing
             'serverSide' => [
-                'enabled' => $config->serverSide,
-                'url' => $config->serverSide ? route('canvastack.table.data') : null,
+                'enabled' => $configArray['serverSide'] ?? true,
+                'url' => ($configArray['serverSide'] ?? true) ? route('canvastack.table.data') : null,
             ],
             
             // Actions
-            'actions' => $config->actions,
+            'actions' => $configArray['actions'] ?? [],
             
             // Alpine.js data
             'alpineData' => $this->getAlpineData($table),
@@ -455,6 +462,17 @@ class TanStackEngine implements TableEngineInterface
             $initialData = $query->get()->toArray();
         }
 
+        // Calculate safe pageSize and pageCount
+        $totalRows = count($initialData);
+        $pageSize = is_numeric($config->pageSize) ? (int)$config->pageSize : $totalRows;
+        
+        // Prevent division by zero and ensure minimum pageSize
+        if ($pageSize <= 0) {
+            $pageSize = $totalRows > 0 ? $totalRows : 10;
+        }
+        
+        $pageCount = $totalRows > 0 ? ceil($totalRows / $pageSize) : 1;
+        
         return [
             // Table state
             'data' => $initialData,
@@ -463,9 +481,9 @@ class TanStackEngine implements TableEngineInterface
             
             // Pagination state
             'page' => 0,
-            'pageSize' => $config->pageSize,
-            'pageCount' => ceil(count($initialData) / $config->pageSize),
-            'totalRows' => count($initialData),
+            'pageSize' => $pageSize,
+            'pageCount' => $pageCount,
+            'totalRows' => $totalRows,
             
             // Sorting state
             'sorting' => [
@@ -496,6 +514,125 @@ class TanStackEngine implements TableEngineInterface
                 'left' => [],
                 'right' => [],
             ],
+            
+            // Translations for Alpine.js (i18n support)
+            'translations' => $this->getTranslations(),
+        ];
+    }
+    
+    /**
+     * Get translations for Alpine.js.
+     *
+     * Loads all table-related translations from the i18n system.
+     * This ensures all UI text is properly translated.
+     *
+     * @return array
+     */
+    protected function getTranslations(): array
+    {
+        return [
+            // Search
+            'search' => __('canvastack::components.table.search'),
+            'search_table' => __('canvastack::components.table.search_table'),
+            'clear_search' => __('canvastack::components.table.clear_search'),
+            
+            // Sorting
+            'sort_asc' => __('canvastack::components.table.sort_asc'),
+            'sort_desc' => __('canvastack::components.table.sort_desc'),
+            'unsorted' => __('canvastack::components.table.unsorted'),
+            'sort_active_singular' => __('canvastack::components.table.sort_active_singular'),
+            'sort_active_plural' => __('canvastack::components.table.sort_active_plural'),
+            'clear_sorting' => __('canvastack::components.table.clear_sorting'),
+            'sort_hint' => __('canvastack::components.table.sort_hint'),
+            
+            // Pagination
+            'showing' => __('canvastack::components.table.showing'),
+            'first' => __('canvastack::components.table.first'),
+            'previous' => __('canvastack::components.table.previous'),
+            'next' => __('canvastack::components.table.next'),
+            'last' => __('canvastack::components.table.last'),
+            'page' => __('canvastack::components.table.page'),
+            'from' => __('canvastack::components.table.from'),
+            'page_size' => __('canvastack::components.table.page_size'),
+            'per_page' => __('canvastack::components.table.per_page'),
+            'of' => __('canvastack::components.table.of'),
+            'entries' => __('canvastack::components.table.entries'),
+            
+            // Filtering
+            'filters' => __('canvastack::components.table.filters'),
+            'filter_by' => __('canvastack::components.table.filter_by'),
+            'active_filters' => __('canvastack::components.table.active_filters'),
+            'clear_filters' => __('canvastack::components.table.clear_filters'),
+            'clear_filter' => __('canvastack::components.table.clear_filter'),
+            'clear_all' => __('canvastack::components.table.clear_all'),
+            'apply_filters' => __('canvastack::components.table.apply_filters'),
+            'no_filters' => __('canvastack::components.table.no_filters'),
+            'all' => __('canvastack::components.table.all'),
+            'select_date_range' => __('canvastack::components.table.select_date_range'),
+            
+            // Selection
+            'select_all' => __('canvastack::components.table.select_all'),
+            'deselect_all' => __('canvastack::components.table.deselect_all'),
+            'selected_count' => __('canvastack::components.table.selected_count'),
+            'select_row' => __('canvastack::components.table.select_row'),
+            'row_selected' => __('canvastack::components.table.row_selected'),
+            'rows_selected' => __('canvastack::components.table.rows_selected'),
+            'clear_selection' => __('canvastack::components.table.clear_selection'),
+            
+            // Actions
+            'actions' => __('canvastack::components.table.actions'),
+            'view' => __('canvastack::components.table.view'),
+            'edit' => __('canvastack::components.table.edit'),
+            'delete' => __('canvastack::components.table.delete'),
+            'delete_confirm' => __('canvastack::components.table.delete_confirm'),
+            'bulk_actions' => __('canvastack::components.table.bulk_actions'),
+            'bulk_delete' => __('canvastack::components.table.bulk_delete'),
+            'bulk_delete_confirm' => __('canvastack::components.table.bulk_delete_confirm'),
+            'confirm' => __('canvastack::components.table.confirm'),
+            'cancel' => __('canvastack::components.table.cancel'),
+            'confirm_action' => __('canvastack::components.table.confirm_action'),
+            'no_rows_selected' => __('canvastack::components.table.no_rows_selected'),
+            'bulk_action_error' => __('canvastack::components.table.bulk_action_error'),
+            
+            // Export
+            'export' => __('canvastack::components.table.export'),
+            'export_excel' => __('canvastack::components.table.export_excel'),
+            'export_csv' => __('canvastack::components.table.export_csv'),
+            'export_pdf' => __('canvastack::components.table.export_pdf'),
+            'print' => __('canvastack::components.table.print'),
+            
+            // States
+            'loading' => __('canvastack::components.table.loading'),
+            'loading_more' => __('canvastack::components.table.loading_more'),
+            'no_data' => __('canvastack::components.table.no_data'),
+            'error' => __('canvastack::components.table.error'),
+            'retry' => __('canvastack::components.table.retry'),
+            'empty_title' => __('canvastack::components.table.empty_title'),
+            'empty_description' => __('canvastack::components.table.empty_description'),
+            'all_data_loaded' => __('canvastack::components.table.all_data_loaded'),
+            
+            // Column visibility
+            'show_columns' => __('canvastack::components.table.show_columns'),
+            'hide_columns' => __('canvastack::components.table.hide_columns'),
+            'show_all_columns' => __('canvastack::components.table.show_all_columns'),
+            'hide_all_columns' => __('canvastack::components.table.hide_all_columns'),
+            
+            // Column resizing
+            'resize_column' => __('canvastack::components.table.resize_column'),
+            'auto_fit' => __('canvastack::components.table.auto_fit'),
+            
+            // Mobile card view
+            'collapse' => __('canvastack::components.table.collapse'),
+            'expand' => __('canvastack::components.table.expand'),
+            'show_less' => __('canvastack::components.table.show_less'),
+            'show_more' => __('canvastack::components.table.show_more'),
+            
+            // Misc
+            'refresh' => __('canvastack::components.table.refresh'),
+            'reset' => __('canvastack::components.table.reset'),
+            'items' => __('canvastack::components.table.items'),
+            'total' => __('canvastack::components.table.total'),
+            'rows' => __('canvastack::components.table.rows'),
         ];
     }
 

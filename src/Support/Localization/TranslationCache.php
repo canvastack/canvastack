@@ -42,6 +42,13 @@ class TranslationCache
     protected string $driver;
 
     /**
+     * Whether cache driver supports tagging.
+     *
+     * @var bool
+     */
+    protected bool $supportsTagging;
+
+    /**
      * Translation loader.
      *
      * @var TranslationLoader
@@ -57,6 +64,25 @@ class TranslationCache
         $this->ttl = Config::get('canvastack.localization.cache_ttl', 3600);
         $this->enabled = Config::get('canvastack.localization.cache_enabled', true);
         $this->driver = Config::get('canvastack.localization.cache_driver', 'redis');
+        
+        // Check if cache driver supports tagging
+        // Only redis, memcached, and dynamodb support tagging
+        $this->supportsTagging = in_array($this->driver, ['redis', 'memcached', 'dynamodb']);
+    }
+
+    /**
+     * Get cache repository with or without tags.
+     *
+     * @param  array<string>  $tags
+     * @return \Illuminate\Contracts\Cache\Repository
+     */
+    protected function cache(array $tags = []): mixed
+    {
+        if ($this->supportsTagging && !empty($tags)) {
+            return Cache::tags($tags);
+        }
+        
+        return Cache::store($this->driver);
     }
 
     /**
@@ -75,7 +101,7 @@ class TranslationCache
 
         $cacheKey = $this->getCacheKey($locale, $key);
 
-        return Cache::tags($this->getTags($locale))->remember(
+        return $this->cache($this->getTags($locale))->remember(
             $cacheKey,
             $this->ttl,
             fn () => $this->loader->get($locale, $key, $replace)
@@ -97,7 +123,7 @@ class TranslationCache
 
         $cacheKey = $this->getCacheKey($locale, $group ?? 'all');
 
-        return Cache::tags($this->getTags($locale))->remember(
+        return $this->cache($this->getTags($locale))->remember(
             $cacheKey,
             $this->ttl,
             fn () => $this->loader->load($locale, $group)
@@ -120,7 +146,7 @@ class TranslationCache
 
         $cacheKey = $this->getCacheKey($locale, $key);
 
-        Cache::tags($this->getTags($locale))->put($cacheKey, $value, $this->ttl);
+        $this->cache($this->getTags($locale))->put($cacheKey, $value, $this->ttl);
     }
 
     /**
@@ -138,7 +164,7 @@ class TranslationCache
 
         $cacheKey = $this->getCacheKey($locale, $key);
 
-        return Cache::tags($this->getTags($locale))->has($cacheKey);
+        return $this->cache($this->getTags($locale))->has($cacheKey);
     }
 
     /**
@@ -156,7 +182,7 @@ class TranslationCache
 
         $cacheKey = $this->getCacheKey($locale, $key);
 
-        Cache::tags($this->getTags($locale))->forget($cacheKey);
+        $this->cache($this->getTags($locale))->forget($cacheKey);
     }
 
     /**
@@ -171,7 +197,12 @@ class TranslationCache
             return;
         }
 
-        Cache::tags($this->getTags($locale))->flush();
+        if ($this->supportsTagging) {
+            $this->cache($this->getTags($locale))->flush();
+        } else {
+            // For non-tagging drivers, flush all cache (less efficient but works)
+            Cache::store($this->driver)->flush();
+        }
 
         // Fire cache cleared event
         event(new \Canvastack\Canvastack\Events\Translation\TranslationCacheCleared($locale));
@@ -190,7 +221,12 @@ class TranslationCache
             return;
         }
 
-        Cache::tags($this->getGroupTags($locale, $group))->flush();
+        if ($this->supportsTagging) {
+            $this->cache($this->getGroupTags($locale, $group))->flush();
+        } else {
+            // For non-tagging drivers, flush all cache (less efficient but works)
+            Cache::store($this->driver)->flush();
+        }
 
         // Fire cache cleared event
         event(new \Canvastack\Canvastack\Events\Translation\TranslationCacheCleared($locale));
@@ -207,7 +243,12 @@ class TranslationCache
             return;
         }
 
-        Cache::tags(['translations'])->flush();
+        if ($this->supportsTagging) {
+            $this->cache(['translations'])->flush();
+        } else {
+            // For non-tagging drivers, flush all cache (less efficient but works)
+            Cache::store($this->driver)->flush();
+        }
 
         // Fire cache cleared event (all locales)
         event(new \Canvastack\Canvastack\Events\Translation\TranslationCacheCleared(null));

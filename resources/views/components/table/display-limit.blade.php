@@ -1,6 +1,6 @@
 {{--
-Display Limit Component
-Provides a dropdown to change the number of rows displayed in a table
+    Display Limit Component
+    Provides a dropdown to change the number of rows displayed in a table
 --}}
 
 <div x-data="displayLimit()" class="flex items-center gap-2">

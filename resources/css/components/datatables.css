@@ -59,6 +59,9 @@ table.dataTable thead tr th {
     /* Use Tailwind format with CSS variables */
     --tw-text-opacity: 1 !important;
     color: var(--tw-gray-500, rgb(107 114 128)) !important; /* text-gray-500 */
+    /* CRITICAL FIX: Prevent text wrapping in headers */
+    white-space: nowrap !important;
+    min-width: fit-content !important;
 }
 
 /* Dark mode for table header - Tailwind format */

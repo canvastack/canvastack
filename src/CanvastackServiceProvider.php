@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Canvastack\Canvastack;
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -75,8 +76,38 @@ class CanvastackServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Check cache driver compatibility
+        $this->checkCacheDriverCompatibility();
+
         // Publish configurations
         if ($this->app->runningInConsole()) {
+            
+            $this->publishes([
+                __DIR__ . '/../config/vite/app.css' => resource_path('css/app.css'),
+            ], 'canvastack-config-vite');
+            
+            $this->publishes([
+                __DIR__ . '/../config/vite/package.json' => base_path('package.json'),
+            ], 'canvastack-config-vite');
+            
+            $this->publishes([
+                __DIR__ . '/../config/vite/postcss.config.js' => base_path('postcss.config.js'),
+            ], 'canvastack-config-vite');
+            
+            $this->publishes([
+                __DIR__ . '/../config/vite/tailwind.config.js' => base_path('tailwind.config.js'),
+            ], 'canvastack-config-vite');
+            
+            $this->publishes([
+                __DIR__ . '/../config/vite/vite.config.js' => base_path('vite.config.js'),
+            ], 'canvastack-config-vite');
+
+            // Publish JavaScript entry point
+            $this->publishes([
+                __DIR__ . '/../stubs/resources/js/app.js' => resource_path('js/app.js'),
+            ], 'canvastack-js');
+
+
             $this->publishes([
                 __DIR__ . '/../config/canvastack.php' => config_path('canvastack.php'),
             ], 'canvastack-config');
@@ -113,6 +144,11 @@ class CanvastackServiceProvider extends ServiceProvider
                 __DIR__ . '/../resources/css' => public_path('vendor/canvastack/css'),
                 __DIR__ . '/../resources/js' => public_path('vendor/canvastack/js'),
             ], 'canvastack-assets');
+
+            // Publish routes
+            $this->publishes([
+                __DIR__ . '/../routes/web.php' => base_path('routes/web.php'),
+            ], 'canvastack-routes');
 
             // Publish TanStack Table CSS (for development testing)
             $this->publishes([
@@ -173,10 +209,18 @@ class CanvastackServiceProvider extends ServiceProvider
 
             // Register image optimization Blade directives
             $this->registerImageDirectives($blade);
+            
+            // Register Vite Blade directives
+            $this->registerViteDirectives($blade);
         });
 
         // Load routes
         $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+        
+        // Load API routes with prefix
+        Route::prefix('api/canvastack')
+            ->middleware(['web'])
+            ->group(__DIR__ . '/../routes/api.php');
         
         // Register View Composer for table_engine variable
         // This ensures $table_engine is available in ALL views BEFORE rendering
@@ -227,10 +271,22 @@ class CanvastackServiceProvider extends ServiceProvider
         $this->app->singleton('canvastack.image', function ($app) {
             return new \Canvastack\Canvastack\Support\Assets\ImageOptimizer();
         });
+        
+        // Register ViteAssetLoader
+        $this->app->singleton('canvastack.vite', function ($app) {
+            return new \Canvastack\Canvastack\Support\Vite\ViteAssetLoader();
+        });
 
         // Register LocaleManager
         $this->app->singleton('canvastack.locale', function ($app) {
             return new \Canvastack\Canvastack\Support\Localization\LocaleManager();
+        });
+
+        // Register RtlSupport (depends on LocaleManager)
+        $this->app->singleton('canvastack.rtl', function ($app) {
+            return new \Canvastack\Canvastack\Support\Localization\RtlSupport(
+                $app->make('canvastack.locale')
+            );
         });
 
         // Register TranslationLoader
@@ -361,6 +417,25 @@ class CanvastackServiceProvider extends ServiceProvider
             return "<?php echo app('canvastack.image')->addLazyLoading({$expression}); ?>";
         });
     }
+    
+    /**
+     * Register Vite Blade directives.
+     *
+     * @param \Illuminate\View\Compilers\BladeCompiler $blade
+     * @return void
+     */
+    protected function registerViteDirectives($blade): void
+    {
+        // @canvastackVite directive - Load Vite assets
+        $blade->directive('canvastackVite', function ($expression) {
+            return "<?php echo app('canvastack.vite')->scripts({$expression}); ?>";
+        });
+        
+        // @canvastackViteAsset directive - Get asset URL
+        $blade->directive('canvastackViteAsset', function ($expression) {
+            return "<?php echo app('canvastack.vite')->asset({$expression}); ?>";
+        });
+    }
 
     /**
      * Register table services.
@@ -435,6 +510,33 @@ class CanvastackServiceProvider extends ServiceProvider
                 }
             }
         });
+    }
+
+    /**
+     * Check if cache driver supports tagging.
+     * 
+     * @return void
+     */
+    protected function checkCacheDriverCompatibility(): void
+    {
+        try {
+            $cacheDriver = config('cache.default');
+            $supportedDrivers = ['redis', 'memcached', 'dynamodb', 'octane'];
+            
+            if (!in_array($cacheDriver, $supportedDrivers)) {
+                // Log warning instead of throwing exception
+                if ($this->app->runningInConsole()) {
+                    echo "\n";
+                    echo "⚠️  WARNING: CanvaStack works best with cache drivers that support tagging.\n";
+                    echo "   Current driver: {$cacheDriver}\n";
+                    echo "   Recommended drivers: redis, memcached\n";
+                    echo "   Some features may not work optimally.\n";
+                    echo "\n";
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently continue if check fails
+        }
     }
 
     /**

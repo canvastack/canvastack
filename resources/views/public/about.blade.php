@@ -14,7 +14,7 @@
             About <span class="gradient-text">CanvaStack</span>
         </h1>
         <p class="text-lg md:text-xl text-gray-600 dark:text-gray-400">
-            A modern Laravel CMS package built for developers who want to build powerful admin panels quickly.
+            A modern CanvaStack CMS package built for developers who want to build powerful admin panels quickly.
         </p>
     </div>
 </section>
@@ -25,7 +25,7 @@
         <div class="prose prose-lg dark:prose-invert max-w-none">
             <h2 class="text-3xl font-bold mb-4">What is CanvaStack?</h2>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
-                CanvaStack is a comprehensive Laravel CMS package that provides all the tools you need to build modern admin panels and content management systems. It includes powerful components like FormBuilder, TableBuilder, ChartBuilder, and more.
+                CanvaStack is a comprehensive CanvaStack CMS package that provides all the tools you need to build modern admin panels and content management systems. It includes powerful components like FormBuilder, TableBuilder, ChartBuilder, and more.
             </p>
             
             <h2 class="text-3xl font-bold mb-4 mt-12">Key Features</h2>
@@ -72,7 +72,7 @@
             <ul class="space-y-2 mb-12">
                 <li class="flex items-center gap-2">
                     <i data-lucide="check" class="w-5 h-5 text-green-600"></i>
-                    <span>Laravel 12.x</span>
+                    <span>CanvaStack 12.x</span>
                 </li>
                 <li class="flex items-center gap-2">
                     <i data-lucide="check" class="w-5 h-5 text-green-600"></i>
@@ -101,7 +101,7 @@
                 <p class="text-gray-600 dark:text-gray-400 mb-6">
                     Check out the dashboard to see all the components in action.
                 </p>
-                <a href="{{ route('test.dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 gradient-bg text-white rounded-xl text-sm font-semibold hover:opacity-90 transition">
+                <a href="{{ route('page.dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 gradient-bg text-white rounded-xl text-sm font-semibold hover:opacity-90 transition">
                     <i data-lucide="rocket" class="w-4 h-4"></i> View Dashboard
                 </a>
             </div>

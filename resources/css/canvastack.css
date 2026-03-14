@@ -1,8 +1,13 @@
 /* Google Fonts - URL imports are allowed */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+/* Tom Select CSS - Base styles */
+/* NOTE: Tom Select CSS is now bundled in app.css via Vite */
+/* @import 'tom-select/dist/css/tom-select.bootstrap5.css'; */
+
 /* Import CanvaStack component CSS directly - nested @import doesn't work */
 @import 'components/searchable-select.css';
+@import 'components/tom-select-theme.css';
 @import 'rtl.css';
 @import 'lazy-loading.css';
 @import 'components/datatables.css';

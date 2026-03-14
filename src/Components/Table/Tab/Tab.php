@@ -181,6 +181,26 @@ class Tab
     {
         return !empty($this->charts);
     }
+    /**
+     * Check if tab has any content
+     *
+     * @return bool
+     */
+    public function hasContent(): bool
+    {
+        return !empty($this->content);
+    }
+
+    /**
+     * Check if tab has any tables
+     *
+     * @return bool
+     */
+    public function hasTables(): bool
+    {
+        return !empty($this->tables);
+    }
+
 
     /**
      * Set tab configuration
@@ -235,6 +255,8 @@ class Tab
     /**
      * Convert tab to array for JSON serialization
      * 
+     * Includes lazy loading configuration (Requirement 6.4, 32.7)
+     * 
      * @return array
      */
     public function toArray(): array
@@ -245,7 +267,11 @@ class Tab
             'tables' => array_map(fn($table) => $table->toArray(), $this->tables),
             'charts' => array_map(fn($chart) => $chart->toArray(), $this->charts),
             'content' => $this->content,
+            'custom_content' => implode("\n", $this->content), // Join content blocks for blade template
             'config' => $this->config,
+            'lazy_load' => $this->lazyLoad,
+            'url' => $this->lazyLoadUrl,
+            'loaded' => $this->isLoaded,
         ];
     }
 

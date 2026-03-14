@@ -1,8 +1,18 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
-      class="{{ request()->cookie('darkMode') === 'true' ? 'dark' : '' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    @include('canvastack::layouts.partials.meta', ['table_engine' => $table_engine ?? null])
+    {{-- Initialize dark mode BEFORE any rendering --}}
+    <script>
+        (function() {
+            const isDark = localStorage.getItem('darkMode') === 'true' || 
+                          document.cookie.includes('darkMode=true');
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    
+    @include('canvastack::layouts.partials.meta')
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
     

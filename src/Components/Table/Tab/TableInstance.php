@@ -175,6 +175,7 @@ class TableInstance
             'tableName' => $this->tableName,
             'fields' => $this->fields,
             'config' => $this->config,
+            'html' => $this->config['html'] ?? '', // Get HTML from config if available
         ];
     }
 

@@ -90,7 +90,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_register_creates_event_listeners(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheInvalidatorTestModel::class;
         $this->invalidator->register($modelClass);
 
         // Verify listeners were registered by checking if registered
@@ -102,7 +102,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_register_works_with_model_instance(): void
     {
-        $model = new TestModel();
+        $model = new CacheInvalidatorTestModel();
         $this->invalidator->register($model);
 
         // Verify listeners were registered
@@ -114,7 +114,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_invalidate_model_cache_clears_all_related_caches(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheInvalidatorTestModel::class;
 
         $this->cacheManager->shouldReceive('clearModelCache')
             ->once()
@@ -139,7 +139,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_invalidate_model_cache_clears_related_model_caches(): void
     {
-        $model = new TestModel();
+        $model = new CacheInvalidatorTestModel();
         $modelClass = get_class($model);
 
         $this->cacheManager->shouldReceive('clearModelCache')
@@ -165,7 +165,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_invalidate_instance_works_with_model_instance(): void
     {
-        $model = new TestModel();
+        $model = new CacheInvalidatorTestModel();
         $modelClass = get_class($model);
 
         $this->cacheManager->shouldReceive('clearModelCache')
@@ -191,8 +191,8 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_invalidate_multiple_works_with_array_of_models(): void
     {
-        $model1 = new TestModel();
-        $model2 = TestModel::class;
+        $model1 = new CacheInvalidatorTestModel();
+        $model2 = CacheInvalidatorTestModel::class;
 
         $this->cacheManager->shouldReceive('clearModelCache')
             ->twice();
@@ -229,7 +229,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_register_multiple_registers_multiple_models(): void
     {
-        $models = [TestModel::class, AnotherTestModel::class];
+        $models = [CacheInvalidatorTestModel::class, AnotherTestModel::class];
         $this->invalidator->registerMultiple($models);
 
         foreach ($models as $modelClass) {
@@ -242,7 +242,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_unregister_removes_event_listeners(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheInvalidatorTestModel::class;
         
         // Register first
         $this->invalidator->register($modelClass);
@@ -260,7 +260,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_is_registered_checks_if_model_has_listeners(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheInvalidatorTestModel::class;
 
         // Should not be registered initially
         $this->assertFalse($this->invalidator->isRegistered($modelClass));
@@ -277,7 +277,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_trigger_invalidation_manually_triggers_cache_invalidation(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheInvalidatorTestModel::class;
 
         $this->cacheManager->shouldReceive('clearModelCache')
             ->once()
@@ -302,7 +302,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_trigger_invalidation_ignores_invalid_events(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheInvalidatorTestModel::class;
 
         $this->cacheManager->shouldNotReceive('clearModelCache');
         $this->cacheManager->shouldNotReceive('clearFilterCache');
@@ -319,7 +319,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_event_listener_triggers_cache_invalidation_on_model_created(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheInvalidatorTestModel::class;
 
         $this->cacheManager->shouldReceive('clearModelCache')
             ->once()
@@ -337,7 +337,7 @@ class TableCacheInvalidatorTest extends TestCase
         $this->invalidator->register($modelClass);
 
         // Fire event
-        $model = new TestModel();
+        $model = new CacheInvalidatorTestModel();
         Event::dispatch("eloquent.created: {$modelClass}", $model);
         
         // Verify expectations
@@ -349,7 +349,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_event_listener_triggers_cache_invalidation_on_model_updated(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheInvalidatorTestModel::class;
 
         $this->cacheManager->shouldReceive('clearModelCache')
             ->once()
@@ -367,7 +367,7 @@ class TableCacheInvalidatorTest extends TestCase
         $this->invalidator->register($modelClass);
 
         // Fire event
-        $model = new TestModel();
+        $model = new CacheInvalidatorTestModel();
         Event::dispatch("eloquent.updated: {$modelClass}", $model);
         
         // Verify expectations
@@ -379,7 +379,7 @@ class TableCacheInvalidatorTest extends TestCase
      */
     public function test_event_listener_triggers_cache_invalidation_on_model_deleted(): void
     {
-        $modelClass = TestModel::class;
+        $modelClass = CacheInvalidatorTestModel::class;
 
         $this->cacheManager->shouldReceive('clearModelCache')
             ->once()
@@ -397,7 +397,7 @@ class TableCacheInvalidatorTest extends TestCase
         $this->invalidator->register($modelClass);
 
         // Fire event
-        $model = new TestModel();
+        $model = new CacheInvalidatorTestModel();
         Event::dispatch("eloquent.deleted: {$modelClass}", $model);
         
         // Verify expectations
@@ -408,7 +408,7 @@ class TableCacheInvalidatorTest extends TestCase
 /**
  * Test model for testing purposes.
  */
-class TestModel extends Model
+class CacheInvalidatorTestModel extends Model
 {
     protected $table = 'test_models';
     protected $fillable = ['name', 'email'];

@@ -3,6 +3,8 @@
 use Canvastack\Canvastack\Http\Controllers\Admin\ThemeController;
 use Canvastack\Canvastack\Http\Controllers\AjaxSyncController;
 use Canvastack\Canvastack\Http\Controllers\LocaleController;
+use Canvastack\Canvastack\Http\Controllers\PublicController;
+use Canvastack\Canvastack\Http\Controllers\DemoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +16,25 @@ use Illuminate\Support\Facades\Route;
 | These routes are loaded by the CanvastackServiceProvider.
 |
 */
+
+// Homepage Route (Default CanvaStack Welcome Page)
+Route::get('/', [PublicController::class, 'home'])
+    ->middleware(['web'])
+    ->name('home');
+
+// About Page Route
+Route::get('/about', [PublicController::class, 'about'])
+    ->middleware(['web'])
+    ->name('about');
+
+// Placeholder routes for navbar (redirect to home)
+Route::get('/login', function () {
+    return redirect()->route('home');
+})->middleware(['web'])->name('login');
+
+Route::get('/register', function () {
+    return redirect()->route('home');
+})->middleware(['web'])->name('register');
 
 // Ajax Sync endpoint for cascading dropdowns
 Route::post('/canvastack/ajax/sync', [AjaxSyncController::class, 'handle'])
@@ -63,17 +84,35 @@ Route::post('/datatable/warm-filter-cache', [\Canvastack\Canvastack\Http\Control
 
 // Admin Dashboard Route (for testing/navigation)
 Route::get('/admin/dashboard', function () {
-    return view('canvastack::admin.dashboard');
+    $meta = app(\Canvastack\Canvastack\Library\Components\MetaTags::class);
+    $meta->title('Dashboard');
+    $meta->description('Admin Dashboard');
+    
+    $chart = app(\Canvastack\Canvastack\Components\Chart\ChartBuilder::class);
+    $chart->setContext('admin');
+    $chart->line([
+        ['name' => 'Users', 'data' => [10, 20, 30, 40, 50, 60]]
+    ], ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']);
+    
+    return view('canvastack::admin.dashboard', compact('meta', 'chart'));
 })->middleware(['web'])->name('admin.dashboard');
 
 // Admin Profile Route (for navbar)
 Route::get('/admin/profile', function () {
-    return view('canvastack::admin.profile');
+    $meta = app(\Canvastack\Canvastack\Library\Components\MetaTags::class);
+    $meta->title('Profile');
+    $meta->description('User Profile');
+    
+    return view('canvastack::admin.profile', compact('meta'));
 })->middleware(['web'])->name('admin.profile');
 
 // Admin Settings Route (for navbar)
 Route::get('/admin/settings', function () {
-    return view('canvastack::admin.settings');
+    $meta = app(\Canvastack\Canvastack\Library\Components\MetaTags::class);
+    $meta->title('Settings');
+    $meta->description('Application Settings');
+    
+    return view('canvastack::admin.settings', compact('meta'));
 })->middleware(['web'])->name('admin.settings');
 
 // Logout Route (for navbar)
@@ -82,6 +121,20 @@ Route::post('/logout', function () {
 
     return redirect('/');
 })->middleware(['web'])->name('logout');
+
+// Test Routes (for page/testing)
+Route::prefix('page')->name('page.')->middleware(['web'])->group(function () {
+    Route::get('/dashboard', [DemoController::class, 'dashboard'])->name('dashboard');
+    Route::get('/form-create', [DemoController::class, 'formCreate'])->name('form-create');
+    Route::get('/form-edit', [DemoController::class, 'formEdit'])->name('form-edit');
+    Route::get('/chart', [DemoController::class, 'chart'])->name('chart');
+    Route::get('/table', [DemoController::class, 'table'])->name('table');
+    Route::get('/multi-table', [DemoController::class, 'multiTable'])->name('multi-table');
+    Route::get('/tanstacktable', [DemoController::class, 'tanstackTable'])->name('tanstacktable');
+    Route::get('/tanstack-tabs', [DemoController::class, 'tanstackMultiTableTabs'])->name('tanstack-tabs');
+    Route::get('/theme', [DemoController::class, 'theme'])->name('theme');
+    Route::get('/i18n', [DemoController::class, 'i18n'])->name('i18n');
+});
 
 // Admin Theme Management Routes
 Route::prefix('admin/themes')->name('admin.themes.')->middleware(['web'])->group(function () {
@@ -99,6 +152,13 @@ Route::prefix('admin/themes')->name('admin.themes.')->middleware(['web'])->group
 Route::prefix('admin/locales')->name('admin.locales.')->middleware(['web'])->group(function () {
     Route::get('/', [\Canvastack\Canvastack\Http\Controllers\Admin\LocaleController::class, 'index'])->name('index');
 });
+
+// Tab Loading Route (Task 3.4.3 - Requirement 6.4)
+// AJAX endpoint for lazy loading tab content
+Route::get('/canvastack/table/tab/{tableId}/{tabIndex}', [\Canvastack\Canvastack\Http\Controllers\TableTabController::class, 'loadTab'])
+    ->middleware(['web'])
+    ->name('canvastack.table.tab.load')
+    ->where(['tabIndex' => '[0-9]+']);
 
 // Test Routes for Fixed Columns (Phase 4)
 Route::prefix('test/fixed-columns')->name('test.fixed-columns.')->middleware(['web'])->group(function () {

@@ -1,6 +1,27 @@
 {{-- Header/Navbar Block --}}
+
+{{-- Initialize services required by table and other components --}}
+@php
+    // Initialize locale service (same as locale-selector component)
+    $localeManager = app('canvastack.locale');
+    $currentLocale = $localeManager->getLocale();
+    $availableLocales = $localeManager->getAvailableLocales();
+    $currentInfo = $localeManager->getLocaleInfo($currentLocale);
+@endphp
+
 <header class="sticky top-0 z-20 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800">
     <div class="flex items-center justify-between h-16 px-6">
+        {{-- 
+            CRITICAL: This file MUST contain "md:block" class to trigger Tailwind CSS generation.
+            
+            TanStackRenderer.php uses "hidden md:block" for responsive table rendering.
+            Without this trigger, Tailwind v4 Lightning CSS will NOT generate the @media query
+            for md:block, causing tables to remain hidden on desktop.
+            
+            DO NOT DELETE THIS FILE OR REMOVE THE md:block CLASS!
+        --}}
+        <span class="md:block" style="display: none;" aria-hidden="true"></span>
+
         {{-- Left Side --}}
         <div class="flex items-center gap-4">
             {{-- Mobile Menu Toggle --}}
@@ -23,6 +44,9 @@
                 <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
                 <input type="text" placeholder="Search..." class="bg-transparent outline-none text-sm w-40">
             </div>
+            
+            {{-- Language Selector --}}
+            <x-canvastack::ui.locale-selector :showName="false" :compact="true" />
             
             {{-- Notifications --}}
             <button class="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">

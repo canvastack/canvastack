@@ -1043,6 +1043,16 @@ abstract class TestCase extends BaseTestCase
             $route->name('index');
         });
 
+        // Register API routes with prefix (Task 4.2.1 - Requirement 6.4)
+        // Task 4.2.2 - Added authentication middleware (Requirement 10.6)
+        // Task 4.2.3 - Added rate limiting middleware (Requirement 10.10)
+        $router->prefix('api/canvastack')->middleware(['web'])->group(function ($router) {
+            $route = $router->post('/table/tab/{index}', [\Canvastack\Canvastack\Http\Controllers\TableTabController::class, 'loadTab'])
+                ->middleware(['auth', 'throttle:60,1'])
+                ->where(['index' => '[0-9]+']);
+            $route->name('canvastack.table.tab.load');
+        });
+
         // Force refresh of route collection name index
         $router->getRoutes()->refreshNameLookups();
     }
@@ -1231,6 +1241,44 @@ abstract class TestCase extends BaseTestCase
             $table->string('status')->default('active'); // For filtering tests
             $table->string('role')->default('user'); // For filtering tests
             $table->timestamps();
+        });
+
+        // Create test_posts table for relationship testing
+        $capsule->schema()->create('test_posts', function ($table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->string('title');
+            $table->text('content');
+            $table->timestamps();
+
+            $table->index('user_id');
+        });
+
+        // Add foreign key for test_posts
+        $capsule->schema()->table('test_posts', function ($table) {
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('test_users')
+                ->onDelete('cascade');
+        });
+
+        // Create test_profiles table for relationship testing
+        $capsule->schema()->create('test_profiles', function ($table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id')->unique();
+            $table->text('bio')->nullable();
+            $table->string('avatar')->nullable();
+            $table->timestamps();
+
+            $table->index('user_id');
+        });
+
+        // Add foreign key for test_profiles
+        $capsule->schema()->table('test_profiles', function ($table) {
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('test_users')
+                ->onDelete('cascade');
         });
 
         // Create posts table for testing
@@ -1593,6 +1641,68 @@ abstract class TestCase extends BaseTestCase
                     'rtl_locales' => ['ar', 'he', 'fa', 'ur'],
                     'storage' => 'session',
                     'detect_browser' => false,
+                ],
+                'cache' => [
+                    'enabled' => true,
+                    'driver' => 'redis',
+                    'ttl' => [
+                        'forms' => 3600,
+                        'tables' => 300,
+                        'permissions' => 3600,
+                        'views' => 3600,
+                        'queries' => 300,
+                        'tabs' => 600,
+                    ],
+                    'tags' => [
+                        'forms' => 'canvastack:forms',
+                        'tables' => 'canvastack:tables',
+                        'permissions' => 'canvastack:permissions',
+                        'views' => 'canvastack:views',
+                        'tabs' => 'canvastack:tabs',
+                    ],
+                    'tab_system' => [
+                        'enabled' => true,
+                        'ttl' => 600,
+                        'client_cache' => [
+                            'enabled' => true,
+                            'storage' => 'memory',
+                        ],
+                        'server_cache' => [
+                            'enabled' => true,
+                            'driver' => null,
+                            'prefix' => 'tab_content_',
+                        ],
+                        'invalidation' => [
+                            'auto' => true,
+                            'events' => [
+                                'eloquent.created: *',
+                                'eloquent.updated: *',
+                                'eloquent.deleted: *',
+                            ],
+                            'methods' => [
+                                'on_save' => true,
+                                'on_delete' => true,
+                                'on_request' => false,
+                            ],
+                        ],
+                        'key_generation' => [
+                            'include' => [
+                                'table_id' => true,
+                                'tab_index' => true,
+                                'user_id' => false,
+                                'filters' => true,
+                                'sorting' => true,
+                                'pagination' => true,
+                            ],
+                            'format' => '{prefix}{table_id}_{tab_index}_{hash}',
+                        ],
+                        'monitoring' => [
+                            'enabled' => false,
+                            'log_hits' => false,
+                            'log_misses' => false,
+                            'track_ratio' => true,
+                        ],
+                    ],
                 ],
             ],
         ];

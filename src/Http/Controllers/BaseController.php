@@ -199,6 +199,12 @@ class BaseController extends LaravelController
             return false;
         }
         
+        // Check if table has tabs
+        if (method_exists($this->table, 'hasTabNavigation') && $this->table->hasTabNavigation()) {
+            \Log::debug('BaseController: Table has tabs');
+            return true;
+        }
+        
         // Check if table has columns
         if (method_exists($this->table, 'getColumns')) {
             $columns = $this->table->getColumns();

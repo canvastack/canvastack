@@ -23,16 +23,17 @@ class FilterOptionsProvider
      * @param string $table Table name
      * @param string $column Column name
      * @param array $parentFilters Parent filter values
+     * @param string|null $connection Database connection name
      * @return array Array of options [{value, label}, ...]
      */
-    public function getOptions(string $table, string $column, array $parentFilters = []): array
+    public function getOptions(string $table, string $column, array $parentFilters = [], ?string $connection = null): array
     {
-        // Generate cache key
-        $cacheKey = $this->getCacheKey($table, $column, $parentFilters);
+        // Generate cache key (include connection in cache key)
+        $cacheKey = $this->getCacheKey($table, $column, $parentFilters, $connection);
 
         // Try to get from cache
-        return Cache::remember($cacheKey, 300, function () use ($table, $column, $parentFilters) {
-            return $this->fetchOptions($table, $column, $parentFilters);
+        return Cache::remember($cacheKey, 300, function () use ($table, $column, $parentFilters, $connection) {
+            return $this->fetchOptions($table, $column, $parentFilters, $connection);
         });
     }
 
@@ -42,13 +43,19 @@ class FilterOptionsProvider
      * @param string $table Table name
      * @param string $column Column name
      * @param array $parentFilters Parent filter values
+     * @param string|null $connection Database connection name
      * @return array Array of options
      */
-    protected function fetchOptions(string $table, string $column, array $parentFilters): array
+    protected function fetchOptions(string $table, string $column, array $parentFilters, ?string $connection = null): array
     {
         try {
-            // Start query
-            $query = DB::table($table)
+            // FIX #75: Use specified connection or default
+            // Start query with connection
+            $query = $connection 
+                ? DB::connection($connection)->table($table)
+                : DB::table($table);
+            
+            $query = $query
                 ->select($column)
                 ->distinct()
                 ->whereNotNull($column)
@@ -80,6 +87,7 @@ class FilterOptionsProvider
             \Log::error('FilterOptionsProvider error', [
                 'table' => $table,
                 'column' => $column,
+                'connection' => $connection,
                 'error' => $e->getMessage(),
             ]);
 
@@ -93,12 +101,14 @@ class FilterOptionsProvider
      * @param string $table Table name
      * @param string $column Column name
      * @param array $parentFilters Parent filter values
+     * @param string|null $connection Database connection name
      * @return string Cache key
      */
-    protected function getCacheKey(string $table, string $column, array $parentFilters): string
+    protected function getCacheKey(string $table, string $column, array $parentFilters, ?string $connection = null): string
     {
         $filterHash = md5(json_encode($parentFilters));
-        return "filter_options_{$table}_{$column}_{$filterHash}";
+        $connectionPart = $connection ? "_{$connection}" : '';
+        return "filter_options{$connectionPart}_{$table}_{$column}_{$filterHash}";
     }
 
     /**

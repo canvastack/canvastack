@@ -37,7 +37,7 @@ class RBACIntegrationTest extends TestCase
     /**
      * Create test tables for RBAC testing.
      */
-    protected function createTestTables(): void
+    protected function createTestTables(\Illuminate\Database\Capsule\Manager $capsule): void
     {
         $this->schema->create('test_users', function ($table) {
             $table->id();

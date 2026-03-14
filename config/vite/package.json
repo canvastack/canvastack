@@ -1,0 +1,37 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "autoprefixer": "^10.4.27",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "daisyui": "^4.12.24",
+        "datatables.net-buttons-dt": "^3.2.6",
+        "datatables.net-dt": "^2.3.7",
+        "laravel-vite-plugin": "^2.0.0",
+        "postcss": "^8.5.8",
+        "tailwindcss": "^3.4.19",
+        "vite": "^7.0.7"
+    },
+    "dependencies": {
+        "@alpinejs/collapse": "^3.13.0",
+        "@alpinejs/focus": "^3.13.0",
+        "@tanstack/table-core": "^8.11.0",
+        "@tanstack/virtual-core": "^3.0.0",
+        "alpinejs": "^3.13.0",
+        "apexcharts": "^3.45.0",
+        "datatables.net": "^1.13.8",
+        "datatables.net-buttons": "^2.4.2",
+        "flatpickr": "^4.6.13",
+        "gsap": "^3.12.0",
+        "jquery": "^3.7.1",
+        "jszip": "^3.10.1",
+        "lucide": "^0.300.0",
+        "pdfmake": "^0.2.8"
+    }
+}

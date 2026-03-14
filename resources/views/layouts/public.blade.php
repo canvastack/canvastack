@@ -7,25 +7,17 @@
     {{-- Additional Public Styles --}}
     <style>
         .gradient-bg-subtle {
-            background: linear-gradient(135deg, 
-                color-mix(in srgb, @themeColor('primary') 10%, white),
-                color-mix(in srgb, @themeColor('secondary') 10%, white),
-                color-mix(in srgb, @themeColor('accent') 10%, white)
-            );
+            background: linear-gradient(135deg, #eef2ff, #f5f3ff, #faf5ff);
         }
         .dark .gradient-bg-subtle {
-            background: linear-gradient(135deg, 
-                color-mix(in srgb, @themeColor('primary') 20%, black),
-                color-mix(in srgb, @themeColor('secondary') 20%, black),
-                color-mix(in srgb, @themeColor('accent') 20%, black)
-            );
+            background: linear-gradient(135deg, #1e1b4b, #2e1065, #3b0764);
         }
         .card-hover {
             transition: all 0.3s ease;
         }
         .card-hover:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 40px -12px rgba(var(--cs-color-primary-rgb, 99, 102, 241), 0.25);
+            box-shadow: 0 20px 40px -12px rgba(99, 102, 241, 0.25);
         }
     </style>
 </head>

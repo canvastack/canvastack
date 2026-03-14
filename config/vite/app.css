@@ -1,0 +1,533 @@
+/* All @import statements MUST be at the top */
+/* Tailwind v4 - Single import */
+@import "tailwindcss";
+
+/* Tailwind v4 Dark Mode Configuration */
+@variant dark (&:where(.dark, .dark *));
+
+@plugin "daisyui";
+
+/* Force include DaisyUI components for dynamic rendering */
+@source "../views/**/*.blade.php";
+
+/* Tailwind v3
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+*/
+
+/* DataTables CSS */
+@import 'datatables.net-dt';
+@import 'datatables.net-buttons-dt';
+
+/* Tom Select CSS - Import from node_modules */
+@import '../../node_modules/tom-select/dist/css/tom-select.bootstrap5.css';
+
+/* DaisyUI Theme Variables */
+:root {
+    /* Base colors */
+    --b1: 0 0% 100%;        /* Base 100 - white background */
+    --b2: 0 0% 95%;         /* Base 200 */
+    --b3: 0 0% 90%;         /* Base 300 */
+    --bc: 0 0% 20%;         /* Base content - dark text */
+    
+    /* Primary color (Indigo) */
+    --p: 239 84% 67%;       /* Primary - #6366f1 */
+    --pc: 0 0% 100%;        /* Primary content - white */
+    --pf: 239 84% 60%;      /* Primary focus - darker */
+    
+    /* Error color (Red) */
+    --er: 0 91% 71%;        /* Error - #ef4444 */
+    --erc: 0 0% 100%;       /* Error content - white */
+}
+
+/* Toast notification override - ensure always visible */
+.alert.fixed {
+    z-index: 99999 !important;
+    pointer-events: auto !important;
+}
+
+:root.dark {
+    /* Base colors for dark mode */
+    --b1: 222 47% 11%;      /* Base 100 - dark background #101828 */
+    --b2: 222 47% 15%;      /* Base 200 */
+    --b3: 222 47% 20%;      /* Base 300 */
+    --bc: 0 0% 90%;         /* Base content - light text */
+    
+    /* Primary color (Indigo) - same in dark mode */
+    --p: 239 84% 67%;       /* Primary - #6366f1 */
+    --pc: 0 0% 100%;        /* Primary content - white */
+    --pf: 239 84% 60%;      /* Primary focus - darker */
+    
+    /* Error color (Red) - same in dark mode */
+    --er: 0 91% 71%;        /* Error - #ef4444 */
+    --erc: 0 0% 100%;       /* Error content - white */
+}
+
+/* Override DaisyUI default select styling - MUST come after DaisyUI */
+/* Use higher specificity to override DaisyUI */
+.select.select-bordered,
+select.select.select-bordered {
+    height: 3rem !important;
+    min-height: 3rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+    border-radius: 0.5rem !important;
+    border-width: 1px !important;
+    border-color: hsl(var(--bc) / 0.2) !important;
+    background-color: hsl(221.5, 42.9%, 17.8%) !important;
+    color: hsl(var(--bc)) !important;
+    transition: all 0.2s ease !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    /* Override DaisyUI background-image */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+    background-position: right 0.5rem center !important;
+    background-repeat: no-repeat !important;
+    background-size: 1.5em 1.5em !important;
+}
+
+/* Hide DaisyUI arrow when Tom Select is active
+.ts-wrapper .ts-control,
+select.tomselected + .ts-wrapper .ts-control {
+    background-image: none !important;
+} */
+
+.input.input-bordered,
+input.input.input-bordered {
+    height: 3rem !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+    border-radius: 0.5rem !important;
+    border-width: 1px !important;
+    border-color: hsl(var(--bc) / 0.2) !important;
+    background-color: hsl(var(--b1)) !important;
+    color: hsl(var(--bc)) !important;
+    transition: all 0.2s ease !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+}
+
+.select.select-bordered:focus,
+select.select.select-bordered:focus,
+.input.input-bordered:focus,
+input.input.input-bordered:focus {
+    outline: 2px solid hsl(var(--p)) !important;
+    outline-offset: 2px !important;
+    border-color: hsl(var(--p)) !important;
+}
+
+.select.select-bordered:disabled,
+select.select.select-bordered:disabled,
+.input.input-bordered:disabled,
+input.input.input-bordered:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.5 !important;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 3rem;
+    padding: 0 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    border-radius: 0.5rem;
+    border-width: 1px;
+    border-color: transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: hsl(var(--p));
+    color: hsl(var(--pc));
+    border-color: hsl(var(--p));
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: hsl(var(--pf));
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-ghost {
+    background-color: transparent;
+    color: currentColor;
+    border-color: transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+    background-color: hsl(var(--bc) / 0.1);
+}
+
+.btn-sm {
+    height: 2rem;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1rem;
+    border-radius: 9999px;
+}
+
+.badge-sm {
+    padding: 0.125rem 0.375rem;
+    font-size: 0.625rem;
+}
+
+.badge-error {
+    background-color: hsl(var(--er));
+    color: hsl(var(--erc));
+}
+
+.loading {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+}
+
+.loading-spinner {
+    /* Already defined above */
+}
+
+.loading-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Dark mode support */
+:root.dark .select-bordered,
+:root.dark .input-bordered {
+    border-color: hsl(var(--bc) / 0.2);
+    background-color: hsl(var(--b1));
+    color: hsl(var(--bc));
+}
+
+/* Import main CanvaStack CSS (without nested @imports) */
+/* @import '../../../packages/canvastack/canvastack/resources/css/canvastack.css';
+
+/* Note: Layout styles (gradient, filter modal, etc.) are now in canvastack-layout.css */
+/* This file is published from package and loaded via <link> tag in meta.blade.php */
+
+/* ========================================
+   TOM SELECT - HIDE ORIGINAL SELECT
+   ======================================== */
+
+/* CRITICAL: Hide the original select that has been initialized by Tom Select */
+select.tomselected,
+select.ts-hidden-accessible {
+    position: absolute !important;
+    left: -10000px !important;
+    top: auto !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(1px, 1px, 1px, 1px) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    display: block !important;
+}
+
+/* Ensure Tom Select wrapper is visible */
+.ts-wrapper {
+    width: 100% !important;
+    display: block !important;
+    position: relative !important;
+}
+
+/* Hide select inside relative container that has ts-wrapper */
+.relative:has(.ts-wrapper) > select.tomselected {
+    position: absolute !important;
+    left: -10000px !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* ========================================
+   TOM SELECT THEME - DAISYUI COMPATIBLE
+   ======================================== */
+
+/* Control (Input Box) */
+.ts-control {
+    height: 3rem !important;
+    min-height: 3rem !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+    border-radius: 0.5rem !important;
+    border-width: 1px !important;
+    border-style: solid !important;
+    border-color: hsl(var(--bc) / 0.3) !important; /* More visible border */
+    background-color: hsl(var(--b1)) !important;
+    color: hsl(var(--bc)) !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    pointer-events: auto !important; /* Ensure always clickable */
+    z-index: 1 !important;
+    position: relative !important;
+    background-image: none !important; /* Remove DaisyUI arrow */
+    padding-right: 2.5rem !important; /* Space for arrow/clear button */
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Ensure Tom Select wrapper is always clickable */
+.ts-wrapper {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Ensure select inside wrapper doesn't block clicks */
+.ts-wrapper select.tomselected {
+    pointer-events: none !important;
+}
+
+.ts-control:hover {
+    border-color: hsl(var(--bc) / 0.4) !important;
+    background-color: hsl(var(--b2)) !important;
+}
+
+.ts-control.focus,
+.ts-control:focus {
+    outline: 2px solid hsl(var(--p)) !important;
+    outline-offset: 2px !important;
+    border-color: hsl(var(--p)) !important;
+    box-shadow: none !important;
+    background-color: hsl(var(--b1)) !important;
+}
+
+.ts-control.disabled,
+.ts-control:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.5 !important;
+    background-color: hsl(var(--b2)) !important;
+}
+
+/* Dark mode specific styling */
+:root.dark .ts-control {
+    border-color: hsl(var(--bc) / 0.3) !important;
+    background-color: hsl(var(--b1)) !important;
+}
+
+:root.dark .ts-control:hover {
+    border-color: hsl(var(--bc) / 0.4) !important;
+    background-color: hsl(var(--b2)) !important;
+}
+
+:root.dark .ts-control.focus,
+:root.dark .ts-control:focus {
+    border-color: hsl(var(--p)) !important;
+    background-color: hsl(var(--b1)) !important;
+}
+
+.ts-control input {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    flex: 1 !important;
+}
+
+/* Selected item styling */
+.ts-control .item {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: hsl(var(--bc)) !important;
+}
+
+/* Tom Select dropdown arrow */
+.ts-control::after {
+    content: '' !important;
+    position: absolute !important;
+    right: 1rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-left: 5px solid transparent !important;
+    border-right: 5px solid transparent !important;
+    border-top: 5px solid hsl(var(--bc) / 0.6) !important;
+    pointer-events: none !important;
+}
+
+/* Hide arrow when clear button is visible
+.ts-control.has-items::after {
+    display: none !important;
+}
+ */
+/* Dropdown */
+.ts-dropdown {
+    border-radius: 0.5rem !important;
+    border: 1px solid hsl(var(--bc) / 0.2) !important;
+    background-color: hsl(var(--b1)) !important;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+    margin-top: 0.5rem !important;
+    padding: 0.5rem 0 !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    z-index: 10 !important; /* Just above parent elements */
+    position: absolute !important;
+}
+
+:root.dark .ts-dropdown {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3) !important;
+}
+
+/* Dropdown Options */
+.ts-dropdown .option {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+    color: hsl(var(--bc)) !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    border-radius: 0.25rem !important;
+    margin: 0 0.25rem !important;
+}
+
+.ts-dropdown .option:hover,
+.ts-dropdown .option.active {
+    background-color: hsl(var(--p) / 0.1) !important;
+    color: hsl(var(--p)) !important;
+}
+
+.ts-dropdown .option.selected {
+    background-color: hsl(var(--p)) !important;
+    color: hsl(var(--pc)) !important;
+    font-weight: 600 !important;
+}
+
+.ts-dropdown .option.disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+
+/* Clear Button */
+.ts-control .clear-button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    border-radius: 50% !important;
+    background-color: hsl(var(--bc) / 0.1) !important;
+    color: hsl(var(--bc)) !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    margin-left: auto !important;
+    margin-right: 0.25rem !important;
+    font-size: 0.75rem !important;
+}
+
+.ts-control .clear-button:hover {
+    background-color: hsl(var(--er)) !important;
+    color: hsl(var(--erc)) !important;
+}
+
+/* Dropdown Input (Search) */
+.ts-dropdown .dropdown-input-wrap {
+    padding: 0.5rem !important;
+    border-bottom: 1px solid hsl(var(--bc) / 0.1) !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.ts-dropdown .dropdown-input {
+    width: 100% !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    border: 1px solid hsl(var(--bc) / 0.2) !important;
+    border-radius: 0.375rem !important;
+    background-color: hsl(var(--b1)) !important;
+    color: hsl(var(--bc)) !important;
+    outline: none !important;
+}
+
+.ts-dropdown .dropdown-input:focus {
+    border-color: hsl(var(--p)) !important;
+    box-shadow: 0 0 0 2px hsl(var(--p) / 0.2) !important;
+}
+
+/* Loading Spinner */
+.ts-control.loading::after {
+    content: '' !important;
+    position: absolute !important;
+    right: 1rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 1rem !important;
+    height: 1rem !important;
+    border: 2px solid hsl(var(--p)) !important;
+    border-right-color: transparent !important;
+    border-radius: 50% !important;
+    animation: spin 0.75s linear infinite !important;
+}
+
+/* Scrollbar */
+.ts-dropdown::-webkit-scrollbar {
+    width: 6px !important;
+}
+
+.ts-dropdown::-webkit-scrollbar-track {
+    background: hsl(var(--b2)) !important;
+    border-radius: 0.25rem !important;
+}
+
+.ts-dropdown::-webkit-scrollbar-thumb {
+    background: hsl(var(--bc) / 0.3) !important;
+    border-radius: 0.25rem !important;
+}
+
+.ts-dropdown::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--bc) / 0.5) !important;
+}
+
+/* ========================================
+   FILTER MODAL - OVERFLOW FIX
+   ======================================== */
+
+/* Ensure modal content doesn't clip Tom Select dropdown */
+#filter-modal-dialog [x-ref="modalContent"] {
+    overflow: visible !important;
+}
+
+/* Ensure parent containers don't clip dropdown */
+#filter-modal-dialog .relative {
+    overflow: visible !important;
+}

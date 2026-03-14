@@ -9,6 +9,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- New tab system with TabManager, Tab, and TableInstance components
+- Connection detection system with ConnectionManager
+- Warning system for table operations
+- Table tab controller for AJAX tab operations
+- Frontend JS components: filter components, table-tabs, and utilities
+- Tom Select integration with custom theme
+- Comprehensive test suites:
+  - Security tests (authorization, input validation, rate limiting, information disclosure)
+  - Performance tests (cache, memory usage, tab rendering)
+  - Browser tests (Alpine.js interaction, tab navigation and loading)
+  - Feature tests (connection detection, multi-table rendering, tab lazy loading)
+  - Unit tests (cache, connection manager, hash generator, warning system, state isolation)
+- New documentation:
+  - Tab system usage guide
+  - Tom Select integration guide
+  - Multi-table usage guide
+  - Tab cache configuration
+  - Table configuration reference
+  - Browser compatibility guide
+  - Connection detection guide
+  - Performance optimization guide
+  - Security best practices
+  - Troubleshooting guide
+  - Migration guide from origin tabs
+- Vite configuration and build setup (config/vite/)
+- API routes (routes/api.php)
+- New exception classes (InvalidConfigurationException, TableBuilderException)
+- Demo and test controllers
+- Cache facade for improved caching abstraction
+- Vite support utilities
+
+### Changed
+- Refactored TableBuilder with improved state management
+- Enhanced TanStackEngine and TanStackRenderer
+- Improved FilterOptionsProvider with better data handling
+- Updated StateManager with enhanced state isolation
+- Refactored TabManager with better tab lifecycle management
+- Enhanced CacheManager and ConfigCache with improved invalidation
+- Updated TranslationCache with better performance
+- Improved BaseController and DataTableController architecture
+- Updated test fixtures (Post, TestPost, TestProfile models)
+- Enhanced TestCase with better setup utilities
+- Updated CSS:
+  - New tom-select theme
+  - Improved component styles (datatables, tanstack-table)
+  - Enhanced layout styles
+- Updated views:
+  - Refactored table components (display-limit, filter-modal)
+  - Updated layout partials (header, meta, footer, scripts, sidebar)
+  - Enhanced public views (about, home)
+  - Improved admin layout
+- Updated routes with new API endpoints
+- Enhanced service provider with new bindings and registrations
+
+### Removed
+- Legacy admin views:
+  - chart.blade.php
+  - dashboard.blade.php
+  - form.blade.php
+  - configuration/index.blade.php and partials
+  - multi-table.blade.php
+  - test-index.blade.php
+- Deprecated table components:
+  - pagination.blade.php
+  - tab-container.blade.php
+  - tab-content.blade.php
+  - tab-empty-state.blade.php
+  - tab-navigation.blade.php
+  - tanstack-wrapper.blade.php
+  - tanstack.blade.php
+  - filter-modal.blade.php (old location)
+  - locale-switcher.blade.php (old location)
+- Old form components:
+  - checkbox.blade.php
+  - file.blade.php
+  - input.blade.php
+  - radio.blade.php
+  - select.blade.php
+  - textarea.blade.php
+- Test views:
+  - filter-modal.blade.php
+  - fixed-columns.blade.php
+- UI examples:
+  - alpine-examples.blade.php
+- Display limit examples
+
 ---
 
 ## [3.0.1] - 2026-03-07 (In Progress)
