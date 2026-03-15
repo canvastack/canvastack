@@ -25,7 +25,9 @@
     'connection' => null,
 ])
 
-<div x-data="filterModal({
+<div 
+    id="{{ $tableId }}_filter_modal"
+    x-data="filterModal({
     filters: @js($filters),
     activeFilters: @js($activeFilters),
     tableName: @js($tableName),
@@ -33,7 +35,7 @@
     activeFilterCount: {{ $activeFilterCount }},
     config: @js($config),
     connection: @js($connection),
-    filterOptionsRoute: @js(route('datatable.filter-options')),
+    filterOptionsRoute: @js(route('canvastack.table.filter.options')),
     saveFiltersRoute: @js(route('datatable.save-filters')),
     cacheTTL: {{ config('canvastack.table.filters.frontend_cache_ttl', 300) * 1000 }},
     debounceDelay: {{ config('canvastack.table.filters.debounce_delay', 300) }}
@@ -73,8 +75,7 @@
         dusk="filter-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="filter-modal-title"
-        id="filter-modal-dialog"
+        aria-labelledby="filter-modal-title-{{ $tableId }}"
     >
         {{-- Backdrop with Blur Effect --}}
         <div 
@@ -227,7 +228,6 @@
                                         <select 
                                             :id="'filter_' + filter.column"
                                             x-model="filterValues[filter.column]"
-                                            @change="debouncedHandleFilterChange(filter)"
                                             class="select select-bordered w-full"
                                             :disabled="filter.loading || isApplying || cascadeState.isProcessing"
                                             :dusk="'filter-' + filter.column"

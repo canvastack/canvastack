@@ -3430,13 +3430,63 @@ class TableBuilder
     }
 
     /**
-     * Format column data display or maintain backward compatibility.
+     * Format column data display (number, currency, percentage, date).
      *
-     * Requirement 19: Data Formatting
+     * Applies formatting rules to specified columns for consistent data display.
+     * Supports multiple format types with customizable decimal places and separators.
      *
-     * When called without parameters: backward compatibility (returns $this)
-     * When called with parameters: format column data
+     * @param array $fields Column names to format
+     * @param int $decimalPlaces Number of decimal places (default: 0)
+     * @param string $separator Thousands separator (default: '.')
+     * @param string $formatType Format type: 'number', 'currency', 'percentage', 'date'
+     * @return self For method chaining
      *
+     * @throws \InvalidArgumentException If column doesn't exist or format type is invalid
+     *
+     * @example
+     * // Format price columns as currency with 2 decimals
+     * $table->formatColumns(['price', 'total'], 2, '.', 'currency');
+     *
+     * // Format percentage columns
+     * $table->formatColumns(['discount', 'tax'], 2, '.', 'percentage');
+     *
+     * // Format date columns
+     * $table->formatColumns(['created_at', 'updated_at'], 0, '', 'date');
+     */
+    public function formatColumns(
+        array $fields,
+        int $decimalPlaces = 0,
+        string $separator = '.',
+        string $formatType = 'number'
+    ): self {
+        // Validate all fields exist in table schema
+        foreach ($fields as $field) {
+            $this->validateColumn($field);
+        }
+
+        // Validate format type
+        $allowedFormats = ['number', 'currency', 'percentage', 'date'];
+        if (!in_array($formatType, $allowedFormats)) {
+            throw new \InvalidArgumentException(
+                "Invalid format type: {$formatType}. Allowed: " . implode(', ', $allowedFormats)
+            );
+        }
+
+        // Store format configuration
+        $this->formats[] = [
+            'fields' => $fields,
+            'decimals' => $decimalPlaces,
+            'separator' => $separator,
+            'type' => $formatType,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Format column data display (DEPRECATED - use formatColumns instead).
+     *
+     * @deprecated Use formatColumns() instead for data formatting. Will be removed in v2.0.
      * @param array|null $fields Fields to format (null for backward compatibility)
      * @param int $decimalEndpoint Number of decimal places
      * @param string $separator Thousands separator
@@ -3452,31 +3502,25 @@ class TableBuilder
     ): self {
         // Backward compatibility: if no fields provided, just return $this
         if ($fields === null) {
+            trigger_error(
+                'Calling format() without parameters is deprecated and does nothing. ' .
+                'This usage will be removed in v2.0. ' .
+                'Use formatColumns($fields, ...) to format column data.',
+                E_USER_DEPRECATED
+            );
             return $this;
         }
 
-        // Validate all fields exist in table schema
-        foreach ($fields as $field) {
-            $this->validateColumn($field);
-        }
+        // Deprecation warning for format() with parameters
+        trigger_error(
+            'Method format() is deprecated. Use formatColumns() instead. ' .
+            'Example: $table->formatColumns([\'price\'], 2, \'.\', \'currency\'); ' .
+            'This method will be removed in v2.0.',
+            E_USER_DEPRECATED
+        );
 
-        // Validate format type
-        $allowedFormats = ['number', 'currency', 'percentage', 'date'];
-        if (!in_array($format, $allowedFormats)) {
-            throw new \InvalidArgumentException(
-                "Invalid format type: {$format}. Allowed: " . implode(', ', $allowedFormats)
-            );
-        }
-
-        // Store format configuration
-        $this->formats[] = [
-            'fields' => $fields,
-            'decimals' => $decimalEndpoint,
-            'separator' => $separator,
-            'type' => $format,
-        ];
-
-        return $this;
+        // Delegate to new method
+        return $this->formatColumns($fields, $decimalEndpoint, $separator, $format);
     }
 
     /**
@@ -4707,13 +4751,7 @@ class TableBuilder
      */
     public function hasFilters(): bool
     {
-        $hasFilters = !empty($this->filterGroups);
-        \Log::info('TableBuilder::hasFilters', [
-            'hasFilters' => $hasFilters,
-            'filterGroupsCount' => count($this->filterGroups),
-            'filterGroups' => array_keys($this->filterGroups),
-        ]);
-        return $hasFilters;
+        return !empty($this->filterGroups);
     }
 
     /**
@@ -4991,47 +5029,97 @@ class TableBuilder
      */
     public function closeTab(): self
     {
+        // CRITICAL DEBUG: Log immediately when closeTab is called
+        \Log::emergency('🔴 closeTab() CALLED', [
+            'current_tab' => $this->tabManager->getCurrentTab()?->getName(),
+            'table_name' => $this->tableName,
+            'has_columns' => !empty($this->columns),
+        ]);
+        
         // Capture current configuration before closing tab
         if ($this->tabManager->getCurrentTab() !== null) {
             $config = $this->captureCurrentConfig();
             $this->tabManager->setConfig($config);
             
-            // CRITICAL FIX: Render the table HTML NOW before storing in tab
-            // This ensures each tab has pre-rendered HTML that can be displayed immediately
-            try {
-                // Render the table HTML directly using TanStack engine
-                // We bypass the normal render() flow to avoid tab detection recursion
-                $tableHtml = $this->renderWithTanStack();
-                
-                // Create TableInstance with rendered HTML
-                $tableInstance = new TableInstance(
-                    $this->tableName ?? 'unknown',
-                    $this->columns,
-                    $config
-                );
-                
-                // Store the rendered HTML in the config so it can be retrieved later
-                $tableInstance->setConfigValue('html', $tableHtml);
-                
-                // Add the table instance to the current tab
-                $this->tabManager->addTableToCurrentTab($tableInstance);
-                
-                Log::debug('closeTab: Table rendered and stored', [
+            // Log tab state BEFORE closing
+            Log::info('closeTab: BEFORE closing tab', [
+                'current_tab' => $this->tabManager->getCurrentTab()?->getName(),
+                'tabs_count_before' => $this->tabManager->count(),
+                'has_tabs_before' => $this->tabManager->hasTabs(),
+            ]);
+            
+            // TEMPORARY FIX: Render ALL tabs immediately (no lazy loading)
+            // This ensures all tabs work correctly
+            // TODO: Re-implement lazy loading after fixing tab configuration storage
+            
+            // CRITICAL FIX: Check if table is properly configured before rendering
+            // This prevents rendering errors when closeTab() is called before table setup
+            if ($this->isConfigured()) {
+                try {
+                    // Render the table HTML based on the selected engine
+                    // For TanStack engine, use renderWithTanStack()
+                    // For DataTables or default, use regular render flow
+                    if ($this->engine === 'tanstack') {
+                        $tableHtml = $this->renderWithTanStack();
+                    } else {
+                        // For DataTables or other engines, we need to render differently
+                        // to avoid infinite recursion (render() checks hasTabNavigation())
+                        // So we temporarily disable tab detection
+                        $originalTabbed = $this->isTabbed;
+                        $this->isTabbed = false;
+                        $tableHtml = $this->render();
+                        $this->isTabbed = $originalTabbed;
+                    }
+                    
+                    // Create TableInstance with rendered HTML
+                    $tableInstance = new TableInstance(
+                        $this->tableName ?? 'unknown',
+                        $this->columns,
+                        $config
+                    );
+                    
+                    // Store the rendered HTML in the config so it can be retrieved later
+                    $tableInstance->setConfigValue('html', $tableHtml);
+                    
+                    // Add the table instance to the current tab
+                    $this->tabManager->addTableToCurrentTab($tableInstance);
+                    
+                    Log::info('closeTab: Tab rendered immediately (all tabs eager loading)', [
+                        'table_name' => $this->tableName,
+                        'engine' => $this->engine ?? 'default',
+                        'html_length' => strlen($tableHtml),
+                        'columns_count' => count($this->columns),
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('closeTab: Failed to render table', [
+                        'error' => $e->getMessage(),
+                        'table_name' => $this->tableName,
+                        'engine' => $this->engine ?? 'default',
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    throw $e;
+                }
+            } else {
+                // Table not configured yet, skip rendering
+                // This is normal when closeTab() is called before setFields() or setModel()
+                Log::warning('closeTab: Table not configured, skipping render', [
                     'table_name' => $this->tableName,
-                    'html_length' => strlen($tableHtml),
-                    'columns_count' => count($this->columns),
+                    'has_columns' => !empty($this->columns),
+                    'has_model' => $this->model !== null,
+                    'use_collection' => $this->useCollection,
+                    'has_raw_query' => $this->rawQuery !== null,
                 ]);
-            } catch (\Exception $e) {
-                Log::error('closeTab: Failed to render table', [
-                    'error' => $e->getMessage(),
-                    'table_name' => $this->tableName,
-                    'trace' => $e->getTraceAsString(),
-                ]);
-                throw $e;
             }
         }
         
         $this->tabManager->closeTab();
+        
+        // Log tab state AFTER closing
+        Log::info('closeTab: AFTER closing tab', [
+            'tabs_count_after' => $this->tabManager->count(),
+            'has_tabs_after' => $this->tabManager->hasTabs(),
+            'all_tabs' => array_map(fn($tab) => $tab->getName(), $this->tabManager->getTabs()),
+        ]);
         
         // Mark that we need to reset config before the next tab opens
         // This is a deferred reset - it will happen in openTab() if called
@@ -5428,6 +5516,10 @@ class TableBuilder
         
         // Reset clearable properties to their default values
         // These are the properties that should NOT bleed between tabs
+        
+        // CRITICAL FIX: Reset table IDs to generate new unique IDs for each tab
+        $this->tableId = null;
+        $this->uniqueId = null;
         
         // Column configuration
         $this->mergedColumns = [];
@@ -7103,11 +7195,8 @@ class TableBuilder
             // Validate tabs before rendering (Requirement 15.6)
             $this->tabManager->validateTabs();
 
-            // Requirement 15.7: Validate lazy loading + tabs compatibility
-            // If lazy loading is disabled but tabs are defined, throw exception
-            if (!$this->tabManager->isLazyLoadingEnabled()) {
-                throw \Canvastack\Canvastack\Exceptions\InvalidConfigurationException::lazyLoadingDisabledWithTabs();
-            }
+            // REMOVED: Lazy loading validation - eager loading is also valid
+            // We support both lazy loading (load tabs on demand) and eager loading (render all tabs immediately)
 
             // Get tabs data for rendering
             $tabs = $this->tabManager->getTabsArray();
@@ -7122,44 +7211,81 @@ class TableBuilder
                 ] : null,
             ]);
             
-            // Requirement 6.1: First tab content is already rendered in closeTab()
-            // We just need to mark it as not lazy-loaded
-            if (!empty($tabs)) {
-                $tabs[0]['lazy_load'] = false;
+            // Check if lazy loading is enabled (Requirement 6.10)
+            $lazyLoadEnabled = $this->tabManager->isLazyLoadingEnabled();
+            
+            Log::info('renderWithTabs: Lazy loading status', [
+                'lazy_load_enabled' => $lazyLoadEnabled,
+                'tabs_count' => count($tabs),
+            ]);
+            
+            if ($lazyLoadEnabled) {
+                // LAZY LOADING MODE: First tab rendered, others load on demand
                 
-                // Debug: Check if first tab has rendered HTML
-                if (isset($tabs[0]['tables']) && !empty($tabs[0]['tables'])) {
-                    foreach ($tabs[0]['tables'] as $tableIndex => $tableConfig) {
-                        $hasHtml = isset($tableConfig['html']) && !empty($tableConfig['html']);
-                        $htmlLength = $hasHtml ? strlen($tableConfig['html']) : 0;
-                        
-                        Log::debug('renderWithTabs: First tab table status', [
-                            'table_index' => $tableIndex,
-                            'has_html' => $hasHtml,
-                            'html_length' => $htmlLength,
-                        ]);
+                // Requirement 6.1: First tab content is already rendered in closeTab()
+                // We just need to mark it as not lazy-loaded
+                if (!empty($tabs)) {
+                    $tabs[0]['lazy_load'] = false;
+                    
+                    // Debug: Check if first tab has rendered HTML
+                    if (isset($tabs[0]['tables']) && !empty($tabs[0]['tables'])) {
+                        foreach ($tabs[0]['tables'] as $tableIndex => $tableConfig) {
+                            $hasHtml = isset($tableConfig['html']) && !empty($tableConfig['html']);
+                            $htmlLength = $hasHtml ? strlen($tableConfig['html']) : 0;
+                            
+                            Log::debug('renderWithTabs: First tab table status', [
+                                'table_index' => $tableIndex,
+                                'has_html' => $hasHtml,
+                                'html_length' => $htmlLength,
+                            ]);
+                        }
                     }
                 }
-            }
-            
-            // Requirement 6.2: Render placeholders for other tabs
-            // Other tabs will have lazy_load = true and will render as placeholders
-            // Requirement 6.4: Generate unique AJAX endpoint per tab and store in tab configuration
-            $tabObjects = $this->tabManager->getTabs();
-            $tabIds = array_keys($tabObjects);
-            
-            for ($i = 1; $i < count($tabs); $i++) {
-                $tabs[$i]['lazy_load'] = true;
                 
-                // Requirement 6.3, 6.4: Generate AJAX endpoint URL for lazy loading
-                if (!isset($tabs[$i]['url'])) {
-                    $url = $this->generateTabLoadUrl($i);
-                    $tabs[$i]['url'] = $url;
+                // Requirement 6.2: Render placeholders for other tabs
+                // Other tabs will have lazy_load = true and will render as placeholders
+                // Requirement 6.4: Generate unique AJAX endpoint per tab and store in tab configuration
+                $tabObjects = $this->tabManager->getTabs();
+                $tabIds = array_keys($tabObjects);
+                
+                for ($i = 1; $i < count($tabs); $i++) {
+                    $tabs[$i]['lazy_load'] = true;
                     
-                    // Store URL in the Tab object itself (Requirement 6.4)
-                    if (isset($tabIds[$i])) {
-                        $tabId = $tabIds[$i];
-                        $this->tabManager->enableLazyLoadForTab($tabId, $url);
+                    // Requirement 6.3, 6.4: Generate AJAX endpoint URL for lazy loading
+                    if (!isset($tabs[$i]['url'])) {
+                        $url = $this->generateTabLoadUrl($i);
+                        $tabs[$i]['url'] = $url;
+                        
+                        // Store URL in the Tab object itself (Requirement 6.4)
+                        if (isset($tabIds[$i])) {
+                            $tabId = $tabIds[$i];
+                            $this->tabManager->enableLazyLoadForTab($tabId, $url);
+                        }
+                    }
+                }
+            } else {
+                // EAGER LOADING MODE: All tabs rendered immediately
+                
+                Log::info('renderWithTabs: Using EAGER LOADING - all tabs rendered immediately');
+                
+                // Mark all tabs as not lazy-loaded (they're all pre-rendered)
+                for ($i = 0; $i < count($tabs); $i++) {
+                    $tabs[$i]['lazy_load'] = false;
+                    
+                    // Debug: Check if tab has rendered HTML
+                    if (isset($tabs[$i]['tables']) && !empty($tabs[$i]['tables'])) {
+                        foreach ($tabs[$i]['tables'] as $tableIndex => $tableConfig) {
+                            $hasHtml = isset($tableConfig['html']) && !empty($tableConfig['html']);
+                            $htmlLength = $hasHtml ? strlen($tableConfig['html']) : 0;
+                            
+                            Log::info('renderWithTabs: Tab table status (eager loading)', [
+                                'tab_index' => $i,
+                                'tab_name' => $tabs[$i]['name'] ?? 'unknown',
+                                'table_index' => $tableIndex,
+                                'has_html' => $hasHtml,
+                                'html_length' => $htmlLength,
+                            ]);
+                        }
                     }
                 }
             }
@@ -7181,6 +7307,23 @@ class TableBuilder
 
             // Check if lazy loading is enabled (Requirement 6.10)
             $lazyLoadEnabled = $this->tabManager->isLazyLoadingEnabled();
+
+            // Store tab configuration in session for AJAX loading (Requirement 6.4)
+            // This allows TableTabController to retrieve tab configuration when loading tabs
+            $uniqueId = $this->getTableId();
+            $sessionKey = "canvastack.table.tabs.{$uniqueId}";
+            session([$sessionKey => $tabs]);
+            
+            // Also store in cache as fallback (expires in 1 hour)
+            $cacheKey = "canvastack:table:tabs:{$uniqueId}";
+            cache()->put($cacheKey, $tabs, 3600);
+            
+            Log::debug('renderWithTabs: Stored tab configuration', [
+                'unique_id' => $uniqueId,
+                'session_key' => $sessionKey,
+                'cache_key' => $cacheKey,
+                'tabs_count' => count($tabs),
+            ]);
 
             try {
                 // Requirement 6.1, 6.2, 6.3: Pass configuration to Blade templates
@@ -7271,10 +7414,8 @@ class TableBuilder
     {
         // Generate URL for the tab loading endpoint
         // This will be handled by TableTabController (Task 4.1)
-        return route('canvastack.table.tab.load', [
-            'tableId' => $this->getUniqueId(),
-            'tabIndex' => $tabIndex,
-        ]);
+        // Route only accepts 'index' parameter, not 'tableId' and 'tabIndex'
+        return route('canvastack.table.tab.load', ['index' => $tabIndex]);
     }
 
     /**
@@ -7599,14 +7740,39 @@ class TableBuilder
     // and legacy code that expects these getters to exist.
 
     /**
-     * Check if table has been formatted.
+     * Check if table has been configured and is ready to render.
      *
-     * @return bool True if format() has been called
+     * A table is considered configured if it has at least one of:
+     * - Columns defined via setFields()
+     * - Model set via setModel()
+     * - Collection set via setCollection()
+     * - Raw query set via query()
+     *
+     * @return bool True if table is configured and ready to render
+     */
+    public function isConfigured(): bool
+    {
+        return !empty($this->columns) || 
+               $this->model !== null || 
+               $this->useCollection ||
+               $this->rawQuery !== null;
+    }
+
+    /**
+     * Check if table has been formatted (DEPRECATED).
+     *
+     * @deprecated Use isConfigured() instead. Will be removed in v2.0.
+     * @return bool True if table is configured
      */
     public function isFormatted(): bool
     {
-        // Table is considered formatted if it has been configured with columns
-        return !empty($this->columns) || $this->model !== null || $this->useCollection;
+        trigger_error(
+            'Method isFormatted() is deprecated. Use isConfigured() instead. ' .
+            'This method will be removed in v2.0.',
+            E_USER_DEPRECATED
+        );
+        
+        return $this->isConfigured();
     }
 
     /**

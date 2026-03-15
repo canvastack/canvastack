@@ -50,6 +50,8 @@ class FilterOptionsController extends Controller
             'table' => 'required|string',
             'column' => 'required|string',
             'filters' => 'sometimes|array',
+            'parentFilters' => 'sometimes|array', // Support both field names
+            'connection' => 'sometimes|string|nullable',
         ]);
 
         if ($validator->fails()) {
@@ -62,7 +64,17 @@ class FilterOptionsController extends Controller
 
         $table = $request->input('table');
         $column = $request->input('column');
-        $parentFilters = $request->input('filters', []);
+        // Support both 'filters' and 'parentFilters' field names
+        $parentFilters = $request->input('parentFilters', $request->input('filters', []));
+        $connection = $request->input('connection');
+        
+        // Log untuk debugging
+        \Log::info('FilterOptionsController::getOptions received', [
+            'table' => $table,
+            'column' => $column,
+            'parentFilters' => $parentFilters,
+            'connection' => $connection,
+        ]);
 
         try {
             // Validate table name (prevent SQL injection)
@@ -81,15 +93,24 @@ class FilterOptionsController extends Controller
                 ], 400);
             }
 
-            // Get options
-            $options = $this->optionsProvider->getOptions($table, $column, $parentFilters);
+            // Get options with connection support
+            $options = $this->optionsProvider->getOptions($table, $column, $parentFilters, $connection);
 
             return response()->json([
                 'success' => true,
+                'type' => 'options', // CRITICAL: Frontend expects this field
                 'options' => $options,
                 'count' => count($options),
             ]);
         } catch (\Exception $e) {
+            \Log::error('FilterOptionsController::getOptions error', [
+                'table' => $table,
+                'column' => $column,
+                'connection' => $connection,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load filter options',

@@ -103,13 +103,6 @@ class TanStackRenderer
         array $columns,
         array $alpineData
     ): string {
-        // Log IMMEDIATELY at method entry
-        \Log::info('TanStackRenderer::render CALLED', [
-            'tableId' => $table->getUniqueId(),
-            'hasFilters' => $table->hasFilters(),
-            'connection' => $table->getConnection(),
-        ]);
-        
         // Use cache key to avoid re-rendering identical tables
         $cacheKey = $this->getCacheKey($table, $config);
         
@@ -134,16 +127,13 @@ class TanStackRenderer
         $this->columnPinning = $config['columnPinning'] ?? null;
         
         // Use unique ID from HashGenerator (Requirement 8.1, 8.2)
-        // This ensures each table instance has a secure, unique identifier
         $tableId = $table->getUniqueId();
         
         // CRITICAL FIX #35: Render JavaScript BEFORE HTML
         // Alpine.js needs the component to be registered BEFORE it parses the x-data attribute
-        // This prevents "Uncaught ReferenceError: tanstackTable_xxx is not defined"
         echo $this->renderScripts($table, $config, $columns, $alpineData);
         
-        // FIX #74: RE-ENABLE filter modal (was disabled in Fix #49)
-        // Filter modal is needed for filter functionality
+        // Render filter modal (if filters are configured)
         echo $this->renderFilterModal($table, $tableId);
         
         // Render table container with Alpine.js
@@ -2504,8 +2494,12 @@ HTML;
             
             $html .= '<button ';
             $html .= 'id="' . $tableId . '_filter_btn" ';
-            // FIX #74: Filter modal is now re-enabled, use normal dispatch
-            $html .= 'onclick="document.querySelector(\'[x-data*=filterModal]\').dispatchEvent(new CustomEvent(\'open-filter-modal\')); return false;" ';
+            // FIX: Use safer modal targeting with detailed logging
+            $html .= 'onclick="(function() { ';
+            $html .= 'const modal = document.getElementById(\'' . $tableId . '_filter_modal\'); ';
+            $html .= 'if (modal) { modal.dispatchEvent(new CustomEvent(\'open-filter-modal\')); } ';
+            $html .= 'else { console.error(\'Filter modal not found: ' . $tableId . '_filter_modal\'); } ';
+            $html .= '})(); return false;" ';
             $html .= 'class="px-4 py-2 gradient-bg text-white rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-lg flex items-center gap-2 relative" ';
             $html .= 'style="box-shadow: 0 10px 15px -3px ' . $primaryColor . '40, 0 4px 6px -4px ' . $primaryColor . '40">';
             $html .= '<i data-lucide="filter" class="w-4 h-4"></i>';
@@ -2640,20 +2634,6 @@ HTML;
      */
     protected function renderFilterModal(TableBuilder $table, string $tableId): string
     {
-        // Log IMMEDIATELY at method entry
-        \Log::info('TanStackRenderer::renderFilterModal CALLED', [
-            'tableId' => $tableId,
-            'hasFilters' => $table->hasFilters(),
-        ]);
-        
-        // Log connection immediately
-        \Log::info('TanStackRenderer::renderFilterModal START', [
-            'tableId' => $tableId,
-            'hasFilters' => $table->hasFilters(),
-            'connection_from_table' => $table->getConnection(),
-            'connection_property' => $table->connection ?? 'NULL',
-        ]);
-        
         if (!$table->hasFilters()) {
             return '';
         }
@@ -2662,14 +2642,6 @@ HTML;
         $activeFilters = $table->getActiveFilters();
         $config = $table->getConfiguration();
         $tableName = $config->tableName ?? 'tanstack_table';
-        
-        // Debug: Log active filters
-        \Log::info('TanStackRenderer: renderFilterModal', [
-            'tableName' => $tableName,
-            'tableId' => $tableId,
-            'activeFilters' => $activeFilters,
-            'hasFilters' => !empty($activeFilters),
-        ]);
         
         // Transform Filter objects to array format expected by modal component
         $transformedFilters = [];
@@ -2693,19 +2665,7 @@ HTML;
         
         // Use Blade component to render the modal
         try {
-            // Get connection from config object (more reliable than $table->getConnection() during render)
             $connection = $config->connection ?? $table->getConnection();
-            
-            // Log connection for debugging
-            \Log::info('TanStackRenderer: renderFilterModal - connection check', [
-                'tableName' => $tableName,
-                'connection_from_config' => $config->connection ?? 'not set',
-                'connection_from_table' => $table->getConnection(),
-                'connection_used' => $connection,
-                'connection_type' => gettype($connection),
-                'connection_is_null' => $connection === null,
-                'connection_is_empty' => empty($connection),
-            ]);
             
             $modalHtml = view('canvastack::components.table.filter-modal', [
                 'filters' => $transformedFilters,
@@ -2713,11 +2673,10 @@ HTML;
                 'tableName' => $tableName,
                 'tableId' => $tableId,
                 'activeFilterCount' => $activeFilterCount,
-                'showButton' => false, // Don't show button, we have it in search bar
+                'showButton' => false,
                 'config' => (array) $config,
-                'connection' => $connection, // Use connection from config or table
+                'connection' => $connection,
             ])->render();
-            
             
             return $modalHtml;
         } catch (\Exception $e) {

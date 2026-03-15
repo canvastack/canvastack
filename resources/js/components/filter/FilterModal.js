@@ -486,10 +486,14 @@ export function createFilterModal(config) {
                 } else if (data.type === 'options') {
                     filter.options = data.options;
                     
+                    console.log(`🔄 About to update TomSelect for ${filter.column} with ${data.options.length} options`);
+                    
                     // Update Tom Select with new options
-                    this.$nextTick(() => {
+                    // Use setTimeout to ensure DOM is ready
+                    setTimeout(() => {
+                        console.log(`🎯 Calling populateSingleTomSelect for ${filter.column}`);
                         this.populateSingleTomSelect(filter);
-                    });
+                    }, 0);
                     
                     // Clear value if not in new options
                     if (this.filterValues[filter.column]) {
@@ -1038,24 +1042,27 @@ export function createFilterModal(config) {
                         onDropdownClose: function(dropdown) {
                             console.log(`📁 Dropdown closed for: ${filterId}`);
                         },
-                        onItemAdd: () => {
-                            console.log(`➕ Item added to: ${filterId}`);
-                            // Trigger Alpine.js change event
-                            select.dispatchEvent(new Event('change', { bubbles: true }));
-                        },
-                        onClear: () => {
-                            console.log(`🗑️ Cleared: ${filterId}`);
-                            // Trigger Alpine.js change event
-                            select.dispatchEvent(new Event('change', { bubbles: true }));
-                        },
                         onChange: (value) => {
-                            console.log(`🔄 Changed ${filterId} to:`, value);
-                            // Update Alpine.js model
-                            const event = new CustomEvent('input', { 
-                                detail: { value },
-                                bubbles: true 
-                            });
-                            select.dispatchEvent(event);
+                            console.log(`🔄 TomSelect onChange ${filterId}:`, value);
+                            
+                            // 1. Sync native select value so x-model reads correctly
+                            select.value = value || '';
+                            
+                            // 2. Extract column name from filterId (format: "filter_{column}")
+                            const column = filterId.replace(/^filter_/, '');
+                            
+                            // 3. Directly update Alpine filterValues to ensure reactivity
+                            this.filterValues[column] = value || '';
+                            
+                            // 4. Find the filter config and trigger cascade
+                            const filter = this.filters.find(f => f.column === column);
+                            if (filter) {
+                                console.log(`🔗 Triggering cascade for filter: ${column}`);
+                                this.debouncedHandleFilterChange(filter);
+                            }
+                            
+                            // 5. Dispatch change event for any other listeners
+                            select.dispatchEvent(new Event('change', { bubbles: true }));
                         }
                     });
                     
@@ -1094,6 +1101,18 @@ export function createFilterModal(config) {
                 if (instance) {
                     console.log(`📝 Populating ${filter.options.length} options for ${filterId}`);
                     
+                    // CRITICAL: Preserve current selected value if it exists in new options
+                    const currentValue = instance.getValue();
+                    const hasCurrentValueInNewOptions = filter.options.some(opt => opt.value === currentValue);
+                    
+                    console.log(`  Current value: "${currentValue}", exists in new options: ${hasCurrentValueInNewOptions}`);
+                    
+                    // Clear selected value ONLY if it doesn't exist in new options
+                    if (!hasCurrentValueInNewOptions) {
+                        console.log(`  Clearing invalid value: "${currentValue}"`);
+                        instance.clear(true); // true = silent mode (no events)
+                    }
+                    
                     // Clear existing options (except placeholder)
                     instance.clearOptions();
                     
@@ -1104,6 +1123,12 @@ export function createFilterModal(config) {
                             text: option.label
                         });
                     });
+                    
+                    // Restore value if it was valid
+                    if (hasCurrentValueInNewOptions && currentValue) {
+                        console.log(`  Restoring valid value: "${currentValue}"`);
+                        instance.setValue(currentValue, true); // true = silent mode
+                    }
                     
                     // Refresh dropdown
                     instance.refreshOptions(false);

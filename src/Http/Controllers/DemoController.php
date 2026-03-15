@@ -27,9 +27,6 @@ class DemoController extends BaseController
         $this->table->addAction('edit', route('page.form-edit', ':id'), 'edit', 'Edit');
         $this->table->addAction('delete', '#', 'trash', 'Delete', 'DELETE');
         
-        // IMPORTANT: Call format() to prepare the table for rendering
-        $this->table->format();
-        
         // Setup chart - User growth
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
         $userData = [5, 10, 15, 20, 25, 30];
@@ -515,7 +512,7 @@ class DemoController extends BaseController
         // ========================================
         
         // COMMENT OUT: Tab opening
-        // $this->table->openTab('Summary ASM');
+        $this->table->openTab('Summary ASM');
 
         // COMMENT OUT: Custom tab content
         // $this->table->addTabContent(
@@ -527,17 +524,6 @@ class DemoController extends BaseController
         // );
 
         // Configure table for ASM data (KEEP THIS - just render table without tabs)
-        $this->table->connection($connection);
-        $this->table->setName('report_data_summary_incentive_asm');
-        
-        // Log to verify connection is set
-        \Log::info('TestCanvastackController: After setting connection', [
-            'connection_set' => $connection,
-            'connection_get' => $this->table->getConnection(),
-        ]);
-        
-        // Set query to fetch data from the table
-        $this->table->query("SELECT * FROM report_data_summary_incentive_asm");
 
         $fieldsetAsm = [
             'period_string:Period',
@@ -574,6 +560,18 @@ class DemoController extends BaseController
             'netaddgrowthincentive:Incentive Growth Nett Add',
             'totalincentive:Total Incentive'
         ];
+
+        $this->table->connection($connection);
+        $this->table->setName('report_data_summary_incentive_asm');
+        
+        // Log to verify connection is set
+        \Log::info('TestCanvastackController: After setting connection', [
+            'connection_set' => $connection,
+            'connection_get' => $this->table->getConnection(),
+        ]);
+        
+        // Set query to fetch data from the table
+        $this->table->query("SELECT * FROM report_data_summary_incentive_asm");
 
         $this->table->setFields($fieldsetAsm);
 
@@ -614,12 +612,12 @@ class DemoController extends BaseController
         $this->table->cache(300);
 
         // COMMENT OUT: Close tab
-        // $this->table->closeTab();
+        $this->table->closeTab();
 
         // ========================================
         // FIX #72: COMMENT OUT ALL OTHER TABS
         // ========================================
-        /*
+        
         // ========================================
         // TAB 2: Summary ASC
         // ========================================
@@ -710,6 +708,7 @@ class DemoController extends BaseController
 
         $this->table->closeTab();
 
+        /*
         // ========================================
         // TAB 3: Summary PIC Cluster
         // ========================================

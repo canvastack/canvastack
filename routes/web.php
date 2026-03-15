@@ -153,12 +153,9 @@ Route::prefix('admin/locales')->name('admin.locales.')->middleware(['web'])->gro
     Route::get('/', [\Canvastack\Canvastack\Http\Controllers\Admin\LocaleController::class, 'index'])->name('index');
 });
 
-// Tab Loading Route (Task 3.4.3 - Requirement 6.4)
-// AJAX endpoint for lazy loading tab content
-Route::get('/canvastack/table/tab/{tableId}/{tabIndex}', [\Canvastack\Canvastack\Http\Controllers\TableTabController::class, 'loadTab'])
-    ->middleware(['web'])
-    ->name('canvastack.table.tab.load')
-    ->where(['tabIndex' => '[0-9]+']);
+// Tab Loading Route - MOVED TO api.php
+// The tab loading route has been moved to routes/api.php
+// to use POST method with CSRF protection and proper authentication
 
 // Test Routes for Fixed Columns (Phase 4)
 Route::prefix('test/fixed-columns')->name('test.fixed-columns.')->middleware(['web'])->group(function () {

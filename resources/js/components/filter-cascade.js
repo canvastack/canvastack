@@ -18,7 +18,7 @@ export class FilterCascadeManager {
         this.filters = config.filters || [];
         this.cascadeGraph = this.buildCascadeGraph();
         this.reverseCascadeGraph = this.buildReverseCascadeGraph();
-        this.ajaxUrl = config.ajaxUrl || '/api/table/filter-options';
+        this.ajaxUrl = config.ajaxUrl || '/api/canvastack/table/filter-options';
         this.csrfToken = config.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content;
         
         this.initializeEventListeners();

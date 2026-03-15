@@ -444,6 +444,11 @@ class CanvastackServiceProvider extends ServiceProvider
      */
     protected function registerTableServices(): void
     {
+        // Register FilterOptionsProvider as singleton
+        $this->app->singleton(\Canvastack\Canvastack\Components\Table\Filter\FilterOptionsProvider::class, function ($app) {
+            return new \Canvastack\Canvastack\Components\Table\Filter\FilterOptionsProvider();
+        });
+
         // Register EngineManager as singleton
         $this->app->singleton('canvastack.table.engine', function ($app) {
             $manager = new \Canvastack\Canvastack\Components\Table\Engines\EngineManager();
