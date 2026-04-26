@@ -2,7 +2,7 @@
 
 وَٱعْتَصِمُوا۟ بِحَبْلِ ٱللَّهِ
 
-# CanvaStack Origin
+# CanvaStack
 
 ![Canvastack Logo](https://avatars.githubusercontent.com/u/86165096?s=256&v=4)
 
@@ -13,6 +13,9 @@ A comprehensive Laravel library for building secure, accessible, and maintainabl
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Laravel](https://img.shields.io/badge/Laravel-8.x%20%7C%209.x%20%7C%2010.x-red.svg)](https://laravel.com)
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-blue.svg)](https://php.net)
+[![Version](https://img.shields.io/badge/version-0.1.0--alpha-orange.svg)](CHANGELOG.md)
+[![Total Downloads](https://img.shields.io/packagist/dt/canvastack/canvastack)](https://packagist.org/packages/canvastack/canvastack)
+
 
 ## 🌟 Features
 
@@ -78,7 +81,7 @@ composer create-project --prefer-dist laravel/laravel:^10.0 myapp
 cd myapp
 ```
 
-### Step 2: Install Canvastack Origin
+### Step 2: Install CanvaStack
 
 **Option A: Via Composer (Recommended)**
 
@@ -93,7 +96,7 @@ Add to your `composer.json`:
 ```json
 {
     "require": {
-        "canvastack/canvastack": "^1.1"
+        "canvastack/canvastack": "^0.1"
     },
     "repositories": [{
         "type": "vcs",
@@ -319,7 +322,7 @@ Do not create public GitHub issues for security vulnerabilities.
 | Component | Description | Documentation |
 |-----------|-------------|---------------|
 | **Form Builder** | Secure form generation with validation | [docs/COMPONENTS/FORM/](docs/COMPONENTS/FORM/) |
-| **DataTables** | Server-side table processing | Coming soon |
+| **DataTables** | Server-side table processing | [docs/COMPONENTS/TABLE/](docs/COMPONENTS/TABLE/) |
 | **Charts** | Interactive chart components | Coming soon |
 | **Template Engine** | Layout and theme management | Coming soon |
 | **Meta Tags** | SEO optimization helpers | Coming soon |
@@ -333,21 +336,8 @@ Do not create public GitHub issues for security vulnerabilities.
 | `canvastack_form_validate_file_extension()` | Validate file extensions | `canvastack_form_validate_file_extension($file, ['jpg', 'png'])` |
 | `canvastack_form_validate_path()` | Validate file paths | `canvastack_form_validate_path($path, $baseDir)` |
 | `canvastack_form_validate_attributes()` | Validate HTML attributes | `canvastack_form_validate_attributes($attrs)` |
-
-## 🎯 Roadmap
-
-### Version 1.2 (Q2 2024)
-- [ ] Enhanced DataTables documentation
-- [ ] Chart component documentation
-- [ ] Template engine improvements
-- [ ] Performance optimizations
-
-### Version 2.0 (Q4 2024)
-- [ ] Laravel 11 support
-- [ ] PHP 8.2+ features
-- [ ] Livewire integration
-- [ ] Vue.js components
-- [ ] API-first architecture
+| `canvastack_mail_config_service()` | Get MailConfigService instance | `canvastack_mail_config_service()` |
+| `canvastack_mail_test_smtp()` | Test SMTP connection | `canvastack_mail_test_smtp()` |
 
 ## 🤝 Contributing
 
@@ -360,7 +350,9 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 
 ## 📝 Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
+See [CHANGELOG.md](CHANGELOG.md) for version history.
+
+> Previously released as `canvastack/origin`. Legacy history available in [docs/CHANGELOG/CHANGELOG-legacy-origin.md](docs/CHANGELOG/CHANGELOG-legacy-origin.md).
 
 ## 📄 License
 
@@ -369,7 +361,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👥 Credits
 
 ### Author
-- **Wisnu Widi** - [wisnuwidi@gmail.com](mailto:wisnuwidi@gmail.com)
+- **wisnuwidi** - [wisnuwidi@gmail.com](mailto:wisnuwidi@gmail.com)
+- **CanvaStack** - [canvastacks@gmail.com](mailto:canvastacks@gmail.com)
 
 ### Inspiration
 - **Muntilan-CMS** by [.::bit](https://www.limabit.com)
