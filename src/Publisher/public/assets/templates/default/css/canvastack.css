@@ -1,0 +1,1222 @@
+/**
+ * Canvastack DataTables Keyboard Navigation Styles
+ * 
+ * Provides visible focus indicators and keyboard navigation styling
+ * for DataTables components.
+ * 
+ * @author wisnuwidi@canvastack.com
+ * @copyright Canvastack
+ */
+
+/* Keyboard Focus Indicators - Very Visible Orange Outline */
+.canvastack-keyboard-focus:focus {
+    outline: 4px solid rgba(250, 108, 135, 0.8) !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.3) !important;
+    background-color: rgba(230, 87, 114, 0.84) !important;
+    z-index: 10 !important;
+}
+
+/* Sortable Table Headers */
+thead th[role="button"],
+thead th.canvastack-keyboard-focus,
+table thead th[tabindex="0"] {
+    cursor: pointer !important;
+    transition: background-color 0.2s ease, outline 0.2s ease !important;
+}
+
+thead th[role="button"]:hover,
+thead th.canvastack-keyboard-focus:hover,
+table thead th[tabindex="0"]:hover {
+    background-color: rgba(230, 87, 114, 0.84) !important;
+}
+
+thead th[role="button"]:focus,
+thead th.canvastack-keyboard-focus:focus,
+table thead th[tabindex="0"]:focus,
+thead th:focus {
+    outline: 4px solid rgba(250, 108, 135, 0.8) !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.3) !important;
+    background-color: rgba(230, 87, 114, 0.84) !important;
+    z-index: 10 !important;
+}
+
+/* Pagination Controls Focus */
+.paginate_button:focus {
+    outline: 4px solid #ff6b00 !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 6px rgba(255, 107, 0, 0.3) !important;
+    background-color: #fff3e0 !important;
+}
+
+/* Search Input Focus */
+.dataTables_filter input:focus {
+    outline: 4px solid rgba(250, 108, 135, 0.8) !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(230, 87, 114, 0.84) !important;
+}
+
+/* Action Buttons Focus */
+tbody td a:focus,
+tbody td button:focus {
+    outline: 4px solid rgba(250, 108, 135, 0.8) !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Screen Reader Only Content - Task 4.4.1, 4.4.5-4.4.8 */
+/* Hides content visually but keeps it accessible to screen readers */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Screen reader only content that becomes visible on focus (for skip links) */
+.sr-only-focusable:active,
+.sr-only-focusable:focus {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    clip: auto !important;
+    white-space: normal !important;
+}
+
+/* Table caption styling - visible but styled appropriately */
+table caption {
+    caption-side: top;
+    padding: 10px;
+    font-weight: bold;
+    text-align: left;
+    color: #333;
+}
+
+/* Ensure ARIA live regions for screen readers are properly hidden but accessible */
+/* Exclude dataTables_info which needs to be visible */
+[aria-live]:not(.dataTables_info) {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* Keyboard help button styling */
+.canvastack-keyboard-help-btn {
+    font-size: 13px;
+    padding: 4px 10px;
+}
+
+.canvastack-keyboard-help-btn:focus {
+    outline: 4px solid #ff6b00 !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 6px rgba(255, 107, 0, 0.3) !important;
+}
+
+
+/**
+ * Table Search & Filter Enhancements CSS
+ * 
+ * Styles for advanced search and filter functionality including:
+ * - Search term highlighting
+ * - Search suggestions dropdown
+ * - Filter operator selectors
+ * - Date/numeric range inputs
+ * - Filter combination controls
+ * - Filter reset button
+ */
+
+/* Search Highlighting */
+.search-highlight {
+    background-color: #ffeb3b;
+    color: #000;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-weight: 500;
+}
+
+/* Search Suggestions Container */
+.search-suggestions {
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 4px 4px;
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.suggestion-item:hover {
+    background-color: #f0f0f0;
+}
+
+.suggestion-item:active {
+    background-color: #e0e0e0;
+}
+
+/* Filter Operator Selector */
+.filter-operator {
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.filter-operator:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* Filter Combination Selector */
+.filter-combination {
+    margin-bottom: 15px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    background-color: #f9f9f9;
+}
+
+.filter-combination:focus {
+    outline: none;
+    border-color: #2196F3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+/* Date Range Inputs */
+.date-range-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.date-range-container input[type="date"] {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.date-range-container input[type="date"]:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.date-range-separator {
+    color: #666;
+    font-weight: 500;
+}
+
+/* Numeric Range Inputs */
+.numeric-range-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.numeric-range-container input[type="number"] {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.numeric-range-container input[type="number"]:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.numeric-range-separator {
+    color: #666;
+    font-weight: 500;
+}
+
+/* Pattern Type Selector */
+.pattern-type-selector {
+    margin-top: 5px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+    background-color: #f9f9f9;
+}
+
+/* Filter Reset Button */
+.filter-reset-btn {
+    padding: 8px 16px;
+    background-color: #f44336;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.filter-reset-btn:hover {
+    background-color: #d32f2f;
+}
+
+.filter-reset-btn:active {
+    background-color: #c62828;
+}
+
+.filter-reset-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.3);
+}
+
+/* Filter Group Container */
+.filter-group {
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: #fafafa;
+}
+
+.filter-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.filter-group-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.filter-group-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Filter Field Container */
+.filter-field {
+    margin-bottom: 12px;
+}
+
+.filter-field-label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+}
+
+.filter-field-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.filter-field-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.filter-field-help {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #777;
+    font-style: italic;
+}
+
+/* Loading Indicator for Filters */
+.filter-loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #4CAF50;
+    border-radius: 50%;
+    animation: filter-spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes filter-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .date-range-container,
+    .numeric-range-container {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .date-range-separator,
+    .numeric-range-separator {
+        display: none;
+    }
+    
+    .filter-group {
+        padding: 10px;
+    }
+    
+    .search-suggestions {
+        max-height: 150px;
+    }
+}
+
+/* Accessibility Enhancements */
+.filter-field-input:focus-visible,
+.filter-operator:focus-visible,
+.filter-combination:focus-visible {
+    outline: 2px solid #4CAF50;
+    outline-offset: 2px;
+}
+
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+    .search-highlight {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .search-suggestions {
+        background: #333;
+        border-color: #555;
+    }
+    
+    .suggestion-item {
+        color: #fff;
+    }
+    
+    .suggestion-item:hover {
+        background-color: #444;
+    }
+    
+    .filter-group {
+        background-color: #2a2a2a;
+        border-color: #444;
+    }
+    
+    .filter-field-label {
+        color: #ddd;
+    }
+    
+    .filter-field-input,
+    .filter-operator,
+    .filter-combination {
+        background-color: #333;
+        border-color: #555;
+        color: #fff;
+    }
+}
+
+/* ========================================
+   DataTables Search Enhancement Styles
+   ======================================== */
+
+/* Search result highlighting */
+.search-highlight {
+    background-color: #ffeb3b;
+    color: #000;
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: 500;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .search-highlight {
+        background-color: #ffc107;
+        color: #000;
+    }
+}
+
+/* Screen reader only content */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Search input enhancements */
+.dataTables_filter input {
+    transition: border-color 0.2s ease-in-out;
+}
+
+.dataTables_filter input:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+    border-color: #007bff;
+}
+
+/* Search hint message */
+.search-hint {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+/* Loading indicator for search */
+.dataTables_filter.searching::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+/* ========================================
+   DataTables Error Handling Styles
+   ======================================== */
+
+/* Error row container */
+.canvastack-table-error-row td {
+    padding: 40px 20px !important;
+    text-align: center !important;
+    background-color: #fff !important;
+}
+
+/* Error content wrapper */
+.canvastack-error-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Error icon */
+.canvastack-error-icon {
+    margin-bottom: 20px;
+}
+
+.canvastack-error-icon i {
+    font-size: 4em;
+}
+
+.canvastack-error-icon-red {
+    color: #d9534f;
+}
+
+.canvastack-error-icon-orange {
+    color: #f0ad4e;
+}
+
+/* Error title */
+.canvastack-error-title {
+    margin-bottom: 15px;
+    font-weight: 600;
+    font-size: 1.5em;
+}
+
+.canvastack-error-title-red {
+    color: #d9534f;
+}
+
+.canvastack-error-title-orange {
+    color: #f0ad4e;
+}
+
+/* Error message box */
+.canvastack-error-message-box {
+    background-color: #f8f9fa;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: left;
+    border-radius: 4px;
+}
+
+.canvastack-error-message-box-red {
+    border-left: 4px solid #d9534f;
+}
+
+.canvastack-error-message-box-orange {
+    border-left: 4px solid #f0ad4e;
+}
+
+/* Error message label */
+.canvastack-error-label {
+    margin: 0 0 10px 0;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Error message text */
+.canvastack-error-text {
+    margin: 0;
+    color: #666;
+    font-family: monospace;
+    font-size: 13px;
+    word-break: break-word;
+}
+
+/* Error details label */
+.canvastack-error-details-label {
+    margin: 15px 0 5px 0;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Error details text */
+.canvastack-error-details-text {
+    margin: 0;
+    color: #999;
+    font-family: monospace;
+    font-size: 11px;
+    word-break: break-word;
+}
+
+/* Suggestions box */
+.canvastack-error-suggestions {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 12px;
+    margin-bottom: 20px;
+    text-align: left;
+    border-radius: 4px;
+}
+
+.canvastack-error-suggestions-label {
+    margin: 0;
+    color: #856404;
+    font-size: 13px;
+}
+
+.canvastack-error-suggestions-list {
+    margin: 10px 0 0 20px;
+    color: #856404;
+    font-size: 12px;
+    text-align: left;
+}
+
+.canvastack-error-suggestions-list li {
+    margin-bottom: 5px;
+}
+
+.canvastack-error-suggestions-list code {
+    background-color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+/* Refresh button container */
+.canvastack-error-actions {
+    margin-top: 20px;
+}
+
+/* Refresh button */
+.canvastack-table-refresh-btn {
+    padding: 10px 30px;
+    font-size: 14px;
+    font-weight: 600;
+    background-color: #007bff;
+    border-color: #007bff;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.canvastack-table-refresh-btn:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+
+.canvastack-table-refresh-btn:focus {
+    outline: 4px solid #ff6b00 !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 6px rgba(255, 107, 0, 0.3) !important;
+}
+
+.canvastack-table-refresh-btn:active {
+    background-color: #004085;
+    border-color: #003366;
+}
+
+.canvastack-table-refresh-btn i {
+    margin-right: 8px;
+}
+
+/* Help text */
+.canvastack-error-help {
+    margin-top: 15px;
+}
+
+.canvastack-error-help-text {
+    color: #999;
+    font-size: 12px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .canvastack-table-error-row td {
+        padding: 20px 10px !important;
+    }
+    
+    .canvastack-error-container {
+        max-width: 100%;
+    }
+    
+    .canvastack-error-icon i {
+        font-size: 3em;
+    }
+    
+    .canvastack-error-title {
+        font-size: 1.2em;
+    }
+    
+    .canvastack-error-message-box {
+        padding: 12px;
+    }
+    
+    .canvastack-error-suggestions {
+        padding: 10px;
+    }
+    
+    .canvastack-table-refresh-btn {
+        padding: 8px 20px;
+        font-size: 13px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .canvastack-table-error-row td {
+        background-color: #2a2a2a !important;
+    }
+    
+    .canvastack-error-message-box {
+        background-color: #333;
+    }
+    
+    .canvastack-error-label,
+    .canvastack-error-details-label {
+        color: #ddd;
+    }
+    
+    .canvastack-error-text {
+        color: #aaa;
+    }
+    
+    .canvastack-error-details-text {
+        color: #888;
+    }
+    
+    .canvastack-error-suggestions {
+        background-color: #3a3a2a;
+    }
+    
+    .canvastack-error-suggestions-label,
+    .canvastack-error-suggestions-list {
+        color: #d4a574;
+    }
+    
+    .canvastack-error-suggestions-list code {
+        background-color: #444;
+        color: #ddd;
+    }
+    
+    .canvastack-error-help-text {
+        color: #888;
+    }
+}
+
+/* Print styles - hide error messages when printing */
+@media print {
+    .canvastack-table-error-row {
+        display: none !important;
+    }
+}
+
+/* ========================================
+   Module Privileges Table Styles
+   ======================================== */
+
+/* Main privilege table container */
+.privilege-table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin: 20px 0;
+    background: #ffffff;
+}
+
+/* Privilege table */
+.privilege-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+}
+
+/* Table header styles */
+.privilege-table thead th {
+    background: linear-gradient(135deg, rgba(250, 108, 135, 0.8), rgba(250, 108, 135, 0.8) 100%) !important;
+    color: #fff;
+    border: none !important;
+    padding: 16px 12px;
+    text-align: center;
+    font-weight: 900 !important;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    vertical-align: middle;
+    position: relative;
+}
+
+.privilege-table thead tr th.privilege-header-backend {
+    border-bottom: 2px white solid !important;
+}
+
+.privilege-table thead tr th.privilege-header-module {
+    border-right: 2px white solid !important;
+}
+
+.privilege-table thead th:first-child {
+    border-top-left-radius: 0;
+}
+
+.privilege-table thead th:last-child {
+    border-top-right-radius: 0;
+}
+
+/* Module name column header */
+.privilege-header-module {
+    min-width: 280px;
+    width: 40%;
+    background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%) !important;
+}
+
+/* Backend privilege header - Elegant blue gradient */
+.privilege-header-backend {
+    background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%) !important;
+    position: relative;
+}
+
+/* Frontend privilege header - Elegant purple gradient */
+.privilege-header-frontend {
+    background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%) !important;
+    position: relative;
+}
+
+.privilege-header-frontend::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ffffff 0%, #ffffff 100%);
+}
+
+/* Sub-header row (Read, Insert, Update, Delete) - Soft colors */
+.privilege-subheader {
+    background: linear-gradient(135deg, rgba(250, 108, 135, 0.8), rgba(250, 108, 135, 0.8) 100%) !important;
+    font-weight: 600 !important;
+    font-size: 13px;
+    padding: 12px 8px;
+    color: #fff !important;
+    border-bottom: 2px solid #ffffff;
+}
+
+/* Table body styles - Clean and spacious */
+.privilege-table tbody td {
+    padding: 10px 20px;
+    vertical-align: middle;
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+table.privilege-table td .ckbox {
+    width: auto;
+}
+
+table.privilege-table td .ckbox label {
+    width: 100%;
+}
+
+/* Module name cells - Better typography */
+.privilege-module-name {
+    text-align: left;
+    padding-left: 20px;
+    font-weight: 500;
+    color: #2d3748;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Indentation levels - Subtle and elegant */
+.privilege-indent-0 {
+    padding-left: 20px;
+    font-weight: 700 !important;
+    background: rgba(164, 255, 88, 0.49);
+    color: rgba(98, 144, 42, 0.96);
+    font-size: 15px;
+}
+
+.privilege-indent-1 {
+    padding-left: 40px;
+    font-weight: 600 !important;
+    color: #2d3748;
+    font-size: 14px;
+    border-left: 3px solid #ffffff;
+    text-indent: 10px;
+}
+
+.privilege-indent-2 {
+    padding-left: 60px;
+    font-weight: 500;
+    color: #4a5568;
+    font-size: 13px;
+    border-left: 2px solid #ffffff;
+    text-indent: 20px;
+}
+
+.privilege-indent-3 {
+    padding-left: 80px;
+    font-weight: 400;
+    color: #718096;
+    font-size: 13px;
+    border-left: 1px solid #ffffff;
+}
+
+/* Checkbox cells - Modern and clean with full cell clickable */
+.privilege-checkbox-cell {
+    text-align: center;
+    padding: 0 !important;
+    background: #fafbfc;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+/* Wrapper untuk checkbox - full cell clickable */
+.privilege-checkbox-cell .ckbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 50px;
+    margin: 0 !important;
+    padding: 12px 8px;
+}
+
+/* Override global ckbox styling - Show checkbox for privilege table */
+.privilege-table .privilege-checkbox-cell .ckbox input[type="checkbox"] {
+    opacity: 1 !important;
+    position: static !important;
+    width: 14px !important;
+    height: 14px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Also override for table tbody td */
+table.privilege-table tbody td.privilege-checkbox-cell .ckbox input[type="checkbox"] {
+    opacity: 1 !important;
+    position: static !important;
+    width: 14px !important;
+    height: 14px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Most specific selector - nuclear option */
+div.privilege-table-container table.privilege-table tbody tr td.privilege-checkbox-cell div.ckbox input[type="checkbox"] {
+    opacity: 1 !important;
+    position: static !important;
+    width: 14px !important;
+    height: 14px !important;
+    margin: 0 auto !important;
+    cursor: pointer !important;
+    display: block !important;
+    visibility: visible !important;
+    z-index: 999 !important;
+}
+
+/* Target by ckbox class with privilege-visible-checkbox */
+.ckbox.ckbox-privilege-visible-checkbox input[type="checkbox"],
+.ckbox-privilege-visible-checkbox input[type="checkbox"],
+div.ckbox-privilege-visible-checkbox input[type="checkbox"] {
+    opacity: 1 !important;
+    position: static !important;
+    width: 14px !important;
+    height: 14px !important;
+    margin: 0 auto !important;
+    cursor: pointer !important;
+    display: block !important;
+    visibility: visible !important;
+    z-index: 999 !important;
+}
+
+/* Hide label karena tidak perlu */
+.privilege-checkbox-cell .ckbox label {
+    display: none !important;
+}
+
+/* Checkbox colors based on action type */
+/* Read/Select - Green */
+div.privilege-table-container table.privilege-table tbody tr td.privilege-checkbox-cell .ckbox.ckbox-success input[type="checkbox"],
+.privilege-checkbox-cell .ckbox.ckbox-success input[type="checkbox"],
+.privilege-checkbox-cell .ckbox-success input[type="checkbox"] {
+    accent-color: #5cb85c !important;
+}
+
+/* Write/Insert - Purple/Lilac */
+div.privilege-table-container table.privilege-table tbody tr td.privilege-checkbox-cell .ckbox.ckbox-lilac input[type="checkbox"],
+.privilege-checkbox-cell .ckbox.ckbox-lilac input[type="checkbox"],
+.privilege-checkbox-cell .ckbox-lilac input[type="checkbox"] {
+    accent-color: #a78bfa !important;
+}
+
+/* Modify/Update - Orange/Warning */
+div.privilege-table-container table.privilege-table tbody tr td.privilege-checkbox-cell .ckbox.ckbox-warning input[type="checkbox"],
+.privilege-checkbox-cell .ckbox.ckbox-warning input[type="checkbox"],
+.privilege-checkbox-cell .ckbox-warning input[type="checkbox"] {
+    accent-color: #f0ad4e !important;
+}
+
+/* Delete/Destroy - Red/Danger */
+div.privilege-table-container table.privilege-table tbody tr td.privilege-checkbox-cell .ckbox.ckbox-danger input[type="checkbox"],
+.privilege-checkbox-cell .ckbox.ckbox-danger input[type="checkbox"],
+.privilege-checkbox-cell .ckbox-danger input[type="checkbox"] {
+    accent-color: #d9534f !important;
+}
+
+/* Checkbox styling - Larger and more visible */
+.privilege-checkbox-cell input[type="checkbox"] {
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    margin: 0 !important;
+    transition: transform 0.2s ease;
+    position: relative;
+    z-index: 1;
+}
+
+/* Hover effect pada cell */
+.privilege-checkbox-cell:hover {
+    background: #e8eaf6;
+}
+
+.privilege-checkbox-cell:hover input[type="checkbox"] {
+    transform: scale(1.15);
+}
+
+.privilege-checkbox-cell input[type="checkbox"]:checked {
+    accent-color: #4facfe;
+}
+
+/* Active state saat cell di-click */
+.privilege-checkbox-cell:active {
+    background: #d1d5f7;
+}
+
+/* Hover effects - Smooth and elegant */
+.privilege-table tbody tr:hover {
+    background: linear-gradient(90deg, #f7fafc 0%, #ffffff 100%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.privilege-table tbody tr:hover .privilege-checkbox-cell {
+    background: #f0f4f8;
+}
+
+/* Module group rows - Elegant headers */
+.privilege-group-row td {
+    background: linear-gradient(90deg, #edf2f7 0%, #f7fafc 100%);
+    font-weight: 700;
+    color: rgba(188, 247, 130, 0.13);
+    border-left: 5px solid #667eea;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Icon styling - Modern and subtle */
+.privilege-icon {
+    margin-right: 10px;
+    color: #a0aec0;
+    font-size: 12px;
+    transition: color 0.2s ease;
+}
+
+.privilege-indent-0 .privilege-icon {
+    color: #667eea;
+}
+
+.privilege-indent-1 .privilege-icon {
+    color: #4facfe;
+}
+
+.privilege-indent-2 .privilege-icon {
+    color: #a0aec0;
+}
+
+/* Alternating row colors for better readability */
+.privilege-table tbody tr:nth-child(even) td {
+    background: #fafbfc;
+}
+
+.privilege-table tbody tr:nth-child(even):hover td {
+    background: #f0f4f8;
+}
+
+/* Responsive design - Mobile friendly */
+@media (max-width: 1200px) {
+    .privilege-header-module {
+        min-width: 220px;
+        width: 35%;
+    }
+    
+    .privilege-table thead th,
+    .privilege-table tbody td {
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    .privilege-table-container {
+        overflow-x: scroll;
+        border-radius: 8px;
+    }
+    
+    .privilege-header-module {
+        min-width: 180px;
+        width: 30%;
+    }
+    
+    .privilege-table thead th,
+    .privilege-table tbody td {
+        padding: 10px 6px;
+        font-size: 12px;
+    }
+    
+    .privilege-checkbox-cell input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .privilege-indent-0 { padding-left: 15px; }
+    .privilege-indent-1 { padding-left: 30px; }
+    .privilege-indent-2 { padding-left: 45px; }
+    .privilege-indent-3 { padding-left: 60px; }
+}
+
+/* Accessibility - Enhanced focus states */
+.privilege-table input[type="checkbox"]:focus {
+    outline: 3px solid #667eea;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.2);
+}
+
+/* Loading state */
+.privilege-table-container.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Empty state */
+.privilege-table tbody tr.empty-state td {
+    text-align: center;
+    padding: 40px 20px;
+    color: #a0aec0;
+    font-style: italic;
+}
+
+/* Print styles - Clean printing */
+@media print {
+    .privilege-table-container {
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+    }
+    
+    .privilege-table {
+        page-break-inside: avoid;
+    }
+    
+    .privilege-table thead {
+        display: table-header-group;
+    }
+    
+    .privilege-table tbody tr {
+        page-break-inside: avoid;
+    }
+    
+    .privilege-table thead th {
+        background: #f8f9fa !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+
+/* ========================================
+   Privilege Table JavaScript Inline Styles
+   (For cell click functionality)
+   ======================================== */
+
+/* Visual feedback saat cell di-click */
+.privilege-checkbox-cell.clicking {
+    background: #c5cae9 !important;
+    transform: scale(0.98);
+}
+
+
+/* ========================================
+   Table Export Button Styles
+   (For cell click functionality)
+   ======================================== */
+.canvastack-dt-search-box button.dt-button.buttons-filter, 
+.canvastack-dt-search-box div.dt-button.buttons-filter, 
+.canvastack-dt-search-box a.dt-button.buttons-filter {
+    border: #2D9F47 solid 1px;
+	padding: 8px 10px !important;
+}

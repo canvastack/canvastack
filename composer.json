@@ -1,0 +1,65 @@
+{
+	"name": "canvastack/canvastack",
+	"type": "library",
+	"description": "Comprehensive Laravel library for building fast, secure, accessible, and maintainable web applications — featuring Form Builder, DataTables, Charts, and more.",
+	"keywords": [
+		"canvastack",
+		"laravel",
+		"form-builder",
+		"datatables",
+		"charts",
+		"security",
+		"accessibility",
+		"wcag",
+		"xss-protection",
+		"file-upload"
+	],
+	"homepage": "https://github.com/canvastack/canvastack",
+	"license": "MIT",
+	"require" : {
+		"laravel/ui" : "~4.0",
+		"laravelcollective/html" : "~6.4",
+		"doctrine/dbal" : "~3.4",
+		"intervention/image" : "~3.9",
+		"yajra/laravel-datatables" : "~9.0",
+		"jlawrence/eos" : "~3.2"
+	},
+    "require-dev": {
+        "giorgiosironi/eris": "^1.1"
+    },
+	"authors": [{
+		"name": "Wisnu Widiantoko",
+		"email": "wisnuwidi@gmail.com",
+		"role": "Developer"
+	}],
+	"support": {
+		"issues": "https://github.com/canvastack/canvastack/issues",
+		"source": "https://github.com/canvastack/canvastack",
+		"docs": "https://github.com/canvastack/canvastack/tree/main/docs",
+		"security": "mailto:security@canvastack.com"
+	},
+	"autoload" : {
+		"psr-4" : {
+			"Canvastack\\Canvastack\\" : "src/"
+		},
+		"files" : [
+			"src/Library/Helpers/App.php",
+			"src/Library/Helpers/MetaTags.php",
+			"src/Library/Helpers/Scripts.php",
+			"src/Library/Helpers/Template.php",
+			"src/Library/Helpers/FormObject.php",
+			"src/Library/Helpers/FileUpload.php",
+			"src/Library/Helpers/Table.php",
+			"src/Library/Helpers/Chart.php"
+		]
+	},
+	"extra" : {
+		"laravel" : {
+			"providers" : [
+				"Canvastack\\Canvastack\\CanvastackServiceProvider"
+			]
+		}
+	},
+	"minimum-stability" : "dev",
+	"prefer-stable": true
+}
