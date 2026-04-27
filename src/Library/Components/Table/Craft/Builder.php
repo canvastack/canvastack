@@ -2137,6 +2137,13 @@ class Builder {
 		return $this->datatables($tableID, $dt_columns, $dt_info, true, $filter_data);
 	}
 	
+	/**
+	 * Get filter data from request (GET or POST)
+	 * 
+	 * FIXED: 2026-04-27 - Support both GET and POST filter parameters
+	 * 
+	 * @return string|null Filter string for DataTables
+	 */
 	private function getFilterDataTables(): ?string {
 		$filter_strings = null;
 		// SECURITY: Use Laravel request()
@@ -2147,7 +2154,11 @@ class Builder {
 		
 		$input_filters = [];
 		$_ajax_url     = 'renderDataTables';
-		foreach ($request->query() as $name => $value) {
+		
+		// FIXED: Check both GET and POST parameters
+		$allParams = array_merge($request->query(), $request->post());
+		
+		foreach ($allParams as $name => $value) {
 			if ('filters'!== $name && '' !== $value) {
 				if (!is_array($value)) {
 					if (
@@ -2159,7 +2170,9 @@ class Builder {
 						$name !== 'length'   &&
 						$name !== 'search'   &&
 						$name !== '_token'   &&
-						$name !== '_'
+						$name !== '_'        &&
+						$name !== 'difta'    &&
+						$name !== 'renderDataTables'
 					) {
 						// SECURITY: URL encode
 						$safeName  = urlencode($name);
@@ -2172,6 +2185,15 @@ class Builder {
 		
 		if (!empty($input_filters)) {
 			$filter_strings = '&filters=true&' . implode('&', $input_filters);
+		}
+		
+		// Debug logging
+		if (config('app.debug') && !empty($input_filters)) {
+			\Log::debug('Builder: Filter data extracted', [
+				'filter_strings' => $filter_strings,
+				'input_filters' => $input_filters,
+				'method' => $request->method()
+			]);
 		}
 		
 		return $filter_strings;

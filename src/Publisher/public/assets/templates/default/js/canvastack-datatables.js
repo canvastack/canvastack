@@ -83,6 +83,12 @@ var CanvastackDataTables = (function($) {
     
     var module = {};
     
+    // Initialize global filter storage
+    if (!window.canvastackDataTableFilters) {
+        window.canvastackDataTableFilters = {};
+        console.log('CanvastackDataTables: Initialized global filter storage');
+    }
+    
     /**
      * Initialize DataTable with configuration
      * 
@@ -202,6 +208,14 @@ var CanvastackDataTables = (function($) {
                 config.datatableConfig.ajax = function(data, callback, settings) {
                     var ajaxConfig = typeof originalAjax === 'string' ? { url: originalAjax } : originalAjax;
                     
+                    // CRITICAL FIX: Merge filters from global storage into request data
+                    var storedFilters = window.canvastackDataTableFilters[tableId] || {};
+                    if (Object.keys(storedFilters).length > 0) {
+                        console.log('CanvastackDataTables: Merging stored filters into AJAX request:', storedFilters);
+                        $.extend(data, storedFilters);
+                        data.filters = true;
+                    }
+                    
                     // Get CSRF token from meta tag
                     var csrfToken = $('meta[name="csrf-token"]').attr('content');
                     
@@ -219,7 +233,9 @@ var CanvastackDataTables = (function($) {
                         url: ajaxConfig.url,
                         type: ajaxConfig.type || 'GET',
                         hasToken: !!csrfToken,
-                        tokenPreview: csrfToken ? csrfToken.substring(0, 10) + '...' : 'none'
+                        tokenPreview: csrfToken ? csrfToken.substring(0, 10) + '...' : 'none',
+                        hasFilters: Object.keys(storedFilters).length > 0,
+                        filterCount: Object.keys(storedFilters).length
                     });
                     
                     $.ajax({
@@ -283,6 +299,20 @@ var CanvastackDataTables = (function($) {
                     });
                 };
             }
+            
+            // FIX: Add columnDefs to handle extra columns from backend gracefully
+            // This prevents "aDataSort" error when backend sends more columns than config defines
+            if (!config.datatableConfig.columnDefs) {
+                config.datatableConfig.columnDefs = [];
+            }
+            
+            // Add defaultContent for all columns to handle missing data
+            config.datatableConfig.columnDefs.push({
+                targets: '_all',
+                defaultContent: '-'
+            });
+            
+            console.log('CanvastackDataTables: Added columnDefs for graceful column mismatch handling');
             
             var dtApi = $table.DataTable(config.datatableConfig);
             
@@ -631,13 +661,264 @@ var CanvastackDataTables = (function($) {
     };
     
     /**
-     * Setup filter button
+     * Setup filter button with state management
+     * 
+     * FIXED: 2026-04-27 - Added filter state management to properly send filters to DataTables
      * 
      * @param {string} tableId - Table element ID
      * @param {string} filterClass - Filter class name
      */
     module.setupFilterButton = function(tableId, filterClass) {
-        $('div#' + tableId + '_wrapper>.dt-buttons').append('<span class="' + filterClass + '"></span>');
+        var $wrapper = $('div#' + tableId + '_wrapper>.dt-buttons');
+        
+        // Append the filter button container (maintains backward compatibility)
+        $wrapper.append('<span class="' + filterClass + '"></span>');
+        
+        // Get DataTable API instance
+        var dtApi = $('#' + tableId).DataTable();
+        if (!dtApi) {
+            console.error('CanvastackDataTables: Cannot setup filter button - DataTable not initialized');
+            return;
+        }
+        
+        // Store filter modal ID
+        var filterModalId = tableId + '_CanvaStackFILTER';
+        var filterFormId = tableId + '_CanvaStackFILTERForm';
+        
+        // Check if filter modal exists
+        if ($('#' + filterModalId).length === 0) {
+            console.warn('CanvastackDataTables: Filter modal not found:', filterModalId);
+            return;
+        }
+        
+        // Handle filter form submit
+        $('#' + filterFormId).off('submit.canvastack-filter').on('submit.canvastack-filter', function(e) {
+            e.preventDefault();
+            
+            console.log('CanvastackDataTables: Filter form submitted');
+            
+            // Show processing indicator
+            $('#' + tableId + '_CanvaStackProcessing').show();
+            
+            // Collect filter values (exclude empty values and placeholders)
+            var filters = {};
+            var filterDescription = [];
+            
+            $(this).find('select, input[type="text"], input[type="hidden"]').each(function() {
+                var name = $(this).attr('name');
+                var value = $(this).val();
+                
+                // Skip reserved parameters and empty values
+                var reservedParams = ['renderDataTables', 'difta', 'filters', '_token'];
+                var placeholders = ['____-__-__', '____-__-__ __:__:__', '____-__-__%20__%3A__%3A__'];
+                
+                if (name && 
+                    value && 
+                    value !== '' && 
+                    !reservedParams.includes(name) &&
+                    !placeholders.includes(value)) {
+                    
+                    filters[name] = value;
+                    
+                    // Build description for screen reader
+                    var label = $(this).closest('.form-group').find('label').text().trim();
+                    if (!label) {
+                        label = name.replace(/_/g, ' ');
+                    }
+                    filterDescription.push(label + ': ' + value);
+                }
+            });
+            
+            console.log('CanvastackDataTables: Collected filters:', filters);
+            
+            // Get AJAX settings
+            var ajaxSettings = dtApi.settings()[0].ajax;
+            
+            // Store original data function if exists
+            if (!ajaxSettings.originalDataFn) {
+                ajaxSettings.originalDataFn = ajaxSettings.data;
+            }
+            
+            // CRITICAL FIX: Store filters in a global variable that ajax.data can access
+            // DataTables ajax.data function needs to access filters from closure
+            if (!window.canvastackDataTableFilters) {
+                window.canvastackDataTableFilters = {};
+            }
+            window.canvastackDataTableFilters[tableId] = filters;
+            
+            console.log('CanvastackDataTables: Stored filters globally for table:', tableId);
+            console.log('CanvastackDataTables: Filter values:', filters);
+            
+            // Update data function to include filters from global storage
+            ajaxSettings.data = function(d) {
+                console.log('CanvastackDataTables: ajax.data function called!');
+                
+                // Call original data function if exists
+                var data = d;
+                if (typeof ajaxSettings.originalDataFn === 'function') {
+                    data = ajaxSettings.originalDataFn(d) || d;
+                }
+                
+                // Get filters from global storage
+                var storedFilters = window.canvastackDataTableFilters[tableId] || {};
+                
+                // Merge filters into request data
+                $.extend(data, storedFilters);
+                
+                // Add filters flag
+                data.filters = true;
+                
+                console.log('CanvastackDataTables: Sending AJAX data with filters:', data);
+                console.log('CanvastackDataTables: Filter values being sent:', storedFilters);
+                
+                return data;
+            };
+            
+            // CRITICAL FIX: Update DataTables settings to use new data function
+            // We need to update the settings object that DataTables is actually using
+            var dtSettings = dtApi.settings()[0];
+            if (dtSettings && dtSettings.ajax) {
+                dtSettings.ajax.data = ajaxSettings.data;
+                console.log('CanvastackDataTables: Updated DataTables settings with new data function');
+            }
+            
+            // Reload DataTable with filters
+            dtApi.ajax.reload(function(json) {
+                console.log('CanvastackDataTables: DataTable reloaded with filters');
+                console.log('CanvastackDataTables: Response:', json);
+                
+                // Hide processing indicator
+                $('#' + tableId + '_CanvaStackProcessing').hide();
+                
+                // Close modal
+                $('#' + filterModalId).modal('hide');
+                
+                // Announce filter status to screen readers
+                if (filterDescription.length > 0) {
+                    module.announceFilterStatus(tableId, filterDescription.join(', '));
+                } else {
+                    module.announceFilterStatus(tableId, 'No filters applied');
+                }
+                
+                // Show filter indicator
+                module.showFilterIndicator(tableId, filters);
+            }, false);
+        });
+        
+        // Add clear filter button if not exists
+        if ($('#' + tableId + '_clearFilterBtn').length === 0) {
+            var $clearBtn = $('<button>', {
+                'id': tableId + '_clearFilterBtn',
+                'class': 'btn btn-secondary btn-sm ml-2',
+                'type': 'button',
+                'html': '<i class="fa fa-times"></i> Clear Filters',
+                'title': 'Clear all applied filters',
+                'style': 'display: none;' // Hidden by default
+            }).on('click', function() {
+                module.clearFilters(tableId);
+            });
+            
+            $wrapper.append($clearBtn);
+        }
+        
+        console.log('CanvastackDataTables: Filter button setup completed for table:', tableId);
+    };
+    
+    /**
+     * Clear all filters from DataTable
+     * 
+     * @param {string} tableId - Table element ID
+     */
+    module.clearFilters = function(tableId) {
+        console.log('CanvastackDataTables: Clearing filters for table:', tableId);
+        
+        var dtApi = $('#' + tableId).DataTable();
+        if (!dtApi) {
+            console.error('CanvastackDataTables: Cannot clear filters - DataTable not initialized');
+            return;
+        }
+        
+        // Show processing indicator
+        $('#' + tableId + '_CanvaStackProcessing').show();
+        
+        // CRITICAL FIX: Clear filters from global storage FIRST
+        // so the AJAX wrapper doesn't re-send them on reload
+        if (window.canvastackDataTableFilters) {
+            window.canvastackDataTableFilters[tableId] = {};
+        }
+        
+        // Reset filter form
+        var filterFormId = tableId + '_CanvaStackFILTERForm';
+        $('#' + filterFormId)[0].reset();
+        
+        // Reset chosen selects if using Chosen plugin
+        $('#' + filterFormId + ' select').trigger('chosen:updated');
+        
+        // Get AJAX settings
+        var ajaxSettings = dtApi.settings()[0].ajax;
+        
+        // Restore original data function
+        if (ajaxSettings.originalDataFn) {
+            ajaxSettings.data = ajaxSettings.originalDataFn;
+        } else {
+            ajaxSettings.data = function(d) { return d; };
+        }
+        
+        // Reload DataTable without filters
+        dtApi.ajax.reload(function() {
+            console.log('CanvastackDataTables: Filters cleared, DataTable reloaded');
+            
+            // Hide processing indicator
+            $('#' + tableId + '_CanvaStackProcessing').hide();
+            
+            // Announce to screen readers
+            module.announceFilterStatus(tableId, '');
+            
+            // Hide filter indicator
+            module.hideFilterIndicator(tableId);
+        }, false);
+    };
+    
+    /**
+     * Show filter indicator
+     * 
+     * @param {string} tableId - Table element ID
+     * @param {object} filters - Applied filters
+     */
+    module.showFilterIndicator = function(tableId, filters) {
+        var filterCount = Object.keys(filters).length;
+        
+        if (filterCount > 0) {
+            // Show clear button
+            $('#' + tableId + '_clearFilterBtn').show();
+            
+            // Add filter badge to filter button if not exists
+            var $filterBtn = $('.' + tableId + '_CanvaStackFILTERButton');
+            var $badge = $filterBtn.find('.filter-badge');
+            
+            if ($badge.length === 0) {
+                $badge = $('<span>', {
+                    'class': 'badge badge-primary filter-badge ml-1',
+                    'style': 'font-size: 10px; vertical-align: super;'
+                });
+                $filterBtn.append($badge);
+            }
+            
+            $badge.text(filterCount).show();
+        }
+    };
+    
+    /**
+     * Hide filter indicator
+     * 
+     * @param {string} tableId - Table element ID
+     */
+    module.hideFilterIndicator = function(tableId) {
+        // Hide clear button
+        $('#' + tableId + '_clearFilterBtn').hide();
+        
+        // Remove filter badge
+        $('.' + tableId + '_CanvaStackFILTERButton .filter-badge').remove();
     };
     
     /**
@@ -1182,6 +1463,11 @@ var CanvastackDataTables = (function($) {
  * DataTables calculates sticky `left` values at init time. Tabs that are
  * hidden (display:none) during init get wrong column widths, so the offsets
  * are incorrect. We recalculate on every `shown.bs.tab` event.
+ *
+ * NOTE: We intentionally avoid api.columns.adjust() because it internally
+ * accesses aoColumns which can throw "aDataSort" errors when the backend
+ * returns more columns than the frontend config defines. Instead we use
+ * a window resize trigger which is safe regardless of column count.
  */
 $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function() {
     var tabTarget = $(this).attr('href');
@@ -1189,31 +1475,25 @@ $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function() {
 
     // Find every DataTable inside the newly-visible tab pane
     $(tabTarget).find('table.dataTable').each(function() {
-        if ($.fn.DataTable.isDataTable(this)) {
-            var api = $(this).DataTable();
+        if (!$.fn.DataTable.isDataTable(this)) return;
 
-            // columns.adjust() recalculates column widths
-            api.columns.adjust();
+        var $table = $(this);
 
-            // If FixedColumns extension is active, recalculate sticky left values
-            var settings = api.settings()[0];
-            if (settings && settings._oFixedColumns) {
-                settings._oFixedColumns._fnDraw(true);
-            }
+        // Trigger a window resize event - DataTables listens to this and
+        // safely recalculates column widths without touching aoColumns directly.
+        // This avoids the "aDataSort" crash caused by column count mismatch.
+        $(window).trigger('resize');
 
-            // Fallback: manually recalculate sticky `left` for dtfc-fixed-left cells
-            var $table = $(this);
-            var $fixedCells = $table.find('thead tr th.dtfc-fixed-left, tbody tr td.dtfc-fixed-left');
-            if ($fixedCells.length) {
-                var leftOffset = 0;
-                $table.find('thead tr th.dtfc-fixed-left').each(function(i) {
-                    $(this).css('left', leftOffset + 'px');
-                    var colWidth = $(this).outerWidth();
-                    // Apply same offset to all body cells in this column
-                    $table.find('tbody tr td.dtfc-fixed-left:nth-child(' + (i + 1) + ')').css('left', leftOffset + 'px');
-                    leftOffset += colWidth;
-                });
-            }
+        // Manually recalculate sticky `left` for dtfc-fixed-left cells (FixedColumns fallback)
+        var $fixedCells = $table.find('thead tr th.dtfc-fixed-left, tbody tr td.dtfc-fixed-left');
+        if ($fixedCells.length) {
+            var leftOffset = 0;
+            $table.find('thead tr th.dtfc-fixed-left').each(function(i) {
+                $(this).css('left', leftOffset + 'px');
+                var colWidth = $(this).outerWidth();
+                $table.find('tbody tr td.dtfc-fixed-left:nth-child(' + (i + 1) + ')').css('left', leftOffset + 'px');
+                leftOffset += colWidth;
+            });
         }
     });
 });

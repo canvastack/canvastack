@@ -2035,361 +2035,325 @@ if (!function_exists('canvastack_add_action_button_by_string')) {
 if (!function_exists('create_action_buttons')) {
 	
 	/**
-	 * Action Button(s) Builder
-	 *
-	 * created @Sep 6, 2018
-	 * author: wisnuwidi
-	 *
-	 * @param string $view
-	 * @param string $edit
-	 * @param string $delete
-	 * @param string $add_action
-	 * @param string $as_root
-	 *
-	 * @return string
+	 * Create action buttons for table rows
+	 * SECURITY: Added input validation and error handling
+	 * 
+	 * @param string|false $view View URL or false
+	 * @param string|false $edit Edit URL or false
+	 * @param string|false $delete Delete URL or false
+	 * @param array|bool $add_action Additional actions or false
+	 * @param bool $as_root Whether to use root context
+	 * @return string HTML for action buttons
 	 */
+	function create_action_buttons(string|false $view = false, string|false $edit = false, string|array|false $delete = false, array|bool $add_action = [], bool $as_root = false): string {
+		try {
+			// Input validation
+			if (!is_array($add_action)) {
+				$add_action = [];
+			}
+			
+			$restoreDeleted = false;
+			$deleteData = false;
+
+			if (false !== $delete) {
+				$deleteData = create_action_buttons_parse_delete($delete);
+				$restoreDeleted = $deleteData['is_restore'];
+			}
+
+			$buttonView = create_action_buttons_view($view, $restoreDeleted);
+			$buttonEdit = create_action_buttons_edit($edit, $restoreDeleted);
+			$buttonDelete = create_action_buttons_delete($deleteData);
+			$buttonNew = create_action_buttons_additional($add_action, $restoreDeleted);
+
+			return create_action_buttons_render($buttonView, $buttonEdit, $buttonDelete, $buttonNew);
+			
+		} catch (\Exception $e) {
+			error_log('create_action_buttons() error: ' . $e->getMessage());
+			return ''; // Return empty string on error
+		}
+	}
+}
+
+if (!function_exists('create_action_buttons_parse_delete')) {
+
 	/**
-		 * Create action buttons for table rows
-		 * SECURITY: Added input validation and error handling
-		 * 
-		 * @param string|false $view View URL or false
-		 * @param string|false $edit Edit URL or false
-		 * @param string|false $delete Delete URL or false
-		 * @param array|bool $add_action Additional actions or false
-		 * @param bool $as_root Whether to use root context
-		 * @return string HTML for action buttons
-		 */
-		function create_action_buttons(string|false $view = false, string|false $edit = false, string|array|false $delete = false, array|bool $add_action = [], bool $as_root = false): string {
-			try {
-				// Input validation
-				if (!is_array($add_action)) {
-					$add_action = [];
-				}
-				
-				$restoreDeleted = false;
-				$deleteData = false;
+	 * Parse delete URL and determine if it's a restore action
+	 * SECURITY: Added error handling
+	 * 
+	 * @param string $delete Delete URL
+	 * @return array Delete data with URL, ID, and restore flag
+	 */
+	function create_action_buttons_parse_delete(string|array|false $delete): array|false {
+		try {
+			$deletePath = explode('/', $delete);
+			$deleteFlag = end($deletePath);
+			$delete_id = intval($deletePath[count($deletePath)-2] ?? 0);
+			
+			// Get current route action name, fallback to empty string if not available
+			$currentRoute = function_exists('canvastack_current_route') ? canvastack_current_route() : null;
+			$actionName = $currentRoute ? $currentRoute->getActionName() : '';
+			$deleteURL = $actionName ? str_replace(CANVASTACK_ROUTE_INDEX_ACTION, CANVASTACK_ROUTE_DESTROY_ACTION, $actionName) : '';
 
-				if (false !== $delete) {
-					$deleteData = create_action_buttons_parse_delete($delete);
-					$restoreDeleted = $deleteData['is_restore'];
-				}
+			$isRestore = (CANVASTACK_RESTORE_DELETED_ACTION === $deleteFlag);
 
-				$buttonView = create_action_buttons_view($view, $restoreDeleted);
-				$buttonEdit = create_action_buttons_edit($edit, $restoreDeleted);
-				$buttonDelete = create_action_buttons_delete($deleteData);
-				$buttonNew = create_action_buttons_additional($add_action, $restoreDeleted);
-
-				return create_action_buttons_render($buttonView, $buttonEdit, $buttonDelete, $buttonNew);
-				
-			} catch (\Exception $e) {
-				error_log('create_action_buttons() error: ' . $e->getMessage());
-				return ''; // Return empty string on error
-			}
+			return [
+				'url' => $deleteURL,
+				'id' => $delete_id,
+				'is_restore' => $isRestore,
+				'delete_path' => $delete
+			];
+			
+		} catch (\Exception $e) {
+			error_log('create_action_buttons_parse_delete() error: ' . $e->getMessage());
+			return [
+				'url' => '',
+				'id' => 0,
+				'is_restore' => false,
+				'delete_path' => ''
+			];
 		}
+	}
+}
 
-		/**
-		 * Parse delete URL and determine if it's a restore action
-		 * SECURITY: Added error handling
-		 * 
-		 * @param string $delete Delete URL
-		 * @return array Delete data with URL, ID, and restore flag
-		 */
-		function create_action_buttons_parse_delete(string|array|false $delete): array|false {
-			try {
-				$deletePath = explode('/', $delete);
-				$deleteFlag = end($deletePath);
-				$delete_id = intval($deletePath[count($deletePath)-2] ?? 0);
-				
-				// Get current route action name, fallback to empty string if not available
-				$currentRoute = function_exists('canvastack_current_route') ? canvastack_current_route() : null;
-				$actionName = $currentRoute ? $currentRoute->getActionName() : '';
-				$deleteURL = $actionName ? str_replace(CANVASTACK_ROUTE_INDEX_ACTION, CANVASTACK_ROUTE_DESTROY_ACTION, $actionName) : '';
-
-				$isRestore = (CANVASTACK_RESTORE_DELETED_ACTION === $deleteFlag);
-
-				return [
-					'url' => $deleteURL,
-					'id' => $delete_id,
-					'is_restore' => $isRestore,
-					'delete_path' => $delete
-				];
-				
-			} catch (\Exception $e) {
-				error_log('create_action_buttons_parse_delete() error: ' . $e->getMessage());
-				return [
-					'url' => '',
-					'id' => 0,
-					'is_restore' => false,
-					'delete_path' => ''
-				];
+if (!function_exists('create_action_buttons_view')) {
+	
+	/**
+	 * Create view button HTML
+	 * SECURITY: Added error handling and XSS protection
+	 * ACCESSIBILITY: Enhanced ARIA attributes and keyboard support
+	 * 
+	 * @param string|false $view View URL
+	 * @param bool $restoreDeleted Whether this is a restore action
+	 * @return array Desktop and mobile button HTML
+	 */
+	function create_action_buttons_view(string|false $view, bool $restoreDeleted): array {
+		try {
+			if (false == $view) {
+				return ['desktop' => false, 'mobile' => false];
 			}
+
+			$view_safe = canvastack_escape_html($view);
+
+			if (true === $restoreDeleted) {
+				// Disabled state for restored items
+				$desktop = '<button type="button" disabled class="btn btn-default btn-xs btn_view" data-toggle="tooltip" data-placement="top" title="View detail" aria-label="View detail (disabled)" aria-disabled="true"><i class="fa fa-eye" aria-hidden="true"></i><span class="sr-only">View detail (disabled)</span></button>';
+				$mobile = '<li class="btn_view"><button type="button" disabled class="tooltip-info" data-rel="tooltip" title="View" aria-label="View detail (disabled)" aria-disabled="true"><span class="blue"><i class="fa fa-search-plus bigger-120" aria-hidden="true"></i></span><span class="sr-only">View (disabled)</span></button></li>';
+			} else {
+				// Active state with proper link
+				$desktop = '<a href="' . $view_safe . '" class="btn btn-success btn-xs btn_view" data-toggle="tooltip" data-placement="top" title="View detail" aria-label="View detail" role="button"><i class="fa fa-eye" aria-hidden="true"></i><span class="sr-only">View</span></a>';
+				$mobile = '<li class="btn_view"><a href="' . $view_safe . '" class="tooltip-info" data-rel="tooltip" title="View" aria-label="View detail" role="button"><span class="blue"><i class="fa fa-search-plus bigger-120" aria-hidden="true"></i></span><span class="sr-only">View</span></a></li>';
+			}
+
+			return ['desktop' => $desktop, 'mobile' => $mobile];
+
+		} catch (\Exception $e) {
+			error_log('create_action_buttons_view() error: ' . $e->getMessage());
+			return ['desktop' => false, 'mobile' => false];
 		}
+	}
+}
 
-		/**
-		 * Create view button HTML
-		 * SECURITY: Added error handling
-		 * 
-		 * @param string|false $view View URL
-		 * @param bool $restoreDeleted Whether this is a restore action
-		 * @return array Desktop and mobile button HTML
-		 */
-		/**
-			 * Create view button HTML
-			 * SECURITY: Added error handling and XSS protection
-			 * ACCESSIBILITY: Enhanced ARIA attributes and keyboard support
-			 * 
-			 * @param string|false $view View URL
-			 * @param bool $restoreDeleted Whether this is a restore action
-			 * @return array Desktop and mobile button HTML
-			 */
-			function create_action_buttons_view(string|false $view, bool $restoreDeleted): array {
-				try {
-					if (false == $view) {
-						return ['desktop' => false, 'mobile' => false];
-					}
+if (!function_exists('create_action_buttons_edit')) {
+		
+	/**
+	 * Create edit button HTML
+	 * SECURITY: Added error handling and XSS protection
+	 * ACCESSIBILITY: Enhanced ARIA attributes and keyboard support
+	 * 
+	 * @param string|false $edit Edit URL
+	 * @param bool $restoreDeleted Whether this is a restore action
+	 * @return array Desktop and mobile button HTML
+	 */
+	function create_action_buttons_edit(string|false $edit, bool $restoreDeleted): array {
+		try {
+			if (false == $edit) {
+				return ['desktop' => false, 'mobile' => false];
+			}
 
-					$view_safe = canvastack_escape_html($view);
+			$edit_safe = canvastack_escape_html($edit);
 
-					if (true === $restoreDeleted) {
-						// Disabled state for restored items
-						$desktop = '<button type="button" disabled class="btn btn-default btn-xs btn_view" data-toggle="tooltip" data-placement="top" title="View detail" aria-label="View detail (disabled)" aria-disabled="true"><i class="fa fa-eye" aria-hidden="true"></i><span class="sr-only">View detail (disabled)</span></button>';
-						$mobile = '<li class="btn_view"><button type="button" disabled class="tooltip-info" data-rel="tooltip" title="View" aria-label="View detail (disabled)" aria-disabled="true"><span class="blue"><i class="fa fa-search-plus bigger-120" aria-hidden="true"></i></span><span class="sr-only">View (disabled)</span></button></li>';
-					} else {
-						// Active state with proper link
-						$desktop = '<a href="' . $view_safe . '" class="btn btn-success btn-xs btn_view" data-toggle="tooltip" data-placement="top" title="View detail" aria-label="View detail" role="button"><i class="fa fa-eye" aria-hidden="true"></i><span class="sr-only">View</span></a>';
-						$mobile = '<li class="btn_view"><a href="' . $view_safe . '" class="tooltip-info" data-rel="tooltip" title="View" aria-label="View detail" role="button"><span class="blue"><i class="fa fa-search-plus bigger-120" aria-hidden="true"></i></span><span class="sr-only">View</span></a></li>';
-					}
+			if (true === $restoreDeleted) {
+				// Disabled state for restored items
+				$desktop = '<button type="button" disabled class="btn btn-default btn-xs btn_edit" data-toggle="tooltip" data-placement="top" title="Edit" aria-label="Edit (disabled)" aria-disabled="true"><i class="fa fa-pencil" aria-hidden="true"></i><span class="sr-only">Edit (disabled)</span></button>';
+				$mobile = '<li class="btn_edit"><button type="button" disabled class="tooltip-success" data-rel="tooltip" title="Edit" aria-label="Edit (disabled)" aria-disabled="true"><span class="green"><i class="fa fa-pencil-square-o bigger-120" aria-hidden="true"></i></span><span class="sr-only">Edit (disabled)</span></button></li>';
+			} else {
+				// Active state with proper link
+				$desktop = '<a href="' . $edit_safe . '" class="btn btn-primary btn-xs btn_edit" data-toggle="tooltip" data-placement="top" title="Edit" aria-label="Edit" role="button"><i class="fa fa-pencil" aria-hidden="true"></i><span class="sr-only">Edit</span></a>';
+				$mobile = '<li class="btn_edit"><a href="' . $edit_safe . '" class="tooltip-success" data-rel="tooltip" title="Edit" aria-label="Edit" role="button"><span class="green"><i class="fa fa-pencil-square-o bigger-120" aria-hidden="true"></i></span><span class="sr-only">Edit</span></a></li>';
+			}
 
-					return ['desktop' => $desktop, 'mobile' => $mobile];
+			return ['desktop' => $desktop, 'mobile' => $mobile];
 
-				} catch (\Exception $e) {
-					error_log('create_action_buttons_view() error: ' . $e->getMessage());
-					return ['desktop' => false, 'mobile' => false];
+		} catch (\Exception $e) {
+			error_log('create_action_buttons_edit() error: ' . $e->getMessage());
+			return ['desktop' => false, 'mobile' => false];
+		}
+	}
+}
+
+if (!function_exists('create_action_buttons_delete')) {
+		
+	/**
+	 * Create delete button HTML
+	 * SECURITY: Added error handling and XSS protection
+	 * ACCESSIBILITY: Enhanced ARIA attributes and keyboard support
+	 * 
+	 * @param array|false $deleteData Delete data from parse_delete
+	 * @return array Desktop and mobile button HTML
+	 */
+	function create_action_buttons_delete(array|false $deleteData): array {
+		try {
+			if (false === $deleteData) {
+				return ['desktop' => false, 'mobile' => false];
+			}
+
+			// Generate delete URL - handle both route-based and direct URL
+			try {
+				if (!empty($deleteData['url'])) {
+					$delete_url = action($deleteData['url'], $deleteData['id']);
+				} else {
+					// Fallback: use delete_path directly
+					$delete_url = $deleteData['delete_path'];
+				}
+			} catch (\Exception $e) {
+				// If action() fails (e.g., in tests), use delete_path directly
+				$delete_url = $deleteData['delete_path'];
+			}
+			
+			$delete_url_safe = canvastack_escape_html($delete_url);
+			$delete_path_safe = canvastack_escape_html($deleteData['delete_path']);
+
+			if ($deleteData['is_restore']) {
+				// Restore button
+				$buttonAttr = 'class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="top" title="Restore" aria-label="Restore deleted item"';
+				$iconAttr = 'fa fa-recycle';
+				$ariaLabel = 'Restore deleted item';
+				$srText = 'Restore';
+			} else {
+				// Delete button with confirmation
+				$buttonAttr = 'class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="top" title="Delete" aria-label="Delete" data-confirm="Are you sure you want to delete this item?"';
+				$iconAttr = 'fa fa-times';
+				$ariaLabel = 'Delete';
+				$srText = 'Delete';
+			}
+
+			$delete_action = '<form action="' . $delete_url_safe . '" method="post" class="btn btn_delete" style="padding:0 !important" onsubmit="return confirm(\'Are you sure you want to delete this item?\');">' . csrf_field() . '<input name="_method" type="hidden" value="DELETE">';
+			$desktop = $delete_action . '<button ' . $buttonAttr . ' type="submit"><i class="' . $iconAttr . '" aria-hidden="true"></i><span class="sr-only">' . $srText . '</span></button></form>';
+			$mobile = '<li><a href="' . $delete_path_safe . '" class="tooltip-error btn_delete" data-rel="tooltip" title="' . $ariaLabel . '" aria-label="' . $ariaLabel . '" role="button" data-confirm="Are you sure?"><span class="red"><i class="fa fa-trash-o bigger-120" aria-hidden="true"></i></span><span class="sr-only">' . $srText . '</span></a></li>';
+
+			return ['desktop' => $desktop, 'mobile' => $mobile];
+
+		} catch (\Exception $e) {
+			error_log('create_action_buttons_delete() error: ' . $e->getMessage());
+			return ['desktop' => false, 'mobile' => false];
+		}
+	}
+}
+
+if (!function_exists('create_action_buttons_additional')) {
+		
+	/**
+	 * Create additional action buttons HTML
+	 * SECURITY: Added error handling and XSS protection
+	 * ACCESSIBILITY: Enhanced ARIA attributes and keyboard support
+	 * 
+	 * @param array $add_action Additional actions with structure:
+	 *        [
+	 *          'action_name' => [
+	 *            'url' => 'action_url',
+	 *            'color' => 'btn_color',
+	 *            'icon' => 'icon_name',
+	 *            'label' => 'Button Label',
+	 *            'tooltip' => 'Tooltip text',
+	 *            'confirm' => 'Confirmation message' (optional)
+	 *          ]
+	 *        ]
+	 * @param bool $restoreDeleted Whether this is a restore action
+	 * @return array Desktop and mobile button HTML
+	 */
+	function create_action_buttons_additional(array $add_action, bool $restoreDeleted): array {
+		try {
+			if (!is_array($add_action) || count($add_action) < 1) {
+				return ['desktop' => '', 'mobile' => ''];
+			}
+
+			$desktop = '';
+			$mobile = '';
+
+			foreach ($add_action as $new_action_name => $new_action_values) {
+				// Extract action properties with defaults
+				$btn_name = $new_action_name;
+				$row_name = $new_action_values['label'] ?? camel_case($new_action_name);
+				$row_url = $new_action_values['url'] ?? '';
+				$row_color = $new_action_values['color'] ?? 'default';
+				$row_icon = $new_action_values['icon'] ?? 'link';
+				$row_tooltip = $new_action_values['tooltip'] ?? $row_name;
+				$row_confirm = $new_action_values['confirm'] ?? null;
+
+				// Escape for HTML context
+				$row_name_safe = canvastack_escape_html($row_name);
+				$row_url_safe = canvastack_escape_html($row_url);
+				$row_icon_safe = canvastack_escape_html($row_icon);
+				$row_tooltip_safe = canvastack_escape_html($row_tooltip);
+				$btn_name_safe = canvastack_escape_html($btn_name);
+
+				// Build confirmation attribute if needed
+				$confirmAttr = '';
+				if ($row_confirm) {
+					$row_confirm_safe = canvastack_escape_html($row_confirm);
+					$confirmAttr = ' data-confirm="' . $row_confirm_safe . '" onclick="return confirm(\'' . addslashes($row_confirm_safe) . '\');"';
+				}
+
+				if (true === $restoreDeleted) {
+					// Disabled state for restored items
+					$desktop .= '<button type="button" disabled class="btn btn-default btn-xs ' . $btn_name_safe . '" data-toggle="tooltip" data-placement="top" title="' . $row_tooltip_safe . '" aria-label="' . $row_name_safe . ' (disabled)" aria-disabled="true"><i class="fa fa-' . $row_icon_safe . '" aria-hidden="true"></i><span class="sr-only">' . $row_name_safe . ' (disabled)</span></button>';
+					$mobile .= '<li><button type="button" disabled class="tooltip-error ' . $btn_name_safe . '" data-rel="tooltip" title="' . $row_tooltip_safe . '" aria-label="' . $row_name_safe . ' (disabled)" aria-disabled="true"><span class="red"><i class="fa fa-' . $row_icon_safe . ' bigger-120" aria-hidden="true"></i></span><span class="sr-only">' . $row_name_safe . ' (disabled)</span></button></li>';
+				} else {
+					// Active state with proper link
+					$desktop .= '<a href="' . $row_url_safe . '" class="btn ' . $btn_name_safe . ' btn-' . $row_color. ' btn-xs" data-toggle="tooltip" data-placement="top" title="' . $row_tooltip_safe . '" aria-label="' . $row_name_safe . '" role="button"' . $confirmAttr . '><i class="fa fa-' . $row_icon_safe . '" aria-hidden="true"></i><span class="sr-only">' . $row_name_safe . '</span></a>';
+					$mobile .= '<li><a href="' . $row_url_safe . '" class="tooltip-error ' . $btn_name_safe . '" data-rel="tooltip" title="' . $row_tooltip_safe . '" aria-label="' . $row_name_safe . '" role="button"' . $confirmAttr . '><span class="red"><i class="fa fa-' . $row_icon_safe . ' bigger-120" aria-hidden="true"></i></span><span class="sr-only">' . $row_name_safe . '</span></a></li>';
 				}
 			}
 
-		/**
-		 * Create edit button HTML
-		 * SECURITY: Added error handling
-		 * 
-		 * @param string|false $edit Edit URL
-		 * @param bool $restoreDeleted Whether this is a restore action
-		 * @return array Desktop and mobile button HTML
-		 */
-		/**
-			 * Create edit button HTML
-			 * SECURITY: Added error handling and XSS protection
-			 * ACCESSIBILITY: Enhanced ARIA attributes and keyboard support
-			 * 
-			 * @param string|false $edit Edit URL
-			 * @param bool $restoreDeleted Whether this is a restore action
-			 * @return array Desktop and mobile button HTML
-			 */
-			function create_action_buttons_edit(string|false $edit, bool $restoreDeleted): array {
-				try {
-					if (false == $edit) {
-						return ['desktop' => false, 'mobile' => false];
-					}
+			return ['desktop' => $desktop, 'mobile' => $mobile];
 
-					$edit_safe = canvastack_escape_html($edit);
+		} catch (\Exception $e) {
+			error_log('create_action_buttons_additional() error: ' . $e->getMessage());
+			return ['desktop' => '', 'mobile' => ''];
+		}
+	}
+}
 
-					if (true === $restoreDeleted) {
-						// Disabled state for restored items
-						$desktop = '<button type="button" disabled class="btn btn-default btn-xs btn_edit" data-toggle="tooltip" data-placement="top" title="Edit" aria-label="Edit (disabled)" aria-disabled="true"><i class="fa fa-pencil" aria-hidden="true"></i><span class="sr-only">Edit (disabled)</span></button>';
-						$mobile = '<li class="btn_edit"><button type="button" disabled class="tooltip-success" data-rel="tooltip" title="Edit" aria-label="Edit (disabled)" aria-disabled="true"><span class="green"><i class="fa fa-pencil-square-o bigger-120" aria-hidden="true"></i></span><span class="sr-only">Edit (disabled)</span></button></li>';
-					} else {
-						// Active state with proper link
-						$desktop = '<a href="' . $edit_safe . '" class="btn btn-primary btn-xs btn_edit" data-toggle="tooltip" data-placement="top" title="Edit" aria-label="Edit" role="button"><i class="fa fa-pencil" aria-hidden="true"></i><span class="sr-only">Edit</span></a>';
-						$mobile = '<li class="btn_edit"><a href="' . $edit_safe . '" class="tooltip-success" data-rel="tooltip" title="Edit" aria-label="Edit" role="button"><span class="green"><i class="fa fa-pencil-square-o bigger-120" aria-hidden="true"></i></span><span class="sr-only">Edit</span></a></li>';
-					}
+if (!function_exists('create_action_buttons_render')) {
+		
+	/**
+	 * Render final action buttons HTML
+	 * ACCESSIBILITY: Enhanced structure with proper ARIA attributes
+	 * 
+	 * @param array $buttonView View button data
+	 * @param array $buttonEdit Edit button data
+	 * @param array $buttonDelete Delete button data
+	 * @param array $buttonNew Additional button data
+	 * @return string Final HTML for action buttons
+	 */
+	function create_action_buttons_render(array $buttonView, array $buttonEdit, array $buttonDelete, array $buttonNew): string {
+		$buttons = ($buttonView['desktop'] ?? '') . ($buttonEdit['desktop'] ?? '') . ($buttonDelete['desktop'] ?? '') . ($buttonNew['desktop'] ?? '');
+		$buttonsMobile = ($buttonView['mobile'] ?? '') . ($buttonEdit['mobile'] ?? '') . ($buttonDelete['mobile'] ?? '') . ($buttonNew['mobile'] ?? '');
 
-					return ['desktop' => $desktop, 'mobile' => $mobile];
+		// Enhanced structure with better accessibility
+		$html  = '<div class="action-buttons-box" role="group" aria-label="Row actions">';
+		$html .= '<div class="hidden-sm hidden-xs action-buttons" role="toolbar" aria-label="Desktop actions">' . $buttons . '</div>';
+		$html .= '<div class="hidden-md hidden-lg">';
+		$html .= '<div class="inline pos-rel">';
+		$html .= '<button class="btn btn-minier btn-yellow dropdown-toggle" data-toggle="dropdown" data-position="auto" aria-haspopup="true" aria-expanded="false" aria-label="Show actions menu">';
+		$html .= '<i class="fa fa-caret-down icon-only bigger-120" aria-hidden="true"></i>';
+		$html .= '<span class="sr-only">Actions</span>';
+		$html .= '</button>';
+		$html .= '<ul class="dropdown-menu dropdown-only-icon dropdown-yellow dropdown-menu-right dropdown-caret dropdown-close" role="menu" aria-label="Mobile actions">' . $buttonsMobile . '</ul>';
+		$html .= '</div></div></div>';
 
-				} catch (\Exception $e) {
-					error_log('create_action_buttons_edit() error: ' . $e->getMessage());
-					return ['desktop' => false, 'mobile' => false];
-				}
-			}
-
-		/**
-		 * Create delete button HTML
-		 * SECURITY: Added error handling
-		 * 
-		 * @param array|false $deleteData Delete data from parse_delete
-		 * @return array Desktop and mobile button HTML
-		 */
-		/**
-			 * Create delete button HTML
-			 * SECURITY: Added error handling and XSS protection
-			 * ACCESSIBILITY: Enhanced ARIA attributes and keyboard support
-			 * 
-			 * @param array|false $deleteData Delete data from parse_delete
-			 * @return array Desktop and mobile button HTML
-			 */
-			function create_action_buttons_delete(array|false $deleteData): array {
-				try {
-					if (false === $deleteData) {
-						return ['desktop' => false, 'mobile' => false];
-					}
-
-					// Generate delete URL - handle both route-based and direct URL
-					try {
-						if (!empty($deleteData['url'])) {
-							$delete_url = action($deleteData['url'], $deleteData['id']);
-						} else {
-							// Fallback: use delete_path directly
-							$delete_url = $deleteData['delete_path'];
-						}
-					} catch (\Exception $e) {
-						// If action() fails (e.g., in tests), use delete_path directly
-						$delete_url = $deleteData['delete_path'];
-					}
-					
-					$delete_url_safe = canvastack_escape_html($delete_url);
-					$delete_path_safe = canvastack_escape_html($deleteData['delete_path']);
-
-					if ($deleteData['is_restore']) {
-						// Restore button
-						$buttonAttr = 'class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="top" title="Restore" aria-label="Restore deleted item"';
-						$iconAttr = 'fa fa-recycle';
-						$ariaLabel = 'Restore deleted item';
-						$srText = 'Restore';
-					} else {
-						// Delete button with confirmation
-						$buttonAttr = 'class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="top" title="Delete" aria-label="Delete" data-confirm="Are you sure you want to delete this item?"';
-						$iconAttr = 'fa fa-times';
-						$ariaLabel = 'Delete';
-						$srText = 'Delete';
-					}
-
-					$delete_action = '<form action="' . $delete_url_safe . '" method="post" class="btn btn_delete" style="padding:0 !important" onsubmit="return confirm(\'Are you sure you want to delete this item?\');">' . csrf_field() . '<input name="_method" type="hidden" value="DELETE">';
-					$desktop = $delete_action . '<button ' . $buttonAttr . ' type="submit"><i class="' . $iconAttr . '" aria-hidden="true"></i><span class="sr-only">' . $srText . '</span></button></form>';
-					$mobile = '<li><a href="' . $delete_path_safe . '" class="tooltip-error btn_delete" data-rel="tooltip" title="' . $ariaLabel . '" aria-label="' . $ariaLabel . '" role="button" data-confirm="Are you sure?"><span class="red"><i class="fa fa-trash-o bigger-120" aria-hidden="true"></i></span><span class="sr-only">' . $srText . '</span></a></li>';
-
-					return ['desktop' => $desktop, 'mobile' => $mobile];
-
-				} catch (\Exception $e) {
-					error_log('create_action_buttons_delete() error: ' . $e->getMessage());
-					return ['desktop' => false, 'mobile' => false];
-				}
-			}
-
-		/**
-		 * Create additional action buttons HTML
-		 * SECURITY: Added error handling
-		 * 
-		 * @param array $add_action Additional actions
-		 * @param bool $restoreDeleted Whether this is a restore action
-		 * @return array Desktop and mobile button HTML
-		 */
-		/**
-			 * Create additional action buttons HTML
-			 * SECURITY: Added error handling and XSS protection
-			 * ACCESSIBILITY: Enhanced ARIA attributes and keyboard support
-			 * 
-			 * @param array $add_action Additional actions with structure:
-			 *        [
-			 *          'action_name' => [
-			 *            'url' => 'action_url',
-			 *            'color' => 'btn_color',
-			 *            'icon' => 'icon_name',
-			 *            'label' => 'Button Label',
-			 *            'tooltip' => 'Tooltip text',
-			 *            'confirm' => 'Confirmation message' (optional)
-			 *          ]
-			 *        ]
-			 * @param bool $restoreDeleted Whether this is a restore action
-			 * @return array Desktop and mobile button HTML
-			 */
-			function create_action_buttons_additional(array $add_action, bool $restoreDeleted): array {
-				try {
-					if (!is_array($add_action) || count($add_action) < 1) {
-						return ['desktop' => '', 'mobile' => ''];
-					}
-
-					$desktop = '';
-					$mobile = '';
-
-					foreach ($add_action as $new_action_name => $new_action_values) {
-						// Extract action properties with defaults
-						$btn_name = $new_action_name;
-						$row_name = $new_action_values['label'] ?? camel_case($new_action_name);
-						$row_url = $new_action_values['url'] ?? '';
-						$row_color = $new_action_values['color'] ?? 'default';
-						$row_icon = $new_action_values['icon'] ?? 'link';
-						$row_tooltip = $new_action_values['tooltip'] ?? $row_name;
-						$row_confirm = $new_action_values['confirm'] ?? null;
-
-						// Escape for HTML context
-						$row_name_safe = canvastack_escape_html($row_name);
-						$row_url_safe = canvastack_escape_html($row_url);
-						$row_icon_safe = canvastack_escape_html($row_icon);
-						$row_tooltip_safe = canvastack_escape_html($row_tooltip);
-						$btn_name_safe = canvastack_escape_html($btn_name);
-
-						// Build confirmation attribute if needed
-						$confirmAttr = '';
-						if ($row_confirm) {
-							$row_confirm_safe = canvastack_escape_html($row_confirm);
-							$confirmAttr = ' data-confirm="' . $row_confirm_safe . '" onclick="return confirm(\'' . addslashes($row_confirm_safe) . '\');"';
-						}
-
-						if (true === $restoreDeleted) {
-							// Disabled state for restored items
-							$desktop .= '<button type="button" disabled class="btn btn-default btn-xs ' . $btn_name_safe . '" data-toggle="tooltip" data-placement="top" title="' . $row_tooltip_safe . '" aria-label="' . $row_name_safe . ' (disabled)" aria-disabled="true"><i class="fa fa-' . $row_icon_safe . '" aria-hidden="true"></i><span class="sr-only">' . $row_name_safe . ' (disabled)</span></button>';
-							$mobile .= '<li><button type="button" disabled class="tooltip-error ' . $btn_name_safe . '" data-rel="tooltip" title="' . $row_tooltip_safe . '" aria-label="' . $row_name_safe . ' (disabled)" aria-disabled="true"><span class="red"><i class="fa fa-' . $row_icon_safe . ' bigger-120" aria-hidden="true"></i></span><span class="sr-only">' . $row_name_safe . ' (disabled)</span></button></li>';
-						} else {
-							// Active state with proper link
-							$desktop .= '<a href="' . $row_url_safe . '" class="btn ' . $btn_name_safe . ' btn-' . $row_color. ' btn-xs" data-toggle="tooltip" data-placement="top" title="' . $row_tooltip_safe . '" aria-label="' . $row_name_safe . '" role="button"' . $confirmAttr . '><i class="fa fa-' . $row_icon_safe . '" aria-hidden="true"></i><span class="sr-only">' . $row_name_safe . '</span></a>';
-							$mobile .= '<li><a href="' . $row_url_safe . '" class="tooltip-error ' . $btn_name_safe . '" data-rel="tooltip" title="' . $row_tooltip_safe . '" aria-label="' . $row_name_safe . '" role="button"' . $confirmAttr . '><span class="red"><i class="fa fa-' . $row_icon_safe . ' bigger-120" aria-hidden="true"></i></span><span class="sr-only">' . $row_name_safe . '</span></a></li>';
-						}
-					}
-
-					return ['desktop' => $desktop, 'mobile' => $mobile];
-
-				} catch (\Exception $e) {
-					error_log('create_action_buttons_additional() error: ' . $e->getMessage());
-					return ['desktop' => '', 'mobile' => ''];
-				}
-			}
-
-		/**
-		 * Render final action buttons HTML
-		 * 
-		 * @param array $buttonView View button data
-		 * @param array $buttonEdit Edit button data
-		 * @param array $buttonDelete Delete button data
-		 * @param array $buttonNew Additional button data
-		 * @return string Final HTML for action buttons
-		 */
-		/**
-			 * Render final action buttons HTML
-			 * ACCESSIBILITY: Enhanced structure with proper ARIA attributes
-			 * 
-			 * @param array $buttonView View button data
-			 * @param array $buttonEdit Edit button data
-			 * @param array $buttonDelete Delete button data
-			 * @param array $buttonNew Additional button data
-			 * @return string Final HTML for action buttons
-			 */
-			function create_action_buttons_render(array $buttonView, array $buttonEdit, array $buttonDelete, array $buttonNew): string {
-				$buttons = ($buttonView['desktop'] ?? '') . ($buttonEdit['desktop'] ?? '') . ($buttonDelete['desktop'] ?? '') . ($buttonNew['desktop'] ?? '');
-				$buttonsMobile = ($buttonView['mobile'] ?? '') . ($buttonEdit['mobile'] ?? '') . ($buttonDelete['mobile'] ?? '') . ($buttonNew['mobile'] ?? '');
-
-				// Enhanced structure with better accessibility
-				$html = '<div class="action-buttons-box" role="group" aria-label="Row actions">';
-				$html .= '<div class="hidden-sm hidden-xs action-buttons" role="toolbar" aria-label="Desktop actions">' . $buttons . '</div>';
-				$html .= '<div class="hidden-md hidden-lg">';
-				$html .= '<div class="inline pos-rel">';
-				$html .= '<button class="btn btn-minier btn-yellow dropdown-toggle" data-toggle="dropdown" data-position="auto" aria-haspopup="true" aria-expanded="false" aria-label="Show actions menu">';
-				$html .= '<i class="fa fa-caret-down icon-only bigger-120" aria-hidden="true"></i>';
-				$html .= '<span class="sr-only">Actions</span>';
-				$html .= '</button>';
-				$html .= '<ul class="dropdown-menu dropdown-only-icon dropdown-yellow dropdown-menu-right dropdown-caret dropdown-close" role="menu" aria-label="Mobile actions">' . $buttonsMobile . '</ul>';
-				$html .= '</div></div></div>';
-
-				return $html;
-			}
+		return $html;
+	}
 }
 
 if (!function_exists('canvastack_table_row_attr')) {
@@ -3108,105 +3072,93 @@ if (!function_exists('canvastack_generate_table')) {
 if (!function_exists('canvastack_draw_query_map_page_table')) {
 	
 	/**
-		 * Draw query map page table
-		 * SECURITY: XSS Fixed - All user input escaped
-		 * 
-		 * @param string $name
-		 * @param string $field_id
-		 * @param string $value_id
-		 * @param array $data
-		 * @param array $buffers
-		 * @param array $fieldbuff
-		 * @return string
-		 */
-		/**
-		 * Draw query mapping page table with field name and value selects
-		 * 
-		 * Generates nested table for role-based page mapping with dynamic select elements.
-		 * Uses SafeHtml marker approach to handle form helper output.
-		 * 
-		 * @param string $name Table class name
-		 * @param string $field_id Field select ID
-		 * @param string $value_id Value select ID
-		 * @param array $data Data containing field_name and field_value select elements
-		 * @param array $buffers Existing buffer data
-		 * @param array $fieldbuff Field buffer IDs
-		 * 
-		 * @return string Safe HTML table (marked as safe)
-		 */
-		function canvastack_draw_query_map_page_table(string $name, string $field_id, mixed $value_id, array $data, array $buffers, array $fieldbuff): string {		
-			$fieldID   = $field_id;
-			$trClass   = null;
+	 * Draw query mapping page table with field name and value selects
+	 * 
+	 * Generates nested table for role-based page mapping with dynamic select elements.
+	 * Uses SafeHtml marker approach to handle form helper output.
+	 * 
+	 * @param string $name Table class name
+	 * @param string $field_id Field select ID
+	 * @param string $value_id Value select ID
+	 * @param array $data Data containing field_name and field_value select elements
+	 * @param array $buffers Existing buffer data
+	 * @param array $fieldbuff Field buffer IDs
+	 * 
+	 * @return string Safe HTML table (marked as safe)
+	 */
+	function canvastack_draw_query_map_page_table(string $name, string $field_id, mixed $value_id, array $data, array $buffers, array $fieldbuff): string {		
+		$fieldID   = $field_id;
+		$trClass   = null;
 
-			// Escape $name for HTML context
-			$name_safe = canvastack_escape_html($name);
-			$o         = "<table class=\"table mapping-table display responsive relative-box {$name_safe}\"><tbody>";
+		// Escape $name for HTML context
+		$name_safe = canvastack_escape_html($name);
+		$o         = "<table class=\"table mapping-table display responsive relative-box {$name_safe}\"><tbody>";
 
-			if (!empty($buffers)) {
-				$n      = 0;
-				$id     = explode('__node__', $field_id)[0];
-				$ico    = 'fa fa-recycle warning';
-				$script = null;
+		if (!empty($buffers)) {
+			$n      = 0;
+			$id     = explode('__node__', $field_id)[0];
+			$ico    = 'fa fa-recycle warning';
+			$script = null;
 
-				/**
-				 * @performance Use array collection + implode() instead of repeated .= in loop
-				 * to avoid repeated string reallocation on each append.
-				 */
-				$rowParts = [];
-				foreach ($buffers[$id] as $field_info => $value) {
-					$n++;
+			/**
+			 * @performance Use array collection + implode() instead of repeated .= in loop
+			 * to avoid repeated string reallocation on each append.
+			 */
+			$rowParts = [];
+			foreach ($buffers[$id] as $field_info => $value) {
+				$n++;
 
-					if ($n > 1) {
-						$field_id = $fieldbuff['ranid'][$field_info];
-						$value_id = $fieldbuff['ranval'][$field_info];
-						$trClass  = " role-add-{$fieldID}";
-						$ico      = 'fa fa-minus-circle danger';
+				if ($n > 1) {
+					$field_id = $fieldbuff['ranid'][$field_info];
+					$value_id = $fieldbuff['ranval'][$field_info];
+					$trClass  = " role-add-{$fieldID}";
+					$ico      = 'fa fa-minus-circle danger';
 
-						// Escape for JavaScript context
-						$field_id_safe = canvastack_escape_js($field_id);
-						$value_id_safe = canvastack_escape_js($value_id);
-						$ajax_field_name_safe = canvastack_escape_js($data['ajax_field_name']);
-						$script   = "<script type='text/javascript'>$(document).ready(function() { rowButtonRemovalMapRoles('{$field_id_safe}', '{$value_id_safe}'); mappingPageFieldnameValues('{$field_id_safe}', '{$value_id_safe}', '{$ajax_field_name_safe}'); });</script>";
-					}
-
-					$rowParts[] = "<tr id=\"row-box-{$field_id}\" class=\"relative-box row-box-{$fieldID}{$trClass}\">"
-						. "<td class=\"qmap-box-{$fieldID} field-name-box\">"
-							// Use SafeHtml::process() to handle marked safe HTML
-							. SafeHtml::process($data['field_name'][$value->target_table][$value->target_field_name])
-						. "</td>"
-						. "<td class=\"qmap-box-{$fieldID} relative-box field-value-box\">"
-							// Use SafeHtml::process() to handle marked safe HTML
-							. SafeHtml::process($data['field_value'][$value->target_table][$field_info])
-							. "<span id=\"remove-row{$field_id}\" class=\"remove-row{$fieldID} multi-chain-buttons\" style=\"\">"
-								. "<i class='{$ico}' aria-hidden='true'></i>"
-							. "</span>"
-							. $script
-						. "</td>"
-					. "</tr>";
+					// Escape for JavaScript context
+					$field_id_safe = canvastack_escape_js($field_id);
+					$value_id_safe = canvastack_escape_js($value_id);
+					$ajax_field_name_safe = canvastack_escape_js($data['ajax_field_name']);
+					$script   = "<script type='text/javascript'>$(document).ready(function() { rowButtonRemovalMapRoles('{$field_id_safe}', '{$value_id_safe}'); mappingPageFieldnameValues('{$field_id_safe}', '{$value_id_safe}', '{$ajax_field_name_safe}'); });</script>";
 				}
-				$o .= implode('', $rowParts);
 
-			} else {
-				$o .= "<tr id=\"row-box-{$field_id}\" class=\"relative-box row-box-{$field_id}\">";
-					$o .= "<td class=\"qmap-box-{$field_id} field-name-box\">";
+				$rowParts[] = "<tr id=\"row-box-{$field_id}\" class=\"relative-box row-box-{$fieldID}{$trClass}\">"
+					. "<td class=\"qmap-box-{$fieldID} field-name-box\">"
 						// Use SafeHtml::process() to handle marked safe HTML
-						$o .= SafeHtml::process($data['field_name']);
-					$o .= "</td>";
-					$o .= "<td class=\"qmap-box-{$field_id} relative-box field-value-box\">";
+						. SafeHtml::process($data['field_name'][$value->target_table][$value->target_field_name])
+					. "</td>"
+					. "<td class=\"qmap-box-{$fieldID} relative-box field-value-box\">"
 						// Use SafeHtml::process() to handle marked safe HTML
-						$o .= SafeHtml::process($data['field_value']);
-						$o .= "<span id=\"remove-row{$field_id}\" class=\"remove-row{$field_id} multi-chain-buttons\" style=\"display:none;\">";
-							$o .= "<i class='fa fa-recycle warning' aria-hidden='true'></i>";
-						$o .= "</span>";
-					$o .= "</td>";
-				$o .= "</tr>";
+						. SafeHtml::process($data['field_value'][$value->target_table][$field_info])
+						. "<span id=\"remove-row{$field_id}\" class=\"remove-row{$fieldID} multi-chain-buttons\" style=\"\">"
+							. "<i class='{$ico}' aria-hidden='true'></i>"
+						. "</span>"
+						. $script
+					. "</td>"
+				. "</tr>";
 			}
+			$o .= implode('', $rowParts);
 
-			$o .= "</tbody></table>";
-
-			// Mark entire table as safe HTML
-			return SafeHtml::mark($o);
+		} else {
+			$o .= "<tr id=\"row-box-{$field_id}\" class=\"relative-box row-box-{$field_id}\">";
+				$o .= "<td class=\"qmap-box-{$field_id} field-name-box\">";
+					// Use SafeHtml::process() to handle marked safe HTML
+					$o .= SafeHtml::process($data['field_name']);
+				$o .= "</td>";
+				$o .= "<td class=\"qmap-box-{$field_id} relative-box field-value-box\">";
+					// Use SafeHtml::process() to handle marked safe HTML
+					$o .= SafeHtml::process($data['field_value']);
+					$o .= "<span id=\"remove-row{$field_id}\" class=\"remove-row{$field_id} multi-chain-buttons\" style=\"display:none;\">";
+						$o .= "<i class='fa fa-recycle warning' aria-hidden='true'></i>";
+					$o .= "</span>";
+				$o .= "</td>";
+			$o .= "</tr>";
 		}
+
+		$o .= "</tbody></table>";
+
+		// Mark entire table as safe HTML
+		return SafeHtml::mark($o);
+	}
 }
 
 // ============================================================================

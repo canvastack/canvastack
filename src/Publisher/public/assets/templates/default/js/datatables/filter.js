@@ -141,6 +141,15 @@ function exportFromModal(modalID, exportID, filterID, token, url, link, filter =
 	});
 }
 
+/**
+ * Initialize DataTable filters with proper state management
+ * 
+ * FIXED: 2026-04-27 - Properly send filter values to DataTables AJAX request
+ * 
+ * @param {string} id - Table ID
+ * @param {string} url - Base AJAX URL
+ * @param {object} obTable - DataTable instance
+ */
 function canvastackDataTableFilters(id, url, obTable) {
 	$('#canvastack-' + id + '-search-box').appendTo('.CanvaStack_' + id + '_canvastack-dt-filter-box');
 	$('.canvastack-dt-search-box').removeClass('hide');
@@ -186,6 +195,11 @@ function canvastackDataTableFilters(id, url, obTable) {
 			}
 		});
 		
+		// Debug logging
+		if (window.APP_DEBUG) {
+			console.log('canvastackDataTableFilters: Collected filter data:', filterData);
+		}
+		
 		// Check if using POST method - prioritize form method attribute
 		var formMethod = $(this).attr('method');
 		var isPostMethod = false;
@@ -219,29 +233,154 @@ function canvastackDataTableFilters(id, url, obTable) {
 			var ajaxSettings = obTable.settings()[0].ajax;
 			var originalDataFn = ajaxSettings.data;
 			
+			// FIXED: Store original data function for later restoration
+			if (!ajaxSettings.originalDataFn) {
+				ajaxSettings.originalDataFn = originalDataFn;
+			}
+			
 			// Create new data function that includes filters
 			ajaxSettings.data = function(d) {
 				// Call original data function if exists
 				if (typeof originalDataFn === 'function') {
 					d = originalDataFn(d) || d;
 				}
+				
 				// Merge filter data into POST body
-				return $.extend({}, d, filterData, {filters: true});
+				var requestData = $.extend({}, d, filterData, {filters: true});
+				
+				if (window.APP_DEBUG) {
+					console.log('canvastackDataTableFilters: Sending AJAX request with filters:', requestData);
+				}
+				
+				return requestData;
 			};
 			
 			// Reload without changing URL (preserves POST method)
-			obTable.ajax.reload(function() {
+			obTable.ajax.reload(function(json) {
+				if (window.APP_DEBUG) {
+					console.log('canvastackDataTableFilters: DataTable reloaded with response:', json);
+				}
+				
 				$('#' + id + '_CanvaStackProcessing').hide();
 				$('#' + id + '_CanvaStackFILTER').modal('hide');
+				
+				// Show filter indicator
+				if (Object.keys(filterData).length > 0) {
+					showFilterIndicator(id, filterData);
+				}
 			});
 		} else {
 			// GET method: Send filters via URL (original behavior)
 			obTable.ajax.url(url + '&' + filterURI.join('&') + '&filters=true').load(function() {
 				$('#' + id + '_CanvaStackProcessing').hide();
 				$('#' + id + '_CanvaStackFILTER').modal('hide');
+				
+				// Show filter indicator
+				if (Object.keys(filterData).length > 0) {
+					showFilterIndicator(id, filterData);
+				}
 			});
 		}
 	});
+}
+
+/**
+ * Show filter indicator badge
+ * 
+ * @param {string} id - Table ID
+ * @param {object} filters - Applied filters
+ */
+function showFilterIndicator(id, filters) {
+	var filterCount = Object.keys(filters).length;
+	
+	if (filterCount > 0) {
+		// Show clear button if exists
+		$('#' + id + '_clearFilterBtn').show();
+		
+		// Add filter badge to filter button if not exists
+		var $filterBtn = $('.' + id + '_CanvaStackFILTERButton');
+		var $badge = $filterBtn.find('.filter-badge');
+		
+		if ($badge.length === 0) {
+			$badge = $('<span>', {
+				'class': 'badge badge-primary filter-badge ml-1',
+				'style': 'font-size: 10px; vertical-align: super;'
+			});
+			$filterBtn.append($badge);
+		}
+		
+		$badge.text(filterCount).show();
+	}
+}
+
+/**
+ * Clear DataTable filters
+ * 
+ * @param {string} id - Table ID
+ * @param {object} obTable - DataTable instance
+ */
+function clearDataTableFilters(id, obTable) {
+	if (window.APP_DEBUG) {
+		console.log('clearDataTableFilters: Clearing filters for table:', id);
+	}
+	
+	// Show processing indicator
+	$('#' + id + '_CanvaStackProcessing').show();
+	
+	// CRITICAL FIX: Clear filters from global storage FIRST
+	// so the AJAX wrapper doesn't re-send them on reload
+	if (window.canvastackDataTableFilters) {
+		// The id here is the short table id, but global storage uses full tableId
+		// Find and clear any matching key
+		Object.keys(window.canvastackDataTableFilters).forEach(function(key) {
+			if (key.indexOf(id) !== -1) {
+				window.canvastackDataTableFilters[key] = {};
+			}
+		});
+	}
+	
+	// Reset filter form
+	var filterFormId = id + '_CanvaStackFILTERForm';
+	$('#' + filterFormId)[0].reset();
+	
+	// Reset chosen selects if using Chosen plugin
+	$('#' + filterFormId + ' select').trigger('chosen:updated');
+	
+	// Get AJAX settings
+	var ajaxSettings = obTable.settings()[0].ajax;
+	
+	// Restore original data function
+	if (ajaxSettings.originalDataFn) {
+		ajaxSettings.data = ajaxSettings.originalDataFn;
+	} else {
+		ajaxSettings.data = function(d) { return d; };
+	}
+	
+	// Reload DataTable without filters
+	obTable.ajax.reload(function() {
+		if (window.APP_DEBUG) {
+			console.log('clearDataTableFilters: Filters cleared, DataTable reloaded');
+		}
+		
+		// Hide processing indicator
+		$('#' + id + '_CanvaStackProcessing').hide();
+		
+		// Hide filter indicator
+		hideFilterIndicator(id);
+	}, false);
+}
+
+/**
+ * Hide filter indicator badge
+ * 
+ * @param {string} id - Table ID
+ */
+function hideFilterIndicator(id) {
+	// Hide clear button
+	$('#' + id + '_clearFilterBtn').hide();
+	
+	// Remove filter badge
+	$('.' + id + '_CanvaStackFILTERButton .filter-badge').remove();
 }
 
 function softDeleteUnnecessaryDatatableComponents(data) {

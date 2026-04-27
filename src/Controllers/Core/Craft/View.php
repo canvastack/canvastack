@@ -666,6 +666,9 @@ trait View {
 		// Handle POST ajax request
 		$filter_datatables = $this->model_filters ?? [];
 		
+		// CRITICAL FIX: Merge POST body data (including filters) into method array
+		$postData = request()->all();
+		
 		$method = [
 			'method' => strtolower(ControllerConstants::HTTP_METHOD_POST),
 			'renderDataTables' => true,
@@ -674,6 +677,20 @@ trait View {
 				'source' => 'dynamics'
 			])
 		];
+		
+		// Merge all POST data (including filter values) into method array
+		$method = array_merge($method, $postData);
+		
+		// Set filters flag if we have filter data
+		if (request()->has('filters') || request()->query('filters')) {
+			$method['filters'] = true;
+		}
+		
+		\Log::info('View::handleDataTablesPostRequest - Method array prepared', [
+			'method_keys' => array_keys($method),
+			'has_filters_flag' => !empty($method['filters']),
+			'post_data_keys' => array_keys($postData)
+		]);
 		
 		return $this->initRenderDatatables($method, $this->data['components']->table, $filter_datatables);
 	}
@@ -1084,7 +1101,24 @@ trait View {
 	 * // Returns: JSON with filtered, paginated user data
 	 * ```
 	 */
+	/**
+	 * Initialize and render DataTables
+	 * 
+	 * FIXED: 2026-04-27 - Properly extract filter values from POST request
+	 * 
+	 * @param array $method Request method parameters
+	 * @param array|object $data Table data configuration
+	 * @param array $model_filters Model-level filters
+	 * @return mixed DataTables response
+	 */
 	private function initRenderDatatables(array $method, array|object $data = [], array $model_filters = []): mixed {
+		// CRITICAL DEBUG: Log all incoming parameters
+		\Log::info('View::initRenderDatatables called', [
+			'method_keys' => array_keys($method),
+			'has_filters_flag' => !empty($method['filters']),
+			'filters_value' => $method['filters'] ?? 'not set'
+		]);
+		
 		if (!empty($data)) {
 			$dataTable = $data;
 		} else {
@@ -1096,24 +1130,55 @@ trait View {
 			$Datatables['datatables'] = $dataTable;
 			$datatables = canvastack_array_to_object_recursive($Datatables);
 			
-			$filters    = [];
+			// FIXED: Extract filter values from request
+			$filters = [];
 			if (!empty($method['filters'])) {
-				if ('true' === $method['filters']) $filters = $method;
+				// Define reserved parameters that should NOT be treated as filters
+				$reservedParams = [
+					'renderDataTables', 'difta', 'filters', '_token', '_method',
+					'draw', 'columns', 'order', 'start', 'length', 'search', 'method'
+				];
+				
+				// Extract filter values from $method array
+				foreach ($method as $key => $value) {
+					if (!in_array($key, $reservedParams) && !empty($value)) {
+						$filters[$key] = $value;
+					}
+				}
+				
+				// CRITICAL DEBUG: Always log filter extraction
+				\Log::info('View: Filters extracted for DataTables', [
+					'filters' => $filters,
+					'filter_count' => count($filters),
+					'method_sample' => array_slice($method, 0, 5, true)
+				]);
+			} else {
+				\Log::warning('View: No filters flag in method', [
+					'method_keys' => array_keys($method)
+				]);
 			}
 			
 			$DataTables = new Datatables();
 			if (!empty($method['method']) && strtolower(ControllerConstants::HTTP_METHOD_POST) === $method['method']) {
+				\Log::info('View: Using POST method for DataTables', [
+					'has_filters' => !empty($filters)
+				]);
+				
 				$initRenderDatatablePost['datatables'] = [
 					'method'           => $method['method'],
 					'renderDataTables' => $method['renderDataTables'],
 					'difta'            => $method['difta'], 
 					'datatables'       => $datatables, 
-					'filters'          => $filters, 
+					'filters'          => $filters,  // ← FIXED: Now contains actual filter values
 					'model_filters'    => $model_filters						
 				];
 				
 				return $this->setObjectInjection($initRenderDatatablePost);
 			}
+			
+			\Log::info('View: Using GET method for DataTables', [
+				'filters' => $filters
+			]);
 			
 			return $DataTables->process($method, $datatables, $filters, $model_filters);
 		}

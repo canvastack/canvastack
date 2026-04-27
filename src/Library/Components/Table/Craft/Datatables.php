@@ -2181,7 +2181,20 @@ class Datatables {
 		
 		$lists = $data->datatables->columns[$table_name]['lists'] ?? null;
 		
+		// Debug: log available column keys vs requested table_name
+		$availableKeys = isset($data->datatables->columns) ? array_keys((array)$data->datatables->columns) : [];
+		\Log::debug('Datatables::selectRequiredColumns', [
+			'table_name' => $table_name,
+			'available_column_keys' => $availableKeys,
+			'key_found' => in_array($table_name, $availableKeys),
+			'lists_count' => $lists ? count($lists) : 0,
+			'lists' => $lists ?? 'NULL'
+		]);
+		
 		if (empty($lists) || !is_array($lists)) {
+			\Log::warning('Datatables::selectRequiredColumns - no lists found, using SELECT *', [
+				'table' => $table_name
+			]);
 			return $model_data;
 		}
 		
@@ -3287,10 +3300,23 @@ class Datatables {
 		$index_lists = $data->datatables->records['index_lists'];
 		
 		if (true === $index_lists) {
-			return $datatables->addIndexColumn()->make(true);
+			$result = $datatables->addIndexColumn()->make(true);
+		} else {
+			$result = $datatables->make();
 		}
 		
-		return $datatables->make();
+		// Debug: log how many columns are in the first data row
+		if (is_object($result) && method_exists($result, 'getData')) {
+			$responseData = $result->getData(true);
+			if (!empty($responseData['data'][0])) {
+				\Log::debug('Datatables::generateTableData - response column count', [
+					'column_count' => count($responseData['data'][0]),
+					'columns' => array_keys($responseData['data'][0])
+				]);
+			}
+		}
+		
+		return $result;
 	}
 	
 	/**
@@ -3627,6 +3653,16 @@ class Datatables {
 	 * 
 	 * @throws \InvalidArgumentException If validation fails
 	 */
+	/**
+	 * Extract filter parameters from POST data
+	 * 
+	 * FIXED: 2026-04-27 - Properly separate system parameters from filter values
+	 * 
+	 * @param array $post POST data (passed by reference)
+	 * @param string|null $connection Database connection
+	 * @return array Extracted filter parameters
+	 * @throws \InvalidArgumentException If _fita format is invalid
+	 */
 	private function extractFilterParameters(array &$post, ?string $connection): array {
 		// Extract connection
 		if (isset($post['grabCanvaStackC'])) {
@@ -3671,8 +3707,61 @@ class Datatables {
 			}
 		}
 		
-		// Remove reserved parameters
-		unset($post['filterDataTables'], $post['_fita'], $post['_token'], $post['_n'], $post['_forKeys']);
+		// FIXED: Separate system parameters from filter values
+		// Define all reserved/system parameters that should NOT be treated as filters
+		$reservedParams = [
+			'filterDataTables',
+			'_fita',
+			'_token',
+			'_n',
+			'_forKeys',
+			'grabCanvaStackC',
+			'_canvastackF',
+			'filters',
+			// DataTables standard parameters
+			'draw',
+			'columns',
+			'order',
+			'start',
+			'length',
+			'search',
+			// Additional system parameters
+			'renderDataTables',
+			'difta',
+			'_method'
+		];
+		
+		// Extract filter values (everything that's NOT a reserved parameter)
+		$filterValues = [];
+		foreach ($post as $key => $value) {
+			if (!in_array($key, $reservedParams) && !empty($value)) {
+				// Validate field name format (prevent SQL injection)
+				if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $key)) {
+					$filterValues[$key] = $value;
+				} else {
+					\Log::warning('Datatables: Invalid filter field name ignored', [
+						'field' => $key,
+						'value' => $value
+					]);
+				}
+			}
+		}
+		
+		// Log filter extraction for debugging
+		if (config('app.debug')) {
+			\Log::debug('Datatables: Filter parameters extracted', [
+				'table' => $table,
+				'target' => $target,
+				'filter_values' => $filterValues,
+				'filters' => $filters,
+				'prev' => $prev
+			]);
+		}
+		
+		// Remove reserved parameters from $post
+		foreach ($reservedParams as $param) {
+			unset($post[$param]);
+		}
 		
 		// Sanitize target field name
 		$safeTarget = preg_replace('/[^a-zA-Z0-9_.]/', '', $target);
@@ -3685,7 +3774,7 @@ class Datatables {
 			'prev' => $prev,
 			'filters' => $filters,
 			'fKeys' => $fKeys,
-			'post' => $post
+			'post' => $filterValues  // ← FIXED: Only pass filter values, not all POST data
 		];
 	}
 	
@@ -3891,6 +3980,14 @@ class Datatables {
 	 */
 	public function processPost(array $postData, object $data, array $filters = [], array $filter_page = []): mixed {
 		try {
+			// CRITICAL DEBUG: Log processPost entry
+			\Log::info('Datatables::processPost called', [
+				'postData_keys' => array_keys($postData),
+				'filters_param' => $filters,
+				'has_user_fullname' => isset($postData['user_fullname']),
+				'has_module_name' => isset($postData['module_name'])
+			]);
+			
 			// SECURITY: Validate inputs
 			if (!is_array($postData)) {
 				throw new \InvalidArgumentException('POST data must be an array');
@@ -3902,6 +3999,13 @@ class Datatables {
 			
 			// Convert POST data to GET format (same format as process() expects)
 			$method = $this->convertPostToGetFormat($postData);
+			
+			\Log::info('Datatables::processPost after convertPostToGetFormat', [
+				'method_keys' => array_keys($method),
+				'has_filters_flag' => !empty($method['filters']),
+				'has_user_fullname' => isset($method['user_fullname']),
+				'has_module_name' => isset($method['module_name'])
+			]);
 			
 			// Call existing process() method (reuse all GET logic)
 			return $this->process($method, $data, $filters, $filter_page);
@@ -3961,6 +4065,13 @@ class Datatables {
 	 * @return array Parsed POST data
 	 */
 	public function parsePostRequest(mixed $request): array {
+		// CRITICAL DEBUG: Log raw request
+		\Log::info('Datatables::parsePostRequest called', [
+			'all_input_keys' => array_keys($request->all()),
+			'has_filters_flag' => $request->has('filters'),
+			'filters_value' => $request->input('filters')
+		]);
+		
 		// Extract standard DataTables parameters
 		$postData = [
 			'draw' => $request->input('draw', 0),
@@ -3981,8 +4092,20 @@ class Datatables {
 			unset($allInput[$reserved]);
 		}
 		
+		// CRITICAL DEBUG: Log extracted filters
+		\Log::info('Datatables::parsePostRequest extracted filters', [
+			'custom_filters' => $allInput,
+			'filter_count' => count($allInput)
+		]);
+		
 		// Merge custom filters into postData
 		$postData = array_merge($postData, $allInput);
+		
+		\Log::info('Datatables::parsePostRequest final postData', [
+			'postData_keys' => array_keys($postData),
+			'has_user_fullname' => isset($postData['user_fullname']),
+			'has_module_name' => isset($postData['module_name'])
+		]);
 		
 		return $postData;
 	}
