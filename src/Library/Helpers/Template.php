@@ -42,6 +42,54 @@ if (!function_exists('canvastack_current_template')) {
 	}
 }
 
+if (!function_exists('canvastack_detect_templates')) {
+
+	/**
+	 * Auto-detect available templates from resources/views directory.
+	 *
+	 * A folder is considered a valid template if it contains the marker file:
+	 *   template/admin/index.blade.php
+	 *
+	 * Excluded folders: errors, vendor (and any non-directory entry).
+	 *
+	 * Returns an array suitable for canvastack selectbox:
+	 *   ['' => '', 'default' => 'Default', 'canvasign' => 'Canvasign']
+	 *
+	 * @return array<string, string>
+	 */
+	function canvastack_detect_templates(): array {
+		$viewsPath = base_path('resources/views');
+		$excluded  = ['errors', 'vendor'];
+		$marker    = 'template/admin/index.blade.php';
+
+		$options = ['' => ''];
+
+		if (!is_dir($viewsPath)) {
+			return $options;
+		}
+
+		$folders = array_filter(
+			scandir($viewsPath),
+			fn($entry) => $entry !== '.' &&
+			              $entry !== '..' &&
+			              !in_array($entry, $excluded, true) &&
+			              is_dir($viewsPath . DIRECTORY_SEPARATOR . $entry)
+		);
+
+		foreach ($folders as $folder) {
+			$markerFile = $viewsPath . DIRECTORY_SEPARATOR . $folder
+			            . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $marker);
+
+			if (file_exists($markerFile)) {
+				// Convert folder name to display label: "canvasign" → "Canvasign"
+				$options[$folder] = ucfirst($folder);
+			}
+		}
+
+		return $options;
+	}
+}
+
 if (!function_exists('canvastack_js')) {
 	
 	function canvastack_js($scripts, $position = 'bottom', $as_script_code = false) {

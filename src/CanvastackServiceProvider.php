@@ -65,6 +65,9 @@ class CanvastackServiceProvider extends ServiceProvider {
 		
 		// Load SMTP configuration from preference
 		$this->loadMailConfiguration();
+
+		// Sync template, language, timezone from DB preference into runtime config
+		$this->loadPreferenceConfiguration();
 	}
 
 	/**
@@ -145,6 +148,57 @@ class CanvastackServiceProvider extends ServiceProvider {
 		});
 	}
 	
+	/**
+	 * Load Preference Configuration from Database
+	 * 
+	 * Syncs template, language, and timezone settings stored in the
+	 * `base_preference` table into the runtime config so that
+	 * canvastack_config('template') and related helpers always reflect
+	 * the value chosen in the Preference admin page.
+	 * 
+	 * Falls back silently to the file-based defaults when the database
+	 * is unavailable (e.g. during migrations or first install).
+	 * 
+	 * @return void
+	 */
+	protected function loadPreferenceConfiguration(): void
+	{
+		// Skip in console context to avoid issues during migrations
+		if ($this->app->runningInConsole()) {
+			return;
+		}
+
+		try {
+			$pref = \Canvastack\Canvastack\Models\Admin\System\Preference::first();
+
+			if (!$pref) {
+				return;
+			}
+
+			// Sync template
+			if (!empty($pref->template)) {
+				config(['canvastack.settings.template' => $pref->template]);
+			}
+
+			// Sync language
+			if (!empty($pref->language)) {
+				config(['canvastack.settings.lang' => $pref->language]);
+				app()->setLocale($pref->language);
+			}
+
+			// Sync timezone
+			if (!empty($pref->timezone)) {
+				config(['app.timezone' => $pref->timezone]);
+				date_default_timezone_set($pref->timezone);
+			}
+
+		} catch (\Exception $e) {
+			// DB not ready yet (migration, fresh install) — use file-based defaults
+			\Log::warning('CanvastackServiceProvider: Could not load preference configuration', [
+				'error' => $e->getMessage(),
+			]);
+		}
+	}
 	/**
 	 * Load Mail Configuration from Preference
 	 * 

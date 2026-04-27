@@ -67,7 +67,7 @@ class PreferenceController extends Controller {
 		
 		$this->form->textarea('header', $this->model_data->header, ['class' => 'text-area-class limit-info', 'maxlength' => 20, 'placeholder' => 'Header']);
 		$this->form->textarea('footer', $this->model_data->footer);
-		$this->form->selectbox('template', ['', 'default' => 'Default'], $this->model_data->template);
+		$this->form->selectbox('template', canvastack_detect_templates(), $this->model_data->template);
 		$this->form->selectbox('language', $this->input_language(), $this->model_data->language);
 		$this->form->selectbox('timezone', $this->input_timezone(), $this->model_data->timezone);
 		
