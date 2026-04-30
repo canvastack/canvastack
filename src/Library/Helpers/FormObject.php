@@ -2,6 +2,7 @@
 use Collective\Html\FormFacade;
 use Canvastack\Canvastack\Library\Constants\SafeHtml;
 use Canvastack\Canvastack\Library\Constants\FormConstants;
+use Canvastack\Canvastack\Library\Theme\ThemeAdapterResolver;
 
 /**
  * Created on 16 Mar 2021
@@ -375,70 +376,7 @@ if (!function_exists('canvastack_form_checkList')) {
 	 * // Throws: InvalidArgumentException
 	 */
 	function canvastack_form_checkList(mixed $name, string|false $value = false, string|false $label = false, bool $checked = false, string $class = 'success', string|false $id = false, ?string $inputNode = null): string {
-		// Security: Escape all output values
-		$nameEscaped  = canvastack_form_escape_html($name);
-		$valueEscaped = canvastack_form_escape_html($value);
-		$labelEscaped = canvastack_form_escape_html($label);
-		$classEscaped = canvastack_form_escape_html($class);
-		$idEscaped    = canvastack_form_escape_html($id);
-		
-		$nameAttr	= false;
-		$valueAttr	= false;
-		$idAttr		= false;
-		$idForAttr	= false;
-		$labelName	= '&nbsp;';
-		$checkBox	= false;
-		
-		if (false !== $name)  $nameAttr  = ' name="' . $nameEscaped . '"';
-		if (false !== $value) $valueAttr = ' value="' . $valueEscaped . '"';
-		if (false !== $id)		{
-			$idAttr    = ' id="' . $idEscaped . '"';
-			$idForAttr = ' for="' . $idEscaped . '"';
-		} else {
-			$idAttr    = ' id="' . $nameEscaped . '"';
-			$idForAttr = ' for="' . $nameEscaped . '"';
-		}
-		if (false !== $label)   $labelName = "&nbsp; {$labelEscaped}";
-		if (false !== $checked) {
-			$checkBox = ' checked="checked" aria-checked="true"';
-		} else {
-			$checkBox = ' aria-checked="false"';
-		}
-		
-		// Security: Validate and sanitize inputNode
-		$inputNodeAttr = '';
-		if (!empty($inputNode)) {
-			// inputNode contains HTML attributes (e.g., "class=\"value\"" or "data-attr=\"value\"")
-			// Validate format to prevent attribute injection attacks
-			
-			// Allow only safe characters: alphanumeric, dash, underscore, equals, quotes, dots, spaces
-			if (!preg_match('/^[a-zA-Z0-9_\-="\'\s.]+$/', $inputNode)) {
-				error_log('SECURITY WARNING: Invalid characters in inputNode: ' . $inputNode);
-				throw new \InvalidArgumentException('Invalid inputNode format. Only alphanumeric, dashes, quotes, dots, and spaces allowed.');
-			}
-			
-			// Block dangerous event handler attributes
-			$dangerousAttrs = ['onclick', 'onload', 'onerror', 'onmouseover', 'onfocus', 'onblur', 'onchange', 'onsubmit', 'onkeyup', 'onkeydown'];
-			foreach ($dangerousAttrs as $attr) {
-				if (stripos($inputNode, $attr . '=') !== false) {
-					error_log('SECURITY WARNING: Dangerous attribute blocked in inputNode: ' . $attr);
-					throw new \InvalidArgumentException('Event handler attributes not allowed in inputNode');
-				}
-			}
-			
-			// Warn if format is unusual (not standard attribute="value" format)
-			if (!preg_match('/^[a-zA-Z0-9_-]+=["\'][^"\']*["\']$/', $inputNode)) {
-				error_log('INFO: inputNode format unusual (may be valid): ' . $inputNode);
-			}
-			
-			$inputNodeAttr = " " . $inputNode;
-		}
-		
-		// Accessibility: Add role for checkbox wrapper
-		$o = "<div class=\"ckbox ckbox-{$classEscaped}\" role=\"checkbox\" tabindex=\"0\"><input type=\"checkbox\"{$valueAttr}{$nameAttr}{$idAttr}{$checkBox}{$inputNodeAttr}><label{$idForAttr}>{$labelName}</label></div>";
-		
-		// Mark as safe HTML to prevent double-encoding
-		return SafeHtml::mark($o);
+		return ThemeAdapterResolver::resolve()->renderCheckList($name, $value, $label, $checked, $class, $id, $inputNode);
 	}
 }
 
@@ -460,22 +398,7 @@ if (!function_exists('canvastack_form_selectbox')) {
 	 * @return string Safe HTML select element (marked as safe)
 	 */
 	function canvastack_form_selectbox(string $name, array $values = [], mixed $selected = false, array $attributes = [], bool $label = true, array|bool $set_first_value = [null => 'Select']): string {
-		$default_attr = ['class' => FormConstants::DEFAULT_SELECTBOX_CLASS];
-		if (!empty($attributes)) {
-			$attributes = canvastack_form_change_input_attribute($attributes, 'class', FormConstants::DEFAULT_SELECTBOX_CLASS);
-		} else {
-			$attributes = $default_attr;
-		}
-		
-		if (is_array($set_first_value) && !empty($set_first_value)) {
-			$values = array_merge_recursive($set_first_value, $values);
-		}
-		
-		// Laravel FormFacade automatically escapes all values
-		$selectbox = FormFacade::select($name, $values, $selected, $attributes);
-		
-		// Mark as safe HTML to prevent double-encoding
-		return SafeHtml::mark($selectbox);
+		return ThemeAdapterResolver::resolve()->renderSelectBox($name, $values, $selected, $attributes, $label, $set_first_value);
 	}
 }
 
@@ -496,72 +419,7 @@ if (!function_exists('canvastack_form_alert_message')) {
 	 * @return string HTML alert element
 	 */
 	function canvastack_form_alert_message(string|array $message = 'Success', string $type = 'success', string $title = 'Success', string $prefix = 'fa-check', string|false $extra = false): string {
-		// Security: Escape type and prefix for safe HTML rendering
-		$type = canvastack_form_escape_html($type);
-		$prefix = canvastack_form_escape_html($prefix);
-		$title = canvastack_form_escape_html($title);
-		
-		$content_message = null;
-		if (is_array($message) && 'success' !== $type) {
-			$content_message = '<ul class="alert-info-content">';
-			foreach ($message as $mfield => $mData) {
-				// Security: Escape field names
-				$mfieldEscaped = canvastack_form_escape_html($mfield);
-				$mfieldLabel = ucwords(str_replace('_', ' ', $mfieldEscaped));
-				
-				$content_message .= '<li class="title"><div>';
-				$content_message .= '<label for="' . $mfieldEscaped . '" class="control-label">' . $mfieldLabel . '</label>';
-				if (is_array($mData)) {
-					$content_message .= '<ul class="content">';
-					foreach ($mData as $imData) {
-						// Security: Escape each message data
-						$imDataEscaped = canvastack_form_escape_html($imData);
-						$content_message .= '<li>';
-						$content_message .= '<label for="' . $mfieldEscaped . '" class="control-label">' . $imDataEscaped . '</label>';
-						$content_message .= '</li>';
-					}
-					$content_message .= '</ul>';
-				} else {
-					// Security: Escape message data
-					$mDataEscaped = canvastack_form_escape_html($mData);
-					$content_message .= '<ul class="content"><li><label for="' . $mfieldEscaped . '" class="control-label">' . $mDataEscaped . '</label></li></ul>';
-				}
-				$content_message .= '</div></li>';
-			}
-			$content_message .= '</ul>';
-		} else {
-			// Security: Escape simple message string
-			if (!is_array($message)) {
-				$content_message = canvastack_form_escape_html($message);
-			}
-		}
-		
-		$prefix_tag = false;
-		if (false !== $prefix && '' !== $prefix) $prefix_tag = "<strong><i class=\"fa {$prefix}\"></i> &nbsp;{$title}</strong>";
-		
-		// Security: Sanitize extra HTML - strip dangerous tags but allow safe formatting
-		$extraHtml = '';
-		if (false !== $extra && '' !== $extra) {
-			// Allow only safe HTML tags
-			$extraHtml = strip_tags($extra, '<br><b><i><strong><em><span><div><p><ul><li><a>');
-		}
-		
-		// Accessibility: Add aria-live based on alert type
-		$ariaLive = ($type === 'danger' || $type === 'warning') ? 'assertive' : 'polite';
-		
-		$o  = "<div class=\"alert alert-block alert-{$type} animated fadeInDown alert-dismissable\" role=\"alert\" aria-live=\"{$ariaLive}\" aria-atomic=\"true\">";
-		$o .= "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close alert\">";
-		$o .= "<i class=\"fa fa-times\" aria-hidden=\"true\"></i>";
-		$o .= "</button>";
-		if (!is_array($message)) {
-			$o .= "<p>{$prefix_tag} {$content_message}</p>";
-		} else {
-			$o .= "<p>{$prefix_tag}</p>{$content_message}";
-		}
-		$o .= $extraHtml;
-		$o .= "</div>";
-		
-		return $o;
+		return ThemeAdapterResolver::resolve()->renderAlertMessage($message, $type, $title, $prefix, $extra);
 	}
 }
 
@@ -580,28 +438,7 @@ if (!function_exists('canvastack_form_create_header_tab')) {
 	 * @return string HTML tab header element
 	 */
 	function canvastack_form_create_header_tab(string $data, string $pointer, string|false $active = false, string|false $class = false): string {
-		// Security: Escape all user inputs
-		$dataEscaped = canvastack_form_escape_html($data);
-		$pointerEscaped = canvastack_form_escape_html($pointer);
-		$activeEscaped = canvastack_form_escape_html($active);
-		$classEscaped = canvastack_form_escape_html($class);
-		
-		$activeClass = false;
-		$classTag    = false;
-		$tabName     = ucwords(str_replace('_', ' ', $dataEscaped));
-		$ariaSelected = 'false';
-		
-		if ($active) {
-			$activeClass = '' . $activeEscaped . '';
-			$ariaSelected = 'true';
-		}
-		if ($class)  $classTag = '<i class="' . $classEscaped . '" aria-hidden="true"></i>';
-		
-		// Accessibility: Add aria-selected and aria-controls, plus id for aria-labelledby reference
-		$string = "<li class=\"nav-item\" role=\"presentation\"><a id=\"{$pointerEscaped}-tab\" class=\"nav-link {$activeClass}\" data-toggle=\"tab\" role=\"tab\" href=\"#{$pointerEscaped}\" aria-selected=\"{$ariaSelected}\" aria-controls=\"{$pointerEscaped}\">{$classTag}{$tabName}</a></li>";
-		
-		// Security: Mark output as safe HTML to prevent double-encoding
-		return \Canvastack\Canvastack\Library\Constants\SafeHtml::mark($string);
+		return ThemeAdapterResolver::resolve()->renderTabHeader($data, $pointer, $active, $class);
 	}
 }
 
@@ -619,24 +456,7 @@ if (!function_exists('canvastack_form_create_content_tab')) {
 	 * @return string HTML tab content element
 	 */
 	function canvastack_form_create_content_tab(string $data, string $pointer, bool $active = false): string {
-		// Security: Escape pointer to prevent XSS in ID attribute
-		$pointerEscaped = canvastack_form_escape_html($pointer);
-		$activeEscaped = canvastack_form_escape_html($active);
-		
-		$activeClass = false;
-		$ariaHidden = 'true';
-		if (false !== $active) {
-			$activeClass = " active show";
-			$ariaHidden = 'false';
-		}
-		
-		// Note: $data is assumed to be safe HTML content (already processed)
-		// If $data comes from user input, it should be escaped before passing to this function
-		// Accessibility: Add aria-hidden and aria-labelledby
-		$string = "<div id=\"{$pointerEscaped}\" class=\"tab-pane fade{$activeClass}\" role=\"tabpanel\" aria-hidden=\"{$ariaHidden}\" aria-labelledby=\"{$pointerEscaped}-tab\">{$data}</div>";
-		
-		// Security: Mark output as safe HTML to prevent double-encoding
-		return \Canvastack\Canvastack\Library\Constants\SafeHtml::mark($string);
+		return ThemeAdapterResolver::resolve()->renderTabContent($data, $pointer, $active);
 	}
 }
 

@@ -44,12 +44,12 @@ use Canvastack\Canvastack\Exceptions\Controller\DataTablesException;
  * In the name of ALLAH SWT,
  * Alhamdulillah because of Allah SWT, this code succesfuly created piece by piece.
  * 
- * Base Controller for Canvastack Origin Framework
+ * Base Controller for CanvaStack Framework
  * 
  * This is the core controller class that extends Laravel's BaseController and provides
  * comprehensive functionality for CRUD operations, view rendering, session management,
  * file uploads, privilege checking, and component integration. It serves as the foundation
- * for all application controllers in the Canvastack Origin framework.
+ * for all application controllers in the CanvaStack framework.
  * 
  * The controller integrates multiple traits to provide modular functionality:
  * - Action trait: CRUD operations and DataTables server-side processing

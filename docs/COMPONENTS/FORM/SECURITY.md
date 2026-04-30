@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Canvastack Origin Form Builder implements multiple layers of security to protect against common web vulnerabilities. This document explains the security features and best practices.
+The CanvaStack Form Builder implements multiple layers of security to protect against common web vulnerabilities. This document explains the security features and best practices.
 
 ## Table of Contents
 

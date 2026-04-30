@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
  * Role-Based Handler Trait
  * 
  * Provides role-based access control and session filtering functionality for the
- * Canvastack Origin framework. This trait implements flexible role management with
+ * CanvaStack framework. This trait implements flexible role management with
  * support for role aliases, role information, and automatic session-based filtering
  * for data access control.
  * 

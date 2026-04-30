@@ -1,4 +1,4 @@
-# Contributing to CanvaStack Origin
+# Contributing to CanvaStack
 
 Alhamdulillah — thank you for considering contributing to this project.
 

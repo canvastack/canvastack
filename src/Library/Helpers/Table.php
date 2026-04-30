@@ -6,6 +6,7 @@ use Canvastack\Canvastack\Library\Exceptions\Table\InvalidColumnException;
 use Canvastack\Canvastack\Library\Exceptions\Table\InvalidPaginationException;
 use Canvastack\Canvastack\Library\Exceptions\Table\InvalidSortException;
 use Canvastack\Canvastack\Library\Exceptions\Table\TableValidationException;
+use Canvastack\Canvastack\Library\Theme\ThemeAdapterResolver;
 
 /**
  * Table Helper Functions
@@ -1367,49 +1368,7 @@ if (!function_exists('canvastack_modal_content_html')) {
 	 * @throws \InvalidArgumentException
 	 */
 	function canvastack_modal_content_html(string $name, string $title, array $elements): string {
-		// Input validation
-		if (!is_string($name) || empty($name)) {
-			throw new \InvalidArgumentException('Name must be a non-empty string');
-		}
-		
-		if (!is_string($title)) {
-			throw new \InvalidArgumentException('Title must be a string');
-		}
-		
-		if (!is_array($elements)) {
-			throw new \InvalidArgumentException('Elements must be an array');
-		}
-		
-		try {
-			// Escape for HTML context to prevent XSS
-			$name_safe = canvastack_escape_html($name);
-			$title_safe = canvastack_escape_html($title);
-			$buttonID = str_replace('_CanvaStackFILTERmodalBOX', '_submitFilterButton', $name_safe);
-
-			$html  = '<div class="modal-body">';
-				$html .= '<div id="' . $name_safe . '">';
-					$html .= implode('', $elements);
-				$html .= '</div>';
-			$html .= '</div>';
-			$html .= '<div class="modal-footer">';
-				$html .= '<div class="canvastack-action-box">';
-					$html .= '<button type="reset" id="' . $name_safe . '-cancel" class="btn btn-danger btn-slideright pull-right" data-dismiss="modal">Cancel</button>';
-					$html .= '<button id="' . $buttonID . '" class="btn btn-primary btn-slideright pull-right" type="submit">';
-						$html .= '<i class="fa fa-filter"></i> &nbsp; Filter Data ' . $title_safe;
-					$html .= '</button>';
-					$html .= '<button id="exportFilterButton' . $name_safe . '" class="btn btn-info btn-slideright pull-right btn-export-csv hide" type="button">Export to CSV</button>';
-				$html .= '</div>';
-			$html .= '</div>';
-
-			return $html;
-			
-		} catch (\InvalidArgumentException $e) {
-			error_log('canvastack_modal_content_html() validation error: ' . $e->getMessage());
-			throw $e;
-		} catch (\Exception $e) {
-			error_log('canvastack_modal_content_html() error: ' . $e->getMessage());
-			return '';
-		}
+		return ThemeAdapterResolver::resolve()->renderFilterModal($name, $title, $elements);
 	}
 }
 
@@ -1538,50 +1497,7 @@ if (!function_exists('canvastack_table_action_button')) {
 	 * $buttons = canvastack_table_action_button($row, 'id', '/admin/users', ['view', 'edit', 'delete'], ['delete']);
 	 */
 	function canvastack_table_action_button(object $row_data, string $field_target = 'id', string $current_url, array|string $action, ?array $removed_button = null): string {
-		// Check if actions are enabled
-		if (!config('canvastack.datatables.actions.enabled', true)) {
-			return '';
-		}
-		
-		// Input validation
-		if (!is_object($row_data)) {
-			throw new \InvalidArgumentException('Row data must be an object');
-		}
-
-		if (!is_string($field_target) || empty($field_target)) {
-			throw new \InvalidArgumentException('Field target must be a non-empty string');
-		}
-
-		if (!is_string($current_url) || empty($current_url)) {
-			throw new \InvalidArgumentException('Current URL must be a non-empty string');
-		}
-
-		try {
-			$enabledAction = canvastack_action_init_enabled_actions();
-			
-			// Check privileges if enabled
-			if (config('canvastack.datatables.actions.check_privileges', true)) {
-				$actions = canvastack_action_check_privileges($action);
-			} else {
-				$actions = is_array($action) ? $action : [$action];
-			}
-			
-			$addActions = canvastack_action_parse_actions($action, $enabledAction);
-
-			canvastack_action_process_removed_buttons($removed_button, $actions, $enabledAction);
-
-			$path = canvastack_action_build_paths($row_data, $field_target, $current_url, $enabledAction);
-			$add_path = canvastack_action_build_additional_paths($addActions, $current_url, $row_data, $field_target);
-
-			return create_action_buttons($path['view'], $path['edit'], $path['delete'], $add_path);
-
-		} catch (\InvalidArgumentException $e) {
-			error_log('canvastack_table_action_button() validation error: ' . $e->getMessage());
-			throw $e;
-		} catch (\Exception $e) {
-			error_log('canvastack_table_action_button() error: ' . $e->getMessage());
-			return ''; // Return empty string on error
-		}
+		return ThemeAdapterResolver::resolve()->renderActionButtons($row_data, $field_target, $current_url, $action, $removed_button);
 	}
 	
 	/**
@@ -2499,7 +2415,7 @@ if (!function_exists('canvastack_generate_table')) {
 	 */
 	function canvastack_table_setup_attributes(string|false $title_id, array|false $attributes): string {
 		try {
-			$datatableClass = CANVASTACK_DEFAULT_TABLE_CLASS;
+			$datatableClass = ThemeAdapterResolver::resolve()->getTableClass();
 			
 			if (false !== $attributes && is_array($attributes)) {
 				$_attributes = canvastack_table_merge_attributes($title_id, $attributes, $datatableClass);

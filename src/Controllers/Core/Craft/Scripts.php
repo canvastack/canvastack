@@ -6,7 +6,7 @@ use Canvastack\Canvastack\Library\Constants\ControllerConstants;
 /**
  * Scripts Management Trait
  * 
- * Provides comprehensive JavaScript and CSS asset management for the Canvastack Origin framework.
+ * Provides comprehensive JavaScript and CSS asset management for the CanvaStack framework.
  * This trait handles dynamic script and stylesheet loading, deduplication, positioning, and
  * optimization for form elements, tables, charts, and custom components.
  * 
@@ -385,8 +385,12 @@ trait Scripts {
 				$uniquePlugins = array_unique($this->form->element_plugins);
 				foreach ($uniquePlugins as $_plugins) {
 					if ('ckeditor' === $_plugins) {
-						$scripts['js'][] = "vendor/ckeditor/ckeditor.js";
-						$scripts['js'][] = "vendor/ckeditor/config.js";
+						// CKEditor 4.22.1 — hosted locally (patched)
+						$scripts['js'][] = "../global/vendor/ckeditor-4.22.1/ckeditor.js";
+						// Warning suppressor (must load immediately after ckeditor.js)
+						$scripts['js'][] = "../global/vendor/ckeditor-4.22.1/ckeditor-no-warning.js";
+						// Config and theme support loaded from global JS file
+						$scripts['js'][] = "last:../global/js/canvastack-ckeditor-config.js";
 					}
 				}
 			}
@@ -838,51 +842,6 @@ trait Scripts {
 		return $manifest;
 	}
 	
-	/**
-	 * Handle missing scripts gracefully
-	 * 
-	 * Implements comprehensive error handling for missing script files to ensure
-	 * the application continues to function even when script files are not found.
-	 * This prevents application crashes and provides clear debugging information.
-	 * 
-	 * When a script file is missing, this method:
-	 * - Validates that the script path is a file reference (not inline code)
-	 * - Checks if the file exists in the public directory
-	 * - Logs the missing script with context for debugging
-	 * - Shows browser console warnings in development mode
-	 * - Provides user-friendly error messages in production
-	 * - Continues execution without breaking the page
-	 * - Filters out missing scripts from the final output
-	 * - Caches existence checks for performance
-	 * 
-	 * Error Handling Strategy:
-	 * - Development: Detailed warnings in browser console with file paths
-	 * - Production: Silent logging without exposing internal paths
-	 * - All environments: Application continues to function
-	 * 
-	 * Performance Optimization:
-	 * - Caches file existence checks to avoid repeated filesystem operations
-	 * - Uses efficient path validation
-	 * - Minimal overhead for existing files
-	 * 
-	 * Security Considerations:
-	 * - Does not expose internal file paths in production
-	 * - Validates paths to prevent directory traversal
-	 * - Sanitizes output for browser console
-	 * 
-	 * @param string $script Script path that is missing
-	 * @param string $type Script type ('js' or 'css')
-	 * @return void
-	 * 
-	 * @security Prevents path disclosure in production
-	 * @performance Minimal overhead - only logs in development
-	 * 
-	 * @example
-	 * ```php
-	 * $this->handleMissingScript('vendor/missing.js', 'js');
-	 * // Logs: "Missing script: vendor/missing.js (type: js)"
-	 * ```
-	 */
 	/**
 	 * Handle missing scripts gracefully
 	 * 

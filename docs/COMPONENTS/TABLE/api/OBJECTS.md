@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `Objects` class is the main entry point for creating and managing tables in Canvastack Origin. It extends the `Builder` class and provides a fluent interface for configuring tables with DataTables integration, server-side processing, relationships, and advanced features.
+The `Objects` class is the main entry point for creating and managing tables in CanvaStack. It extends the `Builder` class and provides a fluent interface for configuring tables with DataTables integration, server-side processing, relationships, and advanced features.
 
 **Namespace:** `Canvastack\Canvastack\Library\Components\Table\Objects`
 

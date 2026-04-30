@@ -93,11 +93,16 @@ class Template extends Scripts {
     
     private function templateScripts($type) {
         $type                                   = strtolower($type);
+        $template                               = canvastack_current_template() ?: 'default';
         $scriptConfig                           = [];
-        $scriptConfig[$type]['top']             = canvastack_config("admin.default.position.top.{$type}", 'templates');
-        $scriptConfig[$type]['bottom']          = canvastack_config("admin.default.position.bottom.{$type}", 'templates');
-        $scriptConfig[$type]['bottom']['first'] = canvastack_config("admin.default.position.bottom.first.{$type}", 'templates');
-        $scriptConfig[$type]['bottom']['last']  = canvastack_config("admin.default.position.bottom.last.{$type}", 'templates');
+        $scriptConfig[$type]['top']             = canvastack_config("admin.{$template}.position.top.{$type}", 'templates')
+                                                    ?? canvastack_config("admin.default.position.top.{$type}", 'templates');
+        $scriptConfig[$type]['bottom']          = canvastack_config("admin.{$template}.position.bottom.{$type}", 'templates')
+                                                    ?? canvastack_config("admin.default.position.bottom.{$type}", 'templates');
+        $scriptConfig[$type]['bottom']['first'] = canvastack_config("admin.{$template}.position.bottom.first.{$type}", 'templates')
+                                                    ?? canvastack_config("admin.default.position.bottom.first.{$type}", 'templates');
+        $scriptConfig[$type]['bottom']['last']  = canvastack_config("admin.{$template}.position.bottom.last.{$type}", 'templates')
+                                                    ?? canvastack_config("admin.default.position.bottom.last.{$type}", 'templates');
         
         foreach ($scriptConfig as $scriptPositions) {
         	foreach ($scriptPositions as $position => $scriptPath) {

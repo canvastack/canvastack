@@ -793,7 +793,7 @@ class ScriptGenerator {
 			$scriptLines[] = "loader('{$nextTargetUniqueId}');";
 		}
 		
-		$scriptLines[] = "$('#{$node_safe}').children('div.form-group').each(function () {";
+		$scriptLines[] = "$('#{$node_safe}').children('div.form-group, div.mb-3').each(function () {";
 		$scriptLines[] = "var \$elem = $(this).find('select#{$uniqueId}.{$firstNode}');";
 		$scriptLines[] = "if (\$elem.length === 0) return;";
 

@@ -2067,17 +2067,25 @@ class Builder {
 	private function addFilterInfo(array $dt_info, string $tableID, string $searchInfoAttribute, object $search_object, array $data): array {
 		$dt_info['id'] = $tableID;
 		$dt_info['class'] = 'dt-button buttons-filter';
+
+		// Use Bootstrap 5 attributes for canvasign, Bootstrap 4 for others
+		$isBS5 = in_array(canvastack_current_template(), ['canvasign']);
 		$dt_info['attributes'] = [
-			'id' => $searchInfoAttribute,
-			'class' => "modal fade {$tableID}",
-			'role' => 'dialog',
-			'tabindex' => '-1',
-			'aria-hidden' => 'true',
-			'aria-controls' => $tableID,
+			'id'              => $searchInfoAttribute,
+			'class'           => "modal fade {$tableID}",
+			'role'            => 'dialog',
+			'tabindex'        => '-1',
+			'aria-hidden'     => 'true',
+			'aria-controls'   => $tableID,
 			'aria-labelledby' => $tableID,
-			'data-backdrop' => 'static',
-			'data-keyboard' => 'true'
 		];
+		if ($isBS5) {
+			$dt_info['attributes']['data-bs-backdrop'] = 'static';
+			$dt_info['attributes']['data-bs-keyboard'] = 'true';
+		} else {
+			$dt_info['attributes']['data-backdrop'] = 'static';
+			$dt_info['attributes']['data-keyboard'] = 'true';
+		}
 		$dt_info['button_label'] = '<i class="fa fa-filter"></i> Filter';
 		$dt_info['action_button_removed'] = $data['attributes']['buttons_removed'];
 		$dt_info['modal_title'] = '<i class="fa fa-filter"></i> &nbsp; Filter';

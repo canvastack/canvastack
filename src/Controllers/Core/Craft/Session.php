@@ -11,7 +11,7 @@ use Canvastack\Canvastack\Exceptions\Controller\SessionException;
 /**
  * Session Management Trait
  * 
- * Provides comprehensive session management functionality for the Canvastack Origin framework.
+ * Provides comprehensive session management functionality for the CanvaStack framework.
  * This trait handles user session initialization, validation, security, and lifecycle management
  * with built-in protection against common session-based attacks.
  * 
@@ -327,12 +327,12 @@ trait Session {
 	 * @see $session For direct property access
 	 */
 	public function get_session(bool $return_data = false): ?array {
-			$this->set_session();
+		$this->set_session();
 
-			if (true === $return_data) return $this->session;
+		if (true === $return_data) return $this->session;
 
-			return null;
-		}
+		return null;
+	}
 	
 	/**
 	 * Verify User Group Membership
@@ -396,12 +396,12 @@ trait Session {
 	 * @see $session['user_group'] For direct group access
 	 */
 	public function group_check(string $group_name): bool {
-			if ($group_name === $this->session['user_group']) {
-				return true;
-			} else {
-				return false;
-			}
+		if ($group_name === $this->session['user_group']) {
+			return true;
+		} else {
+			return false;
 		}
+	}
 	
 	/**
 	 * Validate session data

@@ -8,7 +8,7 @@
 
 بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
 
-Alhamdulillah, this release represents a comprehensive enhancement of CanvaStack Origin Table Components with 108 new features across security, performance, accessibility, and developer experience.
+Alhamdulillah, this release represents a comprehensive enhancement of CanvaStack Table Components with 108 new features across security, performance, accessibility, and developer experience.
 
 ## Improvement Metrics
 
@@ -538,7 +538,7 @@ None at this time.
 
 ## License
 
-CanvaStack Origin is proprietary software.  
+CanvaStack is proprietary software.  
 Copyright © 2018-2026 CanvaStack. All rights reserved.
 
 ---

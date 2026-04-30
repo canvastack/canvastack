@@ -1,0 +1,379 @@
+/**
+ * Font Awesome to Bootstrap Icons Complete Mapping
+ * 
+ * Comprehensive mapping dari Font Awesome icons ke Bootstrap Icons
+ * untuk kompatibilitas dengan CanvaStack menu system yang menggunakan FA
+ * 
+ * Usage: Include this CSS file to automatically convert FA icons to Bootstrap Icons
+ * 
+ * @author wisnuwidi@canvastack.com
+ * @copyright Canvastack
+ * @version 1.0.0
+ */
+
+/* ========================================================================
+   Base Font Family Override - High Specificity
+   ======================================================================== */
+
+.sidebar-nav .fa,
+.sidebar-nav .fa[class*="fa-"] {
+  font-family: 'bootstrap-icons' !important;
+  font-style: normal !important;
+  font-variant: normal !important;
+  text-rendering: auto !important;
+  line-height: 1 !important;
+}
+
+/* ========================================================================
+   Dashboard & Home Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-dashboard::before,
+.sidebar-nav .fa.fa-tachometer::before,
+.sidebar-nav .fa.fa-tachometer-alt::before { 
+  content: '\F3F4' !important; 
+} /* bi-grid-1x2 */
+
+.sidebar-nav .fa.fa-cutlery::before,
+.sidebar-nav .fa.fa-utensils::before { 
+  content: '\F91A' !important; 
+} /* bi-fork-knife */
+
+.sidebar-nav .fa.fa-home::before { 
+  content: '\F425' !important; 
+} /* bi-house */
+
+.sidebar-nav .fa.fa-house::before { 
+  content: '\F425' !important; 
+} /* bi-house */
+
+/* ========================================================================
+   Settings & Configuration Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-gear::before,
+.sidebar-nav .fa.fa-cog::before,
+.sidebar-nav .fa.fa-cogs::before,
+.sidebar-nav .fa.fa-settings::before { 
+  content: '\F3E5' !important; 
+} /* bi-gear */
+
+.sidebar-nav .fa.fa-wrench::before { 
+  content: '\F7E6' !important; 
+} /* bi-wrench */
+
+.sidebar-nav .fa.fa-tools::before { 
+  content: '\F7E6' !important; 
+} /* bi-tools */
+
+/* ========================================================================
+   User & People Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-user::before { 
+  content: '\F4DA' !important; 
+} /* bi-person */
+
+.sidebar-nav .fa.fa-user-circle::before { 
+  content: '\F4DB' !important; 
+} /* bi-person-circle */
+
+.sidebar-nav .fa.fa-user-secret::before,
+.sidebar-nav .fa.fa-users::before,
+.sidebar-nav .fa.fa-people::before,
+.sidebar-nav .fa.fa-account::before,
+.sidebar-nav .fa.fa-accounts::before { 
+  content: '\F4D0' !important; 
+} /* bi-people */
+
+.sidebar-nav .fa.fa-user-plus::before { 
+  content: '\F4DC' !important; 
+} /* bi-person-plus */
+
+.sidebar-nav .fa.fa-user-minus::before { 
+  content: '\F4D9' !important; 
+} /* bi-person-dash */
+
+.sidebar-nav .fa.fa-user-edit::before { 
+  content: '\F4D8' !important; 
+} /* bi-person-gear */
+
+/* ========================================================================
+   Chart & Analytics Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-chart::before,
+.sidebar-nav .fa.fa-bar-chart::before,
+.sidebar-nav .fa.fa-bar-chart-o::before,
+.sidebar-nav .fa.fa-program::before,
+.sidebar-nav .fa.fa-programs::before,
+.sidebar-nav .fa.fa-project::before,
+.sidebar-nav .fa.fa-projects::before { 
+  content: '\F17E' !important; 
+} /* bi-bar-chart */
+
+.sidebar-nav .fa.fa-line-chart::before { 
+  content: '\F3F2' !important; 
+} /* bi-graph-up */
+
+.sidebar-nav .fa.fa-area-chart::before { 
+  content: '\F673' !important; 
+} /* bi-graph-up-arrow */
+
+.sidebar-nav .fa.fa-pie-chart::before { 
+  content: '\F4E9' !important; 
+} /* bi-pie-chart */
+
+.sidebar-nav .fa.fa-analytics::before,
+.sidebar-nav .fa.fa-chart-line::before { 
+  content: '\F3F2' !important; 
+} /* bi-graph-up */
+
+/* ========================================================================
+   Table & Data Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-table::before { content: '\F78E'; } /* bi-table */
+.sidebar-nav .fa.fa-list::before { content: '\F479'; } /* bi-list */
+.sidebar-nav .fa.fa-list-ul::before { content: '\F479'; } /* bi-list */
+.sidebar-nav .fa.fa-list-ol::before { content: '\F47A'; } /* bi-list-ol */
+
+/* ========================================================================
+   File & Document Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-file::before,
+.sidebar-nav .fa.fa-file-o::before { content: '\F377'; } /* bi-file-text */
+
+.sidebar-nav .fa.fa-file-text::before,
+.sidebar-nav .fa.fa-file-text-o::before { content: '\F377'; } /* bi-file-text */
+
+.sidebar-nav .fa.fa-folder::before,
+.sidebar-nav .fa.fa-folder-o::before { content: '\F394'; } /* bi-folder */
+
+.sidebar-nav .fa.fa-folder-open::before,
+.sidebar-nav .fa.fa-folder-open-o::before { content: '\F395'; } /* bi-folder-open */
+
+/* ========================================================================
+   Communication Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-envelope::before,
+.sidebar-nav .fa.fa-envelope-o::before,
+.sidebar-nav .fa.fa-mail::before { content: '\F32F'; } /* bi-envelope */
+
+.sidebar-nav .fa.fa-phone::before { content: '\F4F4'; } /* bi-phone */
+.sidebar-nav .fa.fa-mobile::before { content: '\F4F3'; } /* bi-phone */
+
+.sidebar-nav .fa.fa-comment::before,
+.sidebar-nav .fa.fa-comment-o::before { content: '\F27A'; } /* bi-chat */
+
+.sidebar-nav .fa.fa-comments::before,
+.sidebar-nav .fa.fa-comments-o::before { content: '\F27B'; } /* bi-chat-dots */
+
+/* ========================================================================
+   Calendar & Time Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-calendar::before,
+.sidebar-nav .fa.fa-calendar-o::before { content: '\F248'; } /* bi-calendar3 */
+
+.sidebar-nav .fa.fa-clock::before,
+.sidebar-nav .fa.fa-clock-o::before,
+.sidebar-nav .fa.fa-time::before { content: '\F256'; } /* bi-clock */
+
+/* ========================================================================
+   Navigation & Arrow Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-arrow-up::before { content: '\F148'; } /* bi-arrow-up */
+.sidebar-nav .fa.fa-arrow-down::before { content: '\F145'; } /* bi-arrow-down */
+.sidebar-nav .fa.fa-arrow-left::before { content: '\F146'; } /* bi-arrow-left */
+.sidebar-nav .fa.fa-arrow-right::before { content: '\F147'; } /* bi-arrow-right */
+
+.sidebar-nav .fa.fa-chevron-up::before { content: '\F284'; } /* bi-chevron-up */
+.sidebar-nav .fa.fa-chevron-down::before { content: '\F282'; } /* bi-chevron-down */
+.sidebar-nav .fa.fa-chevron-left::before { content: '\F283'; } /* bi-chevron-left */
+.sidebar-nav .fa.fa-chevron-right::before { content: '\F285'; } /* bi-chevron-right */
+
+/* ========================================================================
+   Action Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-plus::before { content: '\F4FE'; } /* bi-plus */
+.sidebar-nav .fa.fa-minus::before { content: '\F4A2'; } /* bi-dash */
+.sidebar-nav .fa.fa-edit::before,
+.sidebar-nav .fa.fa-pencil::before { content: '\F4CA'; } /* bi-pencil */
+
+.sidebar-nav .fa.fa-trash::before,
+.sidebar-nav .fa.fa-trash-o::before { content: '\F5DE'; } /* bi-trash */
+
+.sidebar-nav .fa.fa-save::before,
+.sidebar-nav .fa.fa-floppy-o::before { content: '\F38E'; } /* bi-floppy */
+
+.sidebar-nav .fa.fa-search::before { content: '\F52A'; } /* bi-search */
+.sidebar-nav .fa.fa-filter::before { content: '\F38A'; } /* bi-funnel */
+
+/* ========================================================================
+   Status & Indicator Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-check::before { content: '\F26A'; } /* bi-check */
+.sidebar-nav .fa.fa-times::before,
+.sidebar-nav .fa.fa-close::before { content: '\F659'; } /* bi-x */
+
+.sidebar-nav .fa.fa-exclamation::before { content: '\F33A'; } /* bi-exclamation */
+.sidebar-nav .fa.fa-question::before { content: '\F517'; } /* bi-question */
+
+.sidebar-nav .fa.fa-info::before { content: '\F431'; } /* bi-info */
+.sidebar-nav .fa.fa-warning::before,
+.sidebar-nav .fa.fa-exclamation-triangle::before { content: '\F33B'; } /* bi-exclamation-triangle */
+
+/* ========================================================================
+   Media & Content Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-image::before,
+.sidebar-nav .fa.fa-picture-o::before { content: '\F434'; } /* bi-image */
+
+.sidebar-nav .fa.fa-video::before,
+.sidebar-nav .fa.fa-video-camera::before { content: '\F62C'; } /* bi-camera-video */
+
+.sidebar-nav .fa.fa-music::before { content: '\F4A7'; } /* bi-music-note */
+.sidebar-nav .fa.fa-volume-up::before { content: '\F627'; } /* bi-volume-up */
+
+/* ========================================================================
+   Security & Lock Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-lock::before { content: '\F47F'; } /* bi-lock */
+.sidebar-nav .fa.fa-unlock::before { content: '\F617'; } /* bi-unlock */
+.sidebar-nav .fa.fa-key::before { content: '\F45A'; } /* bi-key */
+
+.sidebar-nav .fa.fa-shield::before { content: '\F56D'; } /* bi-shield */
+.sidebar-nav .fa.fa-eye::before { content: '\F341'; } /* bi-eye */
+.sidebar-nav .fa.fa-eye-slash::before { content: '\F342'; } /* bi-eye-slash */
+
+/* ========================================================================
+   Shopping & Commerce Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-shopping-cart::before { content: '\F1C7'; } /* bi-cart */
+.sidebar-nav .fa.fa-credit-card::before { content: '\F2F0'; } /* bi-credit-card */
+.sidebar-nav .fa.fa-money::before,
+.sidebar-nav .fa.fa-dollar::before { content: '\F2A0'; } /* bi-currency-dollar */
+
+/* ========================================================================
+   Technology Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-database::before { content: '\F2F1'; } /* bi-database */
+.sidebar-nav .fa.fa-server::before { content: '\F564'; } /* bi-server */
+.sidebar-nav .fa.fa-cloud::before { content: '\F28C'; } /* bi-cloud */
+
+.sidebar-nav .fa.fa-wifi::before { content: '\F6FA'; } /* bi-wifi */
+.sidebar-nav .fa.fa-signal::before { content: '\F578'; } /* bi-signal */
+
+/* ========================================================================
+   Social & Brand Icons (Generic Replacements)
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-facebook::before,
+.sidebar-nav .fa.fa-twitter::before,
+.sidebar-nav .fa.fa-instagram::before,
+.sidebar-nav .fa.fa-linkedin::before { content: '\F56E'; } /* bi-share (generic social) */
+
+.sidebar-nav .fa.fa-github::before { content: '\F3ED'; } /* bi-github */
+.sidebar-nav .fa.fa-google::before { content: '\F3EE'; } /* bi-google */
+
+/* ========================================================================
+   Bookmark & Favorites
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-bookmark::before,
+.sidebar-nav .fa.fa-bookmark-o::before { 
+  content: '\F22E' !important; 
+} /* bi-bookmark */
+
+.sidebar-nav .fa.fa-star::before,
+.sidebar-nav .fa.fa-star-o::before { 
+  content: '\F588' !important; 
+} /* bi-star */
+
+.sidebar-nav .fa.fa-heart::before,
+.sidebar-nav .fa.fa-heart-o::before { 
+  content: '\F414' !important; 
+} /* bi-heart */
+
+/* ========================================================================
+   Layout & Grid Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-th::before { content: '\F3F0'; } /* bi-grid */
+.sidebar-nav .fa.fa-th-large::before { content: '\F3F1'; } /* bi-grid-1x2 */
+.sidebar-nav .fa.fa-th-list::before { content: '\F479'; } /* bi-list */
+
+.sidebar-nav .fa.fa-columns::before { content: '\F28F'; } /* bi-columns */
+.sidebar-nav .fa.fa-bars::before { content: '\F479'; } /* bi-list */
+
+/* ========================================================================
+   Transport & Location Icons
+   ======================================================================== */
+
+.sidebar-nav .fa.fa-map::before,
+.sidebar-nav .fa.fa-map-o::before { content: '\F48F'; } /* bi-map */
+
+.sidebar-nav .fa.fa-location::before,
+.sidebar-nav .fa.fa-map-marker::before { content: '\F3C4'; } /* bi-geo-alt */
+
+.sidebar-nav .fa.fa-car::before { content: '\F1C6'; } /* bi-car-front */
+.sidebar-nav .fa.fa-plane::before { content: '\F12C'; } /* bi-airplane */
+
+/* ========================================================================
+   Fallback for Unmapped Icons - High Specificity
+   ======================================================================== */
+
+/* Generic fallback for any unmapped Font Awesome icon */
+.sidebar-nav .fa:not([class*="fa-"])::before,
+.sidebar-nav .fa.fa-unknown::before { 
+  content: '\F287' !important; /* bi-circle (generic fallback) */
+}
+
+/* Catch-all fallback with very high specificity */
+.sidebar-nav .fa[class*="fa-"]::before {
+  font-family: 'bootstrap-icons' !important;
+}
+
+/* Force content for specific icons that might be overridden */
+.sidebar-nav .main-menu .fa.fa-dashboard::before { content: '\F3F4' !important; }
+.sidebar-nav .main-menu .fa.fa-gear::before { content: '\F3E5' !important; }
+.sidebar-nav .main-menu .fa.fa-user-secret::before { content: '\F4D0' !important; }
+.sidebar-nav .main-menu .fa.fa-bar-chart-o::before { content: '\F17E' !important; }
+.sidebar-nav .main-menu .fa.fa-line-chart::before { content: '\F3F2' !important; }
+.sidebar-nav .main-menu .fa.fa-area-chart::before { content: '\F673' !important; }
+.sidebar-nav .main-menu .fa.fa-pie-chart::before { content: '\F4E9' !important; }
+.sidebar-nav .main-menu .fa.fa-bookmark::before { content: '\F22E' !important; }
+
+/* ========================================================================
+   Debug Helper - TEMPORARY (Remove after debugging)
+   ======================================================================== */
+
+/* Show unmapped icons with red border and label */
+.sidebar-nav .fa[class*="fa-"]:not(.fa-dashboard):not(.fa-gear):not(.fa-user):not(.fa-user-secret):not(.fa-users):not(.fa-chart):not(.fa-bar-chart):not(.fa-bar-chart-o):not(.fa-line-chart):not(.fa-area-chart):not(.fa-pie-chart):not(.fa-table):not(.fa-file):not(.fa-envelope):not(.fa-calendar):not(.fa-home):not(.fa-cog):not(.fa-bookmark):not(.fa-star):not(.fa-heart):not(.fa-lock):not(.fa-key):not(.fa-search):not(.fa-plus):not(.fa-minus):not(.fa-edit):not(.fa-trash):not(.fa-save):not(.fa-check):not(.fa-times):not(.fa-arrow-up):not(.fa-arrow-down):not(.fa-arrow-left):not(.fa-arrow-right) {
+  border: 2px solid red !important;
+  background: rgba(255, 0, 0, 0.1) !important;
+}
+
+.sidebar-nav .fa[class*="fa-"]:not(.fa-dashboard):not(.fa-gear):not(.fa-user):not(.fa-user-secret):not(.fa-users):not(.fa-chart):not(.fa-bar-chart):not(.fa-bar-chart-o):not(.fa-line-chart):not(.fa-area-chart):not(.fa-pie-chart):not(.fa-table):not(.fa-file):not(.fa-envelope):not(.fa-calendar):not(.fa-home):not(.fa-cog):not(.fa-bookmark):not(.fa-star):not(.fa-heart):not(.fa-lock):not(.fa-key):not(.fa-search):not(.fa-plus):not(.fa-minus):not(.fa-edit):not(.fa-trash):not(.fa-save):not(.fa-check):not(.fa-times):not(.fa-arrow-up):not(.fa-arrow-down):not(.fa-arrow-left):not(.fa-arrow-right)::after {
+  content: " [UNMAPPED: " attr(class) "]";
+  color: red;
+  font-size: 10px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  white-space: nowrap;
+  background: white;
+  padding: 2px;
+  border: 1px solid red;
+  z-index: 1000;
+}

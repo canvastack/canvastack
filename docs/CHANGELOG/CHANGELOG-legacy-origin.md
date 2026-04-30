@@ -401,7 +401,7 @@
 
 ### 🎉 Major Release: Table Component v2.0 with Caching & Monitoring
 
-This release represents a comprehensive enhancement of CanvaStack Origin Table Components with 108 new features across security, performance, accessibility, and developer experience.
+This release represents a comprehensive enhancement of CanvaStack Table Components with 108 new features across security, performance, accessibility, and developer experience.
 
 **Improvement Metrics:**
 - Security Features: 5 → 16 (+220%)

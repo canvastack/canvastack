@@ -2,13 +2,13 @@
 
 ## Introduction
 
-Dokumen ini mendefinisikan requirements untuk audit dan perbaikan komprehensif terhadap Form Components di Canvastack Origin framework. Audit ini mencakup file utama Objects.php dan 7 file trait Elements (Check, DateTime, File, Radio, Select, Tab, Text). Perbaikan akan mengikuti pola sukses dari audit FormObject.php yang telah meningkatkan skor dari 3.6/10 menjadi 8.6/10 (+139%).
+Dokumen ini mendefinisikan requirements untuk audit dan perbaikan komprehensif terhadap Form Components di CanvaStack framework. Audit ini mencakup file utama Objects.php dan 7 file trait Elements (Check, DateTime, File, Radio, Select, Tab, Text). Perbaikan akan mengikuti pola sukses dari audit FormObject.php yang telah meningkatkan skor dari 3.6/10 menjadi 8.6/10 (+139%).
 
 Tujuan utama adalah memperbaiki semua isu security, code quality, dan accessibility sambil memastikan 100% backward compatibility dan tidak ada fitur yang dihapus atau berkurang.
 
 ## Glossary
 
-- **Form_Components**: Sistem class dan trait yang menangani rendering form HTML di Canvastack Origin framework
+- **Form_Components**: Sistem class dan trait yang menangani rendering form HTML di CanvaStack framework
 - **Objects_Class**: Class utama `Canvastack\Canvastack\Library\Components\Form\Objects` yang menggunakan 7 traits
 - **Element_Traits**: 7 trait files (Check, DateTime, File, Radio, Select, Tab, Text) yang menyediakan fungsi form elements
 - **XSS**: Cross-Site Scripting vulnerability dimana user input tidak di-escape dengan benar

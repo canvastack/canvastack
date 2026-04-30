@@ -32,6 +32,9 @@ if (!empty($components->template->scripts['css']['bottom_last'])) {
 	<!-- CSRF Token -->
 	<meta name="csrf-token" content="{{ csrf_token() }}">
 	
+	<!-- App Debug Flag -->
+	<script>window.APP_DEBUG = {{ config('app.debug') ? 'true' : 'false' }};</script>
+	
 	<!-- MetaTags  -->
 	@foreach ($meta as $metaTags)
 		{!! $metaTags !!}

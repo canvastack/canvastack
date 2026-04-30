@@ -14,7 +14,7 @@ use Canvastack\Canvastack\Library\Constants\ControllerConstants as CC;
  * other security vulnerabilities.
  * 
  * @package Canvastack\Canvastack\Library\Helpers
- * @author Canvastack Origin Framework
+ * @author CanvaStack Framework
  * @version 1.0.0
  * 
  * @security CRITICAL - These functions are security-sensitive and must be used

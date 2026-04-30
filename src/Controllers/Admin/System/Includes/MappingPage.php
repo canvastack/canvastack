@@ -396,18 +396,18 @@ trait MappingPage {
 	private function mapping(): string {
 		$title_id                    = 'page_privileges_' . canvastack_random_strings(50, false) . ' role-priv';
 		$headerData                  = [];
-		$headerData['module_id']     = [canvastack_table_row_attr('Module Name' , ['style' => 'text-align:center', 'rowspan' => 2])];
-		$headerData['target_table']  = [canvastack_table_row_attr('Table Name'  , ['style' => 'text-align:center', 'rowspan' => 2])];
+		$headerData['module_id']     = [canvastack_table_row_attr('Module Name' , ['class' => 'canvastack-mappriv-modname', 'rowspan' => 2])];
+		$headerData['target_table']  = [canvastack_table_row_attr('Table Name'  , ['class' => 'canvastack-mappriv-tabname', 'rowspan' => 2])];
 		$headerData['target_roles']  = [
 			[
-				'column' => canvastack_table_row_attr('Role Query'  , ['style' => 'text-align:center;min-width:420px;', 'colspan' => 2]),
+				'column' => canvastack_table_row_attr('Role Query'  , ['class' => 'canvastack-mappriv-rqfs', 'colspan' => 2]),
 				'merge'  => [
-					canvastack_table_row_attr('Field Name'  , ['style' => 'text-align:center']),
-					canvastack_table_row_attr('Field Value' , ['style' => 'text-align:center'])
+					canvastack_table_row_attr('Field Name'  , ['style' => 'canvastack-mappriv-rqfname']),
+					canvastack_table_row_attr('Field Value' , ['style' => 'canvastack-mappriv-rqfval'])
 				]
 			]
 		];
-		$headerData['action_button'] = [canvastack_table_row_attr('Action'  , ['style' => 'text-align:center', 'rowspan' => 2])];
+		$headerData['action_button'] = [canvastack_table_row_attr('Action'  , ['style' => 'canvastack-mappriv-act', 'rowspan' => 2])];
 		
 		$header    = array_merge_recursive($headerData['module_id'], $headerData['target_table'], $headerData['target_roles'], $headerData['action_button']);		
 		$row_table = $this->mapping_box();

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Canvastack Origin Form Builder is designed to be fully accessible and compliant with WCAG 2.1 Level A standards. This document explains the accessibility features and best practices for creating accessible forms.
+The CanvaStack Form Builder is designed to be fully accessible and compliant with WCAG 2.1 Level A standards. This document explains the accessibility features and best practices for creating accessible forms.
 
 ## Table of Contents
 

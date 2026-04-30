@@ -2,7 +2,7 @@
 
 بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
 
-Alhamdulillah, this comprehensive API documentation covers all public methods, security warnings, usage examples, and guidelines for the Canvastack Origin Core Controller Components.
+Alhamdulillah, this comprehensive API documentation covers all public methods, security warnings, usage examples, and guidelines for the CanvaStack Core Controller Components.
 
 ## Table of Contents
 
@@ -24,7 +24,7 @@ Alhamdulillah, this comprehensive API documentation covers all public methods, s
 
 ### Purpose
 
-The Core Controller Components provide a comprehensive foundation for building secure, performant, and maintainable web applications with the Canvastack Origin framework. These components handle everything from CRUD operations to view rendering, session management, file uploads, and access control.
+The Core Controller Components provide a comprehensive foundation for building secure, performant, and maintainable web applications with the CanvaStack framework. These components handle everything from CRUD operations to view rendering, session management, file uploads, and access control.
 
 ### Architecture
 
@@ -1869,7 +1869,7 @@ return [
 
 ## Conclusion
 
-The Canvastack Origin Core Controller Components provide a comprehensive, secure, and performant foundation for building web applications. By following the guidelines and examples in this documentation, you can build robust applications that are protected against common security vulnerabilities while maintaining excellent performance.
+The CanvaStack Core Controller Components provide a comprehensive, secure, and performant foundation for building web applications. By following the guidelines and examples in this documentation, you can build robust applications that are protected against common security vulnerabilities while maintaining excellent performance.
 
 ### Key Takeaways
 
@@ -1896,5 +1896,5 @@ The Canvastack Origin Core Controller Components provide a comprehensive, secure
 
 بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
 
-Alhamdulillah, this API documentation has been completed to provide comprehensive guidance for developers using the Canvastack Origin Core Controller Components.
+Alhamdulillah, this API documentation has been completed to provide comprehensive guidance for developers using the CanvaStack Core Controller Components.
 

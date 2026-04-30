@@ -10,7 +10,7 @@ namespace Canvastack\Canvastack\Library\Helpers;
  * configuration is not available.
  * 
  * @package Canvastack\Canvastack\Library\Helpers
- * @author Canvastack Origin Framework
+ * @author CanvaStack Framework
  * @version 1.0.0
  * 
  * @example Basic usage:

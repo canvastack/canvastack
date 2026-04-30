@@ -13,7 +13,7 @@ use Canvastack\Canvastack\Exceptions\Controller\PrivilegeException;
  * First Created on 9 Apr 2021
  * Time Created : 14:49:04
  * 
- * Provides role-based access control and privilege management for the Canvastack Origin framework.
+ * Provides role-based access control and privilege management for the CanvaStack framework.
  * This trait handles user privilege verification, menu generation based on roles, module access control,
  * and privilege caching for optimal performance.
  * 

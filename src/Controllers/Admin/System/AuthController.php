@@ -131,40 +131,32 @@ class AuthController extends Controller {
 	    }
 	    
 	    $this->validateLogin($request);
+
 		if ($this->hasTooManyLoginAttempts($request)) {
 			$this->fireLockoutEvent($request);
-			
 			return $this->sendLockoutResponse($request);
 		}
+
 		$this->incrementLoginAttempts($request);
-		
-		if (!empty($request['_token']) && $request['_token'] === $request->session()->token()) {
-		    $data = $request->only($this->sendRequestKeyWith, 'password');
-		    
-			if (Auth::attempt($data)) {
-				
-			    $this->set_session_auth($data[$this->sendRequestKeyWith]);
-				foreach ($this->session_auth as $session_key => $session_auth) {
-					$request->session()->put($session_key, $session_auth);
-				}
-				
-				/* 
-				if (true === $this->maintenance) {
-					$sessions = Session::all();
-					if ('root' !== strtolower($sessions['user_group'])) {
-						if (!empty(auth()->user()->id)) {
-							$this->add_log('Logout', auth()->user()->id);
-							Auth::logout();
-						}
-						
-						return redirect()->route('login');
-					}
-				}
-				 */
-				return $this->firstRedirect();
+
+		// CSRF already validated by Laravel VerifyCsrfToken middleware
+		$data = $request->only($this->sendRequestKeyWith, 'password');
+
+		if (Auth::attempt($data)) {
+		    $this->set_session_auth($data[$this->sendRequestKeyWith]);
+			foreach ($this->session_auth as $session_key => $session_auth) {
+				$request->session()->put($session_key, $session_auth);
 			}
+			$this->clearLoginAttempts($request);
+			return $this->firstRedirect();
 		}
-		return back()->withInput();
+
+		// Credentials did not match
+		return back()
+			->withInput($request->only($this->sendRequestKeyWith, 'remember'))
+			->withErrors([
+				$this->sendRequestKeyWith => [__('auth.failed')],
+			]);
 	}
 	
 	/**

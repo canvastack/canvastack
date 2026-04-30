@@ -3,6 +3,7 @@ namespace Canvastack\Canvastack\Library\Components\Form\Elements;
 
 use Canvastack\Canvastack\Library\Constants\SafeHtml;
 use Canvastack\Canvastack\Library\Constants\FormConstants;
+use Canvastack\Canvastack\Library\Theme\ThemeAdapterResolver;
 
 /**
  * Select Input Elements Trait
@@ -87,7 +88,7 @@ trait Select {
 	 * $form->selectbox('role', ['admin' => 'Admin', 'user' => 'User'], false, [], true, false);
 	*/
 	public function selectbox(string $name, array $values = [], bool|string|int|array|null $selected = false, array $attributes = [], bool|string|null $label = true, array|bool $set_first_value = [null => '']): void {
-		$attributes = canvastack_form_change_input_attribute($attributes, FormConstants::ATTR_CLASS, FormConstants::CLASS_CHOSEN_SELECT);
+		$attributes = canvastack_form_change_input_attribute($attributes, FormConstants::ATTR_CLASS, ThemeAdapterResolver::resolve()->getSelectBoxClass());
 
 		// Add ARIA attributes
 		$ariaAttributes = $this->getSelectAriaAttributes($name, $attributes);
@@ -176,7 +177,7 @@ trait Select {
 	 * $form->month('report_month', '2026-03', [], true);
 	 */
 	public function month(string $name, ?string $value = null, array $attributes = [], bool|string|null $label = true): void {
-		$attributes = canvastack_form_change_input_attribute($attributes, FormConstants::ATTR_CLASS, FormConstants::CLASS_CHOSEN_SELECT);
+		$attributes = canvastack_form_change_input_attribute($attributes, FormConstants::ATTR_CLASS, ThemeAdapterResolver::resolve()->getSelectBoxClass());
 		
 		// Add ARIA attributes
 		$ariaAttributes = $this->getSelectAriaAttributes($name, $attributes);

@@ -13,7 +13,7 @@ use Canvastack\Canvastack\Exceptions\Controller\RouteException;
  * First Created on 9 Apr 2021
  * Time Created : 14:49:04
  * 
- * Provides comprehensive route information management for the Canvastack Origin framework.
+ * Provides comprehensive route information management for the CanvaStack framework.
  * This trait handles current route analysis, action button generation, page information extraction,
  * and route-based UI element rendering with caching support.
  * 

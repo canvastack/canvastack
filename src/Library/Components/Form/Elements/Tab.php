@@ -3,6 +3,7 @@ namespace Canvastack\Canvastack\Library\Components\Form\Elements;
 
 use Canvastack\Canvastack\Library\Constants\SafeHtml;
 use Canvastack\Canvastack\Library\Constants\FormConstants;
+use Canvastack\Canvastack\Library\Theme\ThemeAdapterResolver;
 
 /**
  * Tab Navigation Trait
@@ -472,19 +473,11 @@ trait Tab {
 			return SafeHtml::unmark($content);
 		}, $contents);
 		
-		$html = '<div class="tabbable">';
-		$html .= '<ul class="nav nav-tabs" role="tablist">';
-		$html .= implode('', $unmarkedHeaders);
-		$html .= '</ul>';
-		$html .= '<div class="tab-content">';
-		$html .= implode('', $unmarkedContents);
-		$html .= '</div>';
-		$html .= '</div><br />';
+		$headersHtml  = implode('', $unmarkedHeaders);
+		$contentsHtml = implode('', $unmarkedContents);
 
-		// Security: Do NOT mark the HTML here to prevent marker leakage
-		// The HTML is already properly escaped by helper functions
-		// Marking here causes the marker to appear in the concatenated output
-		return $html;
+		// Delegate tab wrapper rendering to the active theme adapter
+		return ThemeAdapterResolver::resolve()->renderTabWrapper($headersHtml, $contentsHtml);
 	}
 	
 	/**

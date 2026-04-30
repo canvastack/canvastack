@@ -8,7 +8,7 @@
 
 بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
 
-Alhamdulillah, this release represents a comprehensive security and accessibility audit of CanvaStack Origin, resulting in significant improvements across all quality metrics.
+Alhamdulillah, this release represents a comprehensive security and accessibility audit of CanvaStack, resulting in significant improvements across all quality metrics.
 
 ## Improvement Metrics
 

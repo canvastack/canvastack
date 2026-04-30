@@ -1,0 +1,394 @@
+/**
+ * Canvasign Mapping Page Layout Fixes
+ * 
+ * Fixes positioning and alignment issues for mapping page buttons:
+ * - Centers action buttons (Add/Recycle) vertically and horizontally
+ * - Positions delete/recycle buttons between Field Name and Field Value
+ * - Ensures proper spacing and alignment
+ * 
+ * @package CanvaStack
+ * @subpackage Canvasign Theme
+ * @version 1.0.0
+ */
+
+
+/* ========================================
+   Table Mapping Page Privileges Styles
+   ======================================== */
+.canvastack-mappriv-modname,
+.canvastack-mappriv-tabname,
+.canvastack-mappriv-rqfs,
+.canvastack-mappriv-rqfname,
+.canvastack-mappriv-rqfval,
+.canvastack-mappriv-act {
+	text-align:center;
+}
+
+.canvastack-mappriv-modname {
+    min-width: 260px;
+}
+.canvastack-mappriv-tabname {
+    min-width: 420px;
+}
+
+#mapping-page-privileges table > thead > tr > th {
+	text-align:center;
+    vertical-align: middle;
+}
+
+#mapping-page-privileges table > tbody > tr > td:last-child {
+    vertical-align: middle;
+}
+
+/* ============================================
+   ACTION BUTTONS BOX (Column Action)
+   ============================================ */
+
+/**
+ * Center action buttons vertically and horizontally in Action column
+ */
+.action-buttons-box {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	height: 100%;
+	min-height: 60px;
+	width: 100%;
+	text-align: center;
+}
+
+.action-buttons-box .action-buttons {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	justify-content: center;
+}
+
+.action-buttons-box .action-buttons .btn {
+	margin: 0 !important;
+	padding: 6px 12px !important;
+	font-size: 14px !important;
+	line-height: 1.5;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.action-buttons-box .action-buttons .btn i {
+	font-size: 16px;
+	line-height: 1;
+}
+
+/* ============================================
+   MULTI-CHAIN BUTTONS (Delete/Recycle)
+   ============================================ */
+
+/**
+ * Position delete/recycle buttons exactly between Field Name and Field Value
+ */
+.multi-chain-buttons {
+	position: absolute !important;
+	left: 0 !important;
+	top: 30px !important;
+	transform: translate(-50%, -50%) !important;
+	z-index: 10;
+	display: inline-block;
+	cursor: pointer;
+	background: transparent;
+	border-radius: 50%;
+	width: 28px;
+	height: 28px;
+	display: flex !important;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+}
+
+.multi-chain-buttons:hover {
+	transform: translate(-50%, -50%) scale(1.1) !important;
+	box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+	cursor: pointer;
+}
+
+.multi-chain-buttons i {
+	font-size: 18px !important;
+	line-height: 1;
+	margin: 0;
+	padding: 0;
+}
+
+/* Icon colors for different button types */
+.multi-chain-buttons .bi-dash-circle.danger,
+.multi-chain-buttons .fa-minus-circle.danger {
+	color: #dc3545 !important;  /* Red for delete */
+}
+
+.multi-chain-buttons .bi-recycle.warning,
+.multi-chain-buttons .fa-recycle.warning {
+	color: #ffc107 !important;  /* Yellow/Orange for recycle */
+}
+
+.multi-chain-buttons .bi-plus-circle.success,
+.multi-chain-buttons .fa-plus-circle.success {
+	color: #28a745 !important;  /* Green for add */
+}
+
+/* ============================================
+   FIELD VALUE BOX (Relative positioning)
+   ============================================ */
+
+/**
+ * Ensure field-value-box has relative positioning for absolute child
+ */
+.field-value-box {
+	position: relative !important;
+}
+
+/* ============================================
+   MAPPING TABLE LAYOUT
+   ============================================ */
+
+/**
+ * Ensure proper spacing and alignment in mapping table
+ */
+table.mapping-table {
+	width: 100%;
+	table-layout: fixed;
+}
+
+table.mapping-table td {
+	vertical-align: top !important;
+	padding: 8px !important;
+}
+
+table.mapping-table td.field-name-box {
+	width: 48%;
+	padding-right: 20px !important;
+}
+
+table.mapping-table td.field-value-box {
+	width: 52%;
+	padding-left: 20px !important;
+}
+
+/* ============================================
+   CHOSEN.JS ADJUSTMENTS
+   ============================================ */
+
+/**
+ * Ensure Chosen dropdowns don't overflow
+ */
+.field-name-box .chosen-container,
+.field-value-box .chosen-container {
+	width: 100% !important;
+	max-width: 100%;
+}
+
+.field-name-box .chosen-container .chosen-drop,
+.field-value-box .chosen-container .chosen-drop {
+	width: 100% !important;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+	.action-buttons-box {
+		min-height: 50px;
+	}
+	
+	.action-buttons-box .action-buttons {
+		flex-direction: column;
+		gap: 4px;
+	}
+	
+	.multi-chain-buttons {
+		width: 24px;
+		height: 24px;
+	}
+	
+	.multi-chain-buttons i {
+		font-size: 14px !important;
+	}
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+
+[data-theme="dark"] .multi-chain-buttons {
+	background: var(--surface, #2d3748);
+	box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .multi-chain-buttons:hover {
+	box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+}
+
+
+/* ============================================
+   ENHANCED DARK/LIGHT MODE SUPPORT
+   ============================================ */
+
+/**
+ * Comprehensive dark/light mode styling for mapping page
+ */
+
+/* Action buttons - Dark Mode */
+[data-theme="dark"] .action-buttons-box .action-buttons .btn {
+	background: var(--surface, #2d3748);
+	border-color: var(--border, #4a5568);
+	color: var(--text, #e2e8f0);
+}
+
+[data-theme="dark"] .action-buttons-box .action-buttons .btn:hover {
+	background: var(--surface-hover, #374151);
+	border-color: var(--border-hover, #6b7280);
+}
+
+/* Choices.js dropdown - Dark Mode */
+[data-theme="dark"] .choices {
+	background-color: var(--surface, #2d3748) !important;
+	border-color: var(--border, #4a5568) !important;
+}
+
+[data-theme="dark"] .choices__inner {
+	background-color: var(--surface, #2d3748) !important;
+	border-color: var(--border, #4a5568) !important;
+	color: var(--text, #e2e8f0) !important;
+}
+
+[data-theme="dark"] .choices__list--dropdown {
+	background-color: var(--surface, #2d3748) !important;
+	border-color: var(--border, #4a5568) !important;
+}
+
+[data-theme="dark"] .choices__list--dropdown .choices__item {
+	color: var(--text, #e2e8f0) !important;
+}
+
+[data-theme="dark"] .choices__list--dropdown .choices__item--selectable.is-highlighted {
+	background-color: var(--primary, #3b82f6) !important;
+	color: white !important;
+}
+
+[data-theme="dark"] .choices__input {
+	background-color: var(--surface, #2d3748) !important;
+	color: var(--text, #e2e8f0) !important;
+}
+
+[data-theme="dark"] .choices__list--multiple .choices__item {
+	background-color: var(--primary, #3b82f6) !important;
+	border-color: var(--primary, #3b82f6) !important;
+	color: white !important;
+}
+
+/* Choices.js dropdown - Light Mode */
+[data-theme="light"] .choices,
+body:not([data-theme="dark"]) .choices {
+	background: var(--surface);
+	border-radius: var(--bs-border-radius);
+	margin-bottom: 0 !important;
+}
+
+[data-theme="light"] .choices__inner,
+body:not([data-theme="dark"]) .choices__inner {
+	background: var(--surface);
+  	border: 1px solid var(--border);
+  	color: var(--text);
+	border-radius: var(--bs-border-radius);
+}
+
+[data-theme="light"] .choices__list--dropdown,
+body:not([data-theme="dark"]) .choices__list--dropdown {
+	background: var(--topbar-bg);
+	backdrop-filter: blur(18px);
+	border: 1px solid var(--border) !important;
+	color: white !important;
+}
+
+[data-theme="light"] .choices__list--dropdown .choices__item,
+body:not([data-theme="dark"]) .choices__list--dropdown .choices__item {
+	color: white !important;
+}
+
+.choices__list--dropdown .choices__item--selectable.is-highlighted, .choices__list--dropdown .choices__item--selectable.is-selected, .choices__list[aria-expanded] .choices__item--selectable.is-highlighted, .choices__list[aria-expanded] .choices__item--selectable.is-selected {
+	color: black !important;
+}
+
+[data-theme="light"] .choices__list--dropdown .choices__item--selectable.is-highlighted,
+body:not([data-theme="dark"]) .choices__list--dropdown .choices__item--selectable.is-highlighted {
+	background-color: #3b82f6 !important;
+	color: white !important;
+}
+
+[data-theme="light"] .choices__input,
+body:not([data-theme="dark"]) .choices__input {
+	background-color: transparent !important;
+	color: white !important;
+	border-bottom: var(--choices-base-border, 1px solid) var(--choices-keyline-color, rgba(19, 24, 38, 0.91)) !important
+}
+
+[data-theme="light"] .choices__list--multiple .choices__item,
+body:not([data-theme="dark"]) .choices__list--multiple .choices__item {
+	background-color: #3b82f6 !important;
+	border-color: #3b82f6 !important;
+	color: white !important;
+}
+
+/* Table cells - Dark Mode */
+[data-theme="dark"] table.mapping-table td {
+	background-color: transparent !important;
+	color: var(--text, #e2e8f0) !important;
+	border-color: var(--border, #4a5568) !important;
+}
+
+/* Table cells - Light Mode */
+[data-theme="light"] table.mapping-table td,
+body:not([data-theme="dark"]) table.mapping-table td {
+	background-color: transparent !important;
+	color: #212529 !important;
+}
+
+/* Multi-chain buttons - Enhanced for both modes */
+[data-theme="light"] .multi-chain-buttons,
+body:not([data-theme="dark"]) .multi-chain-buttons:hover {
+	background: rgba(141, 158, 200, 0.06);
+	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .multi-chain-buttons:hover,
+body:not([data-theme="dark"]) .multi-chain-buttons:hover {
+	box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* ============================================
+   BUTTON ICON ALIGNMENT
+   ============================================ */
+
+.action-buttons-box .action-buttons .btn i,
+.multi-chain-buttons i {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* ============================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================ */
+
+.multi-chain-buttons:focus {
+	outline: 2px solid var(--primary, #3b82f6);
+	outline-offset: 2px;
+}
+
+.action-buttons-box .action-buttons .btn:focus {
+	outline: 2px solid var(--primary, #3b82f6);
+	outline-offset: 2px;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="dark"] .action-buttons-box .action-buttons .btn:focus {
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}

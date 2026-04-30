@@ -12,7 +12,7 @@ use Canvastack\Canvastack\Exceptions\Controller\FileUploadException;
  * First Created on 27 Mar 2021
  * Time Created : 01:43:45
  * 
- * Provides comprehensive file upload functionality for the Canvastack Origin framework.
+ * Provides comprehensive file upload functionality for the CanvaStack framework.
  * This trait handles file validation, security checks, chunked uploads for large files,
  * thumbnail generation, and memory-efficient file processing.
  * 

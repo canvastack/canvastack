@@ -3,6 +3,7 @@ namespace Canvastack\Canvastack\Library\Components\Form\Elements;
 
 use Collective\Html\FormFacade as Form;
 use Canvastack\Canvastack\Library\Constants\FormConstants;
+use Canvastack\Canvastack\Library\Theme\ThemeAdapterResolver;
 
 /**
  * Created on 19 Mar 2021
@@ -255,15 +256,12 @@ trait Check {
 		 * @return string HTML for regular checkbox
 		 */
 		private function renderRegularCheckbox(string $name, mixed $checkKey, string $checkKeyEscaped, mixed $checkLabel, bool $isSelected, array $checkAttributes, string $checkboxType, string $checkboxId): string {
-			$openTag = '<div class="col-sm-3 ' . FormConstants::CLASS_CKBOX . $checkboxType . '">';
+			// Security: Escape name and check_key for form field name
+			$checkboxInput = Form::checkbox(canvastack_form_escape_html($name) . "[{$checkKeyEscaped}]", $checkKeyEscaped, $isSelected, $checkAttributes);
 			// Security: Laravel Form::label() automatically escapes the label text
 			// No need to manually escape as it will cause double-escaping
 			$labelTag = Form::label($checkboxId, $checkLabel);
-			$endTag = '</div>';
 
-			// Security: Escape name and check_key for form field name
-			$checkboxInput = Form::checkbox(canvastack_form_escape_html($name) . "[{$checkKeyEscaped}]", $checkKeyEscaped, $isSelected, $checkAttributes);
-
-			return $openTag . $checkboxInput . $labelTag . $endTag;
+			return ThemeAdapterResolver::resolve()->renderCheckboxWrapper($checkboxType, $checkboxInput, $labelTag);
 		}
 }

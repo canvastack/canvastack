@@ -12,7 +12,7 @@
 
 ## Introduction
 
-The Canvastack Origin Form Builder provides a comprehensive, secure, and accessible way to generate HTML forms in Laravel applications. This API reference documents all public methods, security features, and best practices.
+The CanvaStack Form Builder provides a comprehensive, secure, and accessible way to generate HTML forms in Laravel applications. This API reference documents all public methods, security features, and best practices.
 
 ### Key Features
 

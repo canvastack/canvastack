@@ -1,0 +1,325 @@
+/**
+ * Canvasign Menu Styling
+ * 
+ * Adapts CanvaStack menu structure to match Canvasign design reference
+ * Transforms ul-li structure to look like the design reference
+ * 
+ * @author wisnuwidi@canvastack.com
+ * @copyright Canvastack
+ * @version 1.0.0
+ */
+
+/* ========================================================================
+   CanvaStack Menu → Canvasign Design Adapter
+   ======================================================================== */
+
+/* Reset default CanvaStack menu styles */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem .75rem;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-nav li {
+  margin: 0;
+  padding: 0;
+}
+
+/* ========================================================================
+   Main Menu Items (Top Level)
+   ======================================================================== */
+
+/* Dashboard link (simple link, no submenu) */
+.sidebar-nav .main-menu > li.submenu > a:not(.arrow-node) {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: .65rem .85rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: .92rem;
+  font-weight: 500;
+  margin-bottom: 2px;
+  transition: var(--transition);
+  white-space: nowrap;
+  position: relative;
+  text-decoration: none;
+}
+
+.sidebar-nav .main-menu > li.submenu > a:not(.arrow-node):hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Toggle buttons (arrow-node) - menu items with submenus */
+.sidebar-nav .main-menu > li.submenu > a.arrow-node {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: .65rem .85rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: .92rem;
+  font-weight: 500;
+  margin-bottom: 2px;
+  transition: var(--transition);
+  white-space: nowrap;
+  position: relative;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sidebar-nav .main-menu > li.submenu > a.arrow-node:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Active state for menu items */
+.sidebar-nav .main-menu > li.submenu.active > a {
+  background: var(--gradient-soft);
+  color: var(--text);
+}
+
+.sidebar-nav .main-menu > li.submenu.active > a::before {
+  content: '';
+  position: absolute;
+  left: -.75rem; 
+  top: 20%; 
+  bottom: 20%;
+  width: 3px; 
+  border-radius: 0 3px 3px 0;
+  background: var(--gradient-primary);
+  box-shadow: var(--glow);
+}
+
+/* ========================================================================
+   Icons Styling
+   ======================================================================== */
+
+/* Icon container */
+.sidebar-nav .main-menu > li.submenu > a .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  flex-shrink: 0;
+}
+
+.sidebar-nav .main-menu > li.submenu > a .icon i {
+  font-size: 1.1rem;
+  width: 22px;
+  text-align: center;
+  color: inherit;
+}
+
+/* Text styling */
+.sidebar-nav .main-menu > li.submenu > a .text {
+  flex: 1;
+  color: inherit;
+}
+
+/* ========================================================================
+   Category Separators (system, modules, etc.)
+   ======================================================================== */
+
+.sidebar-nav .main-menu > li.sidebar-category {
+  margin: 1rem 0 .5rem 0;
+}
+
+.sidebar-nav .main-menu > li.sidebar-category > span:first-child {
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-dim);
+  padding: 1rem .75rem .5rem;
+  font-weight: 600;
+  display: block;
+}
+
+/* Hide category icons */
+.sidebar-nav .main-menu > li.sidebar-category > span.float-end {
+  display: none;
+}
+
+/* ========================================================================
+   Submenus (Nested Items)
+   ======================================================================== */
+
+/* Submenu container */
+.sidebar-nav .main-menu > li.submenu > ul {
+  margin-left: 2.2rem; /* Indent to align with text */
+  margin-top: .25rem;
+  margin-bottom: .5rem;
+  padding: 0;
+  display: none; /* Hidden by default */
+}
+
+/* Show submenu when parent is active or has 'in' class */
+.sidebar-nav .main-menu > li.submenu.active > ul,
+.sidebar-nav .main-menu > li.submenu > ul.in,
+.sidebar-nav .main-menu > li.submenu > ul[style*="block"] {
+  display: block;
+}
+
+/* Submenu items */
+.sidebar-nav .main-menu > li.submenu > ul > li {
+  margin-bottom: 1px;
+}
+
+.sidebar-nav .main-menu > li.submenu > ul > li > a {
+  display: flex;
+  align-items: center;
+  padding: .45rem .75rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: .85rem;
+  font-weight: 400;
+  text-decoration: none;
+  transition: var(--transition);
+  position: relative;
+}
+
+.sidebar-nav .main-menu > li.submenu > ul > li > a:hover {
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+/* Active submenu item */
+.sidebar-nav .main-menu > li.submenu > ul > li.menu-active-pointer > a,
+.sidebar-nav .main-menu > li.submenu > ul > li > a.active {
+  background: var(--gradient-soft);
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Submenu item indicator (small dot) */
+.sidebar-nav .main-menu > li.submenu > ul > li > a::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  margin-right: .75rem;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.sidebar-nav .main-menu > li.submenu > ul > li > a:hover::before {
+  background: var(--text-muted);
+}
+
+.sidebar-nav .main-menu > li.submenu > ul > li.menu-active-pointer > a::before,
+.sidebar-nav .main-menu > li.submenu > ul > li > a.active::before {
+  background: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59,130,246,.2);
+}
+
+/* ========================================================================
+   Collapsed Sidebar Support
+   ======================================================================== */
+
+.app.collapsed .sidebar-nav .main-menu > li.sidebar-category {
+  opacity: 0; 
+  height: 0; 
+  padding: 0; 
+  overflow: hidden;
+}
+
+.app.collapsed .sidebar-nav .main-menu > li.submenu > a .text {
+  display: none;
+}
+
+.app.collapsed .sidebar-nav .main-menu > li.submenu > ul {
+  display: none !important; /* Force hide submenus in collapsed mode */
+}
+
+/* ========================================================================
+   Smooth Animations
+   ======================================================================== */
+
+.sidebar-nav .main-menu > li.submenu > ul {
+  transition: all .25s ease;
+  overflow: hidden;
+}
+
+/* Animation for expanding/collapsing */
+.sidebar-nav .main-menu > li.submenu > ul.expanding {
+  animation: slideDown .25s ease forwards;
+}
+
+.sidebar-nav .main-menu > li.submenu > ul.collapsing {
+  animation: slideUp .25s ease forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 300px;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    max-height: 300px;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* ========================================================================
+   Mobile Responsive
+   ======================================================================== */
+
+@media (max-width: 900px) {
+  .sidebar-nav .main-menu > li.submenu > ul {
+    margin-left: 1.5rem; /* Less indent on mobile */
+  }
+  
+  .sidebar-nav .main-menu > li.submenu > a {
+    padding: .75rem .85rem; /* Slightly larger touch targets */
+  }
+  
+  .sidebar-nav .main-menu > li.submenu > ul > li > a {
+    padding: .55rem .75rem;
+  }
+}
+
+/* ========================================================================
+   Debug Helpers (Remove in production)
+   ======================================================================== */
+
+/* Uncomment for debugging menu structure */
+/*
+.sidebar-nav .main-menu > li.submenu {
+  border: 1px solid red;
+}
+
+.sidebar-nav .main-menu > li.submenu > a {
+  border: 1px solid blue;
+}
+
+.sidebar-nav .main-menu > li.submenu > ul {
+  border: 1px solid green;
+}
+
+.sidebar-nav .main-menu > li.submenu > ul > li > a {
+  border: 1px solid orange;
+}
+*/

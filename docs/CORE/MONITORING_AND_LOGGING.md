@@ -2,7 +2,7 @@
 
 بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
 
-Alhamdulillah, this document provides comprehensive guidance on the monitoring and logging system for Canvastack Origin Core Controller Components.
+Alhamdulillah, this document provides comprehensive guidance on the monitoring and logging system for CanvaStack Core Controller Components.
 
 ## Table of Contents
 

@@ -22,7 +22,7 @@ use Canvastack\Canvastack\Exceptions\Controller\XSSAttemptException;
  * Provides comprehensive CRUD (Create, Read, Update, Delete) operations for Laravel controllers
  * with advanced DataTables integration, security features, and performance optimizations.
  * This trait implements the core action methods required for resource management in the
- * Canvastack Origin framework, handling everything from form rendering to data persistence.
+ * CanvaStack framework, handling everything from form rendering to data persistence.
  *
  * The trait offers a complete solution for building data-driven applications with features including:
  * - RESTful resource operations (index, create, store, show, edit, update, destroy)
@@ -192,22 +192,22 @@ trait Action {
 	 * // Returns: JSON response with paginated, filtered, and sorted data
 	 * ```
 	 */
-		public function index() {
-				$this->setPage();
+	public function index() {
+			$this->setPage();
 
-				if (!empty($this->model_table)) {
-					// Escape model table name to prevent XSS in table rendering
-					$safeModelTable = $this->escapeRouteParameter($this->model_table);
+			if (!empty($this->model_table)) {
+				// Escape model table name to prevent XSS in table rendering
+				$safeModelTable = $this->escapeRouteParameter($this->model_table);
 
-					$this->table->searchable();
-					$this->table->clickable();
-					$this->table->sortable();
+				$this->table->searchable();
+				$this->table->clickable();
+				$this->table->sortable();
 
-					// Use escaped table name
-					$this->table->lists($safeModelTable);
-				}
-				return $this->render();
+				// Use escaped table name
+				$this->table->lists($safeModelTable);
 			}
+			return $this->render();
+		}
 	
 	/**
 	 * Show the form for creating a new resource
@@ -229,9 +229,9 @@ trait Action {
 	 * // Renders: resources/views/users/create.blade.php
 	 * ```
 	 */
-		public function create() {
-				return $this->render();
-			}
+	public function create() {
+		return $this->render();
+	}
 	
 	/**
 	 * Display the specified resource in read-only mode
@@ -264,6 +264,7 @@ trait Action {
 		
 		return $this->create();
 	}
+
 	/**
 	 * Show the form for editing the specified resource
 	 * 
@@ -288,20 +289,20 @@ trait Action {
 	 * // Renders: resources/views/users/edit.blade.php with user ID 123 data
 	 * ```
 	 */
-		public function edit($id) {
-				// Escape ID parameter to prevent XSS and validate as integer
-				$safeId = $this->escapeRouteParameter($id, 'int');
+	public function edit($id) {
+			// Escape ID parameter to prevent XSS and validate as integer
+			$safeId = $this->escapeRouteParameter($id, 'int');
 
-				$this->setPage('&nbsp;');
-				if (!empty($this->getModel($safeId))) {
-					$model = $this->getModel($safeId);
-					$model->find($safeId);
+			$this->setPage('&nbsp;');
+			if (!empty($this->getModel($safeId))) {
+				$model = $this->getModel($safeId);
+				$model->find($safeId);
 
-					if (!empty($model->getAttributes())) {
-						return $this->create();
-					}
+				if (!empty($model->getAttributes())) {
+					return $this->create();
 				}
 			}
+		}
 	
 	/**
 	 * Insert new data with validation
@@ -1608,201 +1609,173 @@ trait Action {
 	 * ```
 	 */
 	protected function destroy(Request $request, $id) {
-			$model = $this->getModel($id);
+		$model = $this->getModel($id);
+		
+		// Wrap database operation with error handling
+		try {
+			canvastack_delete($request, $model, $id);
+		} catch (\Exception $e) {
+			// Handle database error gracefully
+			$this->handleDatabaseError($e, 'delete', [
+				'model' => get_class($model),
+				'id' => $id,
+			]);
 			
-			// Wrap database operation with error handling
-			try {
-				canvastack_delete($request, $model, $id);
-			} catch (\Exception $e) {
-				// Handle database error gracefully
-				$this->handleDatabaseError($e, 'delete', [
-					'model' => get_class($model),
-					'id' => $id,
-				]);
-				
-				// Re-throw if graceful degradation is disabled
-				if (!config('canvastack.controller.error_handling.handle_database_errors', true)) {
-					throw $e;
-				}
+			// Re-throw if graceful degradation is disabled
+			if (!config('canvastack.controller.error_handling.handle_database_errors', true)) {
+				throw $e;
 			}
-
-			return $this->routeBackAfterAction(__FUNCTION__);
 		}
-	
+
+		return $this->routeBackAfterAction(__FUNCTION__);
+	}
+		
 	/**
-	 * Find and load model data by ID
+	 * Find Model by ID with Database Error Handling
 	 * 
-	 * Retrieves a specific record from the database by its primary key and stores it in the
-	 * model_data property. This method also checks if the record is soft deleted (if the model
-	 * supports soft deletes) and sets the is_softdeleted flag accordingly.
+	 * Retrieves a model record by its primary key ID with comprehensive error handling.
+	 * This method wraps the Eloquent find() operation in try-catch blocks to gracefully
+	 * handle database connection failures, query errors, and other database-related issues.
 	 * 
-	 * This is an internal method used by other action methods to load record data before
-	 * displaying or modifying it.
+	 * The method performs the following operations:
+	 * 1. Attempts to find the model record by ID
+	 * 2. Checks if model uses soft deletes
+	 * 3. Sets soft delete flag if record is deleted
+	 * 4. Handles database errors gracefully with logging and user-friendly messages
 	 * 
-	 * @param mixed $id The ID to find (typically an integer primary key)
-	 * @return void Data is stored in $this->model_data property
+	 * Error Handling Strategy:
+	 * - Database connection errors: Log error, set model_data to null, throw exception
+	 * - Query errors: Log error with context, set model_data to null, throw exception
+	 * - Soft delete check errors: Log warning, continue without soft delete flag
+	 * - All errors are logged with user context for debugging
 	 * 
-	 * @security ID Validation - ID should be validated before calling this method
-	 * @security Soft Delete Awareness - Properly handles soft deleted records
+	 * @param mixed $id The primary key ID to find (typically integer)
+	 * @return void Sets $this->model_data with found record or null on error
 	 * 
-	 * @performance Single Query - Retrieves record with single database query
-	 * @performance Eager Loading - Uses eager loading if configured to prevent N+1 queries
+	 * @throws \Illuminate\Database\QueryException If database query fails
+	 * @throws \PDOException If database connection fails
+	 * @throws ControllerException If model find operation fails
 	 * 
-	 * @example Internal usage in edit() method:
+	 * @security Route Parameter Validation - ID should be validated before calling this method
+	 * @security SQL Injection Prevention - Uses Eloquent ORM parameter binding
+	 * 
+	 * @performance Single database query using Eloquent find()
+	 * @performance Soft delete check only if model supports soft deletes
+	 * @performance Error logging only when errors occur
+	 * 
+	 * @example
 	 * ```php
-	 * public function edit($id) {
+	 * try {
 	 *     $safeId = $this->escapeRouteParameter($id, 'int');
-	 *     $model = $this->getModel($safeId);
-	 *     $model->find($safeId); // Calls this method internally
+	 *     $this->model_find($safeId);
+	 *     
+	 *     if ($this->model_data) {
+	 *         // Record found
+	 *         return view('edit', ['model' => $this->model_data]);
+	 *     } else {
+	 *         // Record not found
+	 *         return redirect()->back()->with('error', 'Record not found');
+	 *     }
+	 * } catch (ControllerException $e) {
+	 *     // Database error occurred
+	 *     return redirect()->back()->with('error', 'Database error: ' . $e->getMessage());
 	 * }
 	 * ```
 	 */
-	/**
-		 * Find Model by ID with Database Error Handling
-		 * 
-		 * Retrieves a model record by its primary key ID with comprehensive error handling.
-		 * This method wraps the Eloquent find() operation in try-catch blocks to gracefully
-		 * handle database connection failures, query errors, and other database-related issues.
-		 * 
-		 * The method performs the following operations:
-		 * 1. Attempts to find the model record by ID
-		 * 2. Checks if model uses soft deletes
-		 * 3. Sets soft delete flag if record is deleted
-		 * 4. Handles database errors gracefully with logging and user-friendly messages
-		 * 
-		 * Error Handling Strategy:
-		 * - Database connection errors: Log error, set model_data to null, throw exception
-		 * - Query errors: Log error with context, set model_data to null, throw exception
-		 * - Soft delete check errors: Log warning, continue without soft delete flag
-		 * - All errors are logged with user context for debugging
-		 * 
-		 * @param mixed $id The primary key ID to find (typically integer)
-		 * @return void Sets $this->model_data with found record or null on error
-		 * 
-		 * @throws \Illuminate\Database\QueryException If database query fails
-		 * @throws \PDOException If database connection fails
-		 * @throws ControllerException If model find operation fails
-		 * 
-		 * @security Route Parameter Validation - ID should be validated before calling this method
-		 * @security SQL Injection Prevention - Uses Eloquent ORM parameter binding
-		 * 
-		 * @performance Single database query using Eloquent find()
-		 * @performance Soft delete check only if model supports soft deletes
-		 * @performance Error logging only when errors occur
-		 * 
-		 * @example
-		 * ```php
-		 * try {
-		 *     $safeId = $this->escapeRouteParameter($id, 'int');
-		 *     $this->model_find($safeId);
-		 *     
-		 *     if ($this->model_data) {
-		 *         // Record found
-		 *         return view('edit', ['model' => $this->model_data]);
-		 *     } else {
-		 *         // Record not found
-		 *         return redirect()->back()->with('error', 'Record not found');
-		 *     }
-		 * } catch (ControllerException $e) {
-		 *     // Database error occurred
-		 *     return redirect()->back()->with('error', 'Database error: ' . $e->getMessage());
-		 * }
-		 * ```
-		 */
-		public function model_find(mixed $id): void {
-			try {
-				// Attempt to find model by ID
-				$this->model_data = $this->model->find($id);
+	public function model_find(mixed $id): void {
+		try {
+			// Attempt to find model by ID
+			$this->model_data = $this->model->find($id);
 
-				// Guard clause: Check if model supports soft deletes and record is soft deleted
-				if (!$this->softDeletedModel) {
-					return;
-				}
-
-				// Check if record is soft deleted
-				try {
-					if ($this->model_data && !is_null($this->model_data->deleted_at)) {
-						$this->is_softdeleted = true;
-					}
-				} catch (\Exception $e) {
-					// Soft delete check failed - log warning but continue
-					if (config('canvastack.controller.logging.log_performance_issues', true)) {
-						\Illuminate\Support\Facades\Log::warning('Soft delete check failed in model_find', [
-							'model_id' => $id,
-							'model_class' => get_class($this->model),
-							'error' => $e->getMessage(),
-							'user_id' => session('id'),
-						]);
-					}
-				}
-
-			} catch (\Illuminate\Database\QueryException $e) {
-				// Database query error - log and throw user-friendly exception
-				\Illuminate\Support\Facades\Log::error('Database query error in model_find', [
-					'model_id' => $id,
-					'model_class' => get_class($this->model),
-					'error_code' => $e->getCode(),
-					'error_message' => $e->getMessage(),
-					'sql' => $e->getSql() ?? 'N/A',
-					'user_id' => session('id'),
-					'ip_address' => request()->ip(),
-				]);
-
-				// Set model_data to null
-				$this->model_data = null;
-
-				// Throw user-friendly exception
-				throw new ControllerException(
-					'Unable to retrieve record from database. Please try again later.',
-					[],
-					500,
-					$e
-				);
-
-			} catch (\PDOException $e) {
-				// Database connection error - log and throw user-friendly exception
-				\Illuminate\Support\Facades\Log::error('Database connection error in model_find', [
-					'model_id' => $id,
-					'model_class' => get_class($this->model),
-					'error_code' => $e->getCode(),
-					'error_message' => $e->getMessage(),
-					'user_id' => session('id'),
-					'ip_address' => request()->ip(),
-				]);
-
-				// Set model_data to null
-				$this->model_data = null;
-
-				// Throw user-friendly exception
-				throw new ControllerException(
-					'Database connection failed. Please check your connection and try again.',
-					[],
-					503,
-					$e
-				);
-
-			} catch (\Exception $e) {
-				// Generic error - log and throw user-friendly exception
-				\Illuminate\Support\Facades\Log::error('Unexpected error in model_find', [
-					'model_id' => $id,
-					'model_class' => get_class($this->model),
-					'error_message' => $e->getMessage(),
-					'user_id' => session('id'),
-					'ip_address' => request()->ip(),
-				]);
-
-				// Set model_data to null
-				$this->model_data = null;
-
-				// Throw user-friendly exception
-				throw new ControllerException(
-					'An unexpected error occurred while retrieving the record.',
-					[],
-					500,
-					$e
-				);
+			// Guard clause: Check if model supports soft deletes and record is soft deleted
+			if (!$this->softDeletedModel) {
+				return;
 			}
+
+			// Check if record is soft deleted
+			try {
+				if ($this->model_data && !is_null($this->model_data->deleted_at)) {
+					$this->is_softdeleted = true;
+				}
+			} catch (\Exception $e) {
+				// Soft delete check failed - log warning but continue
+				if (config('canvastack.controller.logging.log_performance_issues', true)) {
+					\Illuminate\Support\Facades\Log::warning('Soft delete check failed in model_find', [
+						'model_id' => $id,
+						'model_class' => get_class($this->model),
+						'error' => $e->getMessage(),
+						'user_id' => session('id'),
+					]);
+				}
+			}
+
+		} catch (\Illuminate\Database\QueryException $e) {
+			// Database query error - log and throw user-friendly exception
+			\Illuminate\Support\Facades\Log::error('Database query error in model_find', [
+				'model_id' => $id,
+				'model_class' => get_class($this->model),
+				'error_code' => $e->getCode(),
+				'error_message' => $e->getMessage(),
+				'sql' => $e->getSql() ?? 'N/A',
+				'user_id' => session('id'),
+				'ip_address' => request()->ip(),
+			]);
+
+			// Set model_data to null
+			$this->model_data = null;
+
+			// Throw user-friendly exception
+			throw new ControllerException(
+				'Unable to retrieve record from database. Please try again later.',
+				[],
+				500,
+				$e
+			);
+
+		} catch (\PDOException $e) {
+			// Database connection error - log and throw user-friendly exception
+			\Illuminate\Support\Facades\Log::error('Database connection error in model_find', [
+				'model_id' => $id,
+				'model_class' => get_class($this->model),
+				'error_code' => $e->getCode(),
+				'error_message' => $e->getMessage(),
+				'user_id' => session('id'),
+				'ip_address' => request()->ip(),
+			]);
+
+			// Set model_data to null
+			$this->model_data = null;
+
+			// Throw user-friendly exception
+			throw new ControllerException(
+				'Database connection failed. Please check your connection and try again.',
+				[],
+				503,
+				$e
+			);
+
+		} catch (\Exception $e) {
+			// Generic error - log and throw user-friendly exception
+			\Illuminate\Support\Facades\Log::error('Unexpected error in model_find', [
+				'model_id' => $id,
+				'model_class' => get_class($this->model),
+				'error_message' => $e->getMessage(),
+				'user_id' => session('id'),
+				'ip_address' => request()->ip(),
+			]);
+
+			// Set model_data to null
+			$this->model_data = null;
+
+			// Throw user-friendly exception
+			throw new ControllerException(
+				'An unexpected error occurred while retrieving the record.',
+				[],
+				500,
+				$e
+			);
 		}
+	}
 	
 	public array $model_filters = [];
 	

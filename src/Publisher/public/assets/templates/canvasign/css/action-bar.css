@@ -1,0 +1,161 @@
+/**
+ * Canvasign — Sticky Action Bar
+ *
+ * Renders per-page CRUD / action buttons in a sticky bar
+ * positioned just below the topbar (grid-area: action-bar).
+ *
+ * The bar is only rendered when $route_info->action_page is non-empty.
+ */
+
+/* -----------------------------------------------------------------------
+   Grid integration — insert action-bar row between topbar and main
+   ----------------------------------------------------------------------- */
+.app:has(#canvasign-action-bar) {
+    grid-template-rows: 64px auto 1fr;
+    grid-template-areas:
+        "sidebar topbar"
+        "sidebar action-bar"
+        "sidebar main";
+}
+
+/* -----------------------------------------------------------------------
+   Action bar container
+   ----------------------------------------------------------------------- */
+.action-bar {
+    grid-area: action-bar;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    padding: .6rem 1.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+
+    /* Sticky: stays below the topbar (64px) while scrolling */
+    position: sticky;
+    top: 64px;
+    z-index: 1020;
+
+    /* Subtle shadow to separate from content */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+}
+
+/* Dark-mode shadow */
+[data-theme="dark"] .action-bar {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+}
+
+/* -----------------------------------------------------------------------
+   Left side — page title + breadcrumb
+   ----------------------------------------------------------------------- */
+.action-bar-title {
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+    min-width: 0;
+}
+
+.action-bar-page {
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.action-bar-crumbs {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .78rem;
+    color: var(--text-muted);
+}
+
+.action-bar-crumbs i {
+    font-size: .65rem;
+    opacity: .6;
+}
+
+.action-bar-crumbs .active {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+/* -----------------------------------------------------------------------
+   Right side — action buttons
+   ----------------------------------------------------------------------- */
+.action-bar-buttons {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+/* Individual action button — slightly rounded, consistent height */
+.action-btn {
+    border-radius: 8px !important;
+    font-size: .82rem !important;
+    font-weight: 500 !important;
+    padding: .38rem .85rem !important;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    white-space: nowrap;
+    transition: opacity .15s, transform .1s;
+}
+
+.action-btn:active {
+    transform: scale(.97);
+}
+
+/* Dropdown menu alignment */
+.action-bar-buttons .dropdown-menu {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+    padding: .4rem;
+    min-width: 180px;
+}
+
+.action-bar-buttons .dropdown-item {
+    border-radius: 6px;
+    font-size: .85rem;
+    padding: .45rem .75rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.action-bar-buttons .dropdown-item:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.action-bar-buttons .dropdown-divider {
+    border-color: var(--border);
+    margin: .3rem 0;
+}
+
+/* -----------------------------------------------------------------------
+   Responsive — stack on small screens
+   ----------------------------------------------------------------------- */
+@media (max-width: 640px) {
+    .action-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .75rem;
+        padding: .75rem 1rem;
+    }
+
+    .action-bar-buttons {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

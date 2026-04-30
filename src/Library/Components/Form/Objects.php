@@ -1104,8 +1104,8 @@ class Objects {
 		// We only disable escaping for specific safe patterns that we generate
 		$safeHtmlPatterns = [
 			'<span class="required"',  // Required field marker
-			'<sup>',                    // Superscript in required marker
-			'<strong>',                 // Bold in required marker
+			'<sup>',                   // Superscript in required marker
+			'<strong>',                // Bold in required marker
 		];
 		
 		$containsSafeHtml = false;

@@ -152,10 +152,11 @@ To add a new round-trip property test:
 
 ## Related Documentation
 
-- Design Document: `docs/COMPONENTS/FORM/AUDIT/DESIGN.md`
-- Requirements: `docs/COMPONENTS/FORM/AUDIT/REQUIREMENTS.md`
-- Property 41 Definition: DESIGN.md (Tab Rendering Round-Trip)
-- Property 42 Definition: DESIGN.md (File Upload Path Round-Trip)
+- Design Document: `.kiro/specs/form-components-audit-fixes/design.md`
+- Requirements: `.kiro/specs/form-components-audit-fixes/requirements.md`
+- Tasks: `.kiro/specs/form-components-audit-fixes/tasks.md`
+- Property 41 Definition: Design.md (Tab Rendering Round-Trip)
+- Property 42 Definition: Design.md (File Upload Path Round-Trip)
 
 ## Test Results Summary
 

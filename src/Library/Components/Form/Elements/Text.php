@@ -390,42 +390,6 @@ trait Text {
 	}
 	
 	/**
-	 * Check if field is required
-	 * 
-	 * Checks both the attributes array and validation rules to determine
-	 * if a field is required.
-	 * 
-	 * @param string $name Field name
-	 * @param array $attributes HTML attributes
-	 * 
-	 * @return bool True if field is required
-	 */
-	// Method moved to AriaHelper trait to avoid duplication across element traits
-	
-	/**
-	 * Check if field has validation errors
-	 * 
-	 * Checks Laravel's error bag to determine if the field has validation errors.
-	 * 
-	 * @param string $name Field name
-	 * 
-	 * @return bool True if field has validation errors
-	 */
-	// Method moved to AriaHelper trait to avoid duplication across element traits
-	
-	/**
-	 * Generate field label from field name
-	 * 
-	 * Converts field name to human-readable label by replacing underscores
-	 * and hyphens with spaces and capitalizing words.
-	 * 
-	 * @param string $name Field name
-	 * 
-	 * @return string Generated label (escaped)
-	 */
-	// Method moved to AriaHelper trait to avoid duplication across element traits
-	
-	/**
 	 * Build ARIA attributes string for HTML output
 	 * 
 	 * Converts an array of ARIA attributes into an HTML attribute string.

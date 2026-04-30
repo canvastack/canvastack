@@ -4,7 +4,7 @@
 
 ## Overview
 
-This guide documents all configuration options available for the Core Controller Components in Canvastack Origin framework. The configuration file is located at `config/canvastack.controller.php`.
+This guide documents all configuration options available for the Core Controller Components in CanvaStack framework. The configuration file is located at `config/canvastack.controller.php`.
 
 ## Table of Contents
 

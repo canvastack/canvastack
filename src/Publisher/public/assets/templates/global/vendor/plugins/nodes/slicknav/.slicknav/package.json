@@ -1,0 +1,73 @@
+{
+  "_from": "slicknav",
+  "_id": "slicknav@1.0.8",
+  "_inBundle": false,
+  "_integrity": "sha1-GjY6d+nIgnSCRq5vUdGI0c/HMdA=",
+  "_location": "/slicknav",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "slicknav",
+    "name": "slicknav",
+    "escapedName": "slicknav",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/slicknav/-/slicknav-1.0.8.tgz",
+  "_shasum": "1a363a77e9c882748246ae6f51d188d1cfc731d0",
+  "_spec": "slicknav",
+  "_where": "D:\\worksites\\themes\\srtdash\\assets\\js\\vendor",
+  "author": {
+    "name": "Josh Cope"
+  },
+  "bugs": {
+    "url": "https://github.com/ComputerWolf/SlickNav/issues"
+  },
+  "bundleDependencies": false,
+  "copyright": "Copyright 2016",
+  "dependencies": {
+    "jquery": ">=1.7"
+  },
+  "deprecated": false,
+  "description": "[![Join the chat at https://gitter.im/ComputerWolf/SlickNav](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ComputerWolf/SlickNav?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)",
+  "devDependencies": {
+    "gulp": "^3.8.11",
+    "gulp-header": "^1.2.2",
+    "gulp-minify-css": "^1.1.0",
+    "gulp-plumber": "^1.0.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-sass": "^2.0.1",
+    "gulp-uglify": "^1.2.0"
+  },
+  "homepage": "http://slicknav.com",
+  "keywords": [
+    "slicknav",
+    "menu",
+    "css",
+    "sass",
+    "scss",
+    "jquery",
+    "javascript",
+    "component",
+    "responsive",
+    "mobile"
+  ],
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/titon/toolkit/blob/master/license.md"
+    }
+  ],
+  "name": "slicknav",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ComputerWolf/SlickNav.git"
+  },
+  "version": "1.0.8"
+}

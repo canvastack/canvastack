@@ -1188,6 +1188,12 @@ trait Scripts {
 			
 			// Note: button_label may contain HTML (icons), so we don't escape it
 			// Caller is responsible for sanitizing button_label if it comes from user input
+
+			// Use Bootstrap 5 attributes for canvasign template, Bootstrap 4 for others
+			$isBS5 = in_array(canvastack_current_template(), ['canvasign']);
+			if ($isBS5) {
+				return '<button type="button" class="' . $safeClass . ' ' . $safeId . '" data-bs-toggle="modal" data-bs-target="#' . $safeId . '_CanvaStackFILTER">' . $data['button_label'] . '</button>';
+			}
 			return '<button type="button" class="' . $safeClass . ' ' . $safeId . '" data-toggle="modal" data-target=".' . $safeId . '">' . $data['button_label'] . '</button>';
 		}
 		
@@ -1241,7 +1247,13 @@ trait Scripts {
 		
 		// Note: title dan name bisa berisi HTML (icons), jadi tidak di-escape
 		// Sama seperti button_label, caller bertanggung jawab untuk sanitasi jika dari user input
-		
+
+		// Use Bootstrap 5 attributes for canvasign template, Bootstrap 4 for others
+		$isBS5 = in_array(canvastack_current_template(), ['canvasign']);
+		$dismissAttr   = $isBS5 ? 'data-bs-dismiss="modal"' : 'data-dismiss="modal"';
+		$closeBtnClass = $isBS5 ? 'btn-close' : 'close';
+		$closeBtnInner = $isBS5 ? '' : '<span aria-hidden="true">&times;</span>';
+
 		$html  = '<div ' . $attributes . '>';
 		$html .= '<div id="' . $safeId . '_CanvaStackFILTERFormBox" class="modal-dialog modal-lg" role="document">';
 		$html .= '<form action="' . $safeCurrentUrl . '?renderDataTables=true&filters=true" method="' . $filterMethod . '" id="' . $safeId . '_CanvaStackFILTERForm" role="form">';
@@ -1249,9 +1261,7 @@ trait Scripts {
 		$html .= '<div id="' . $safeId . '_CanvaStackProcessing" class="dataTables_processing" style="display:none"></div>';
 		$html .= '<div class="modal-header">';
 		$html .= '<h5 class="modal-title" id="">' . $title . ' Data ' . $name . '</h5>';
-		$html .= '<button type="button" class="close" data-dismiss="modal" aria-label="Close">';
-		$html .= '<span aria-hidden="true">&times;</span>';
-		$html .= '</button>';
+		$html .= '<button type="button" class="' . $closeBtnClass . '" ' . $dismissAttr . ' aria-label="Close">' . $closeBtnInner . '</button>';
 		$html .= '</div>';
 		$html .= '<input type="hidden" name="_token" value="' . $token . '" />';
 		$html .= $content; // Content should be pre-sanitized by caller

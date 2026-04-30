@@ -4,7 +4,7 @@
 
 ### Purpose
 
-Dokumen ini menjelaskan desain teknis untuk audit dan perbaikan komprehensif terhadap Form Components di Canvastack Origin framework. Audit mencakup file utama `Objects.php` dan 7 file trait Elements (Check, DateTime, File, Radio, Select, Tab, Text). Perbaikan akan mengikuti pola sukses dari audit FormObject.php yang telah meningkatkan skor dari 3.6/10 menjadi 8.6/10 (+139%).
+Dokumen ini menjelaskan desain teknis untuk audit dan perbaikan komprehensif terhadap Form Components di CanvaStack framework. Audit mencakup file utama `Objects.php` dan 7 file trait Elements (Check, DateTime, File, Radio, Select, Tab, Text). Perbaikan akan mengikuti pola sukses dari audit FormObject.php yang telah meningkatkan skor dari 3.6/10 menjadi 8.6/10 (+139%).
 
 ### Goals
 
@@ -1738,7 +1738,7 @@ The FormObject.php audit serves as the reference implementation for this spec. K
 
 ## Conclusion
 
-This design document provides a comprehensive blueprint for auditing and fixing the Form Components in Canvastack Origin framework. The approach follows the proven success pattern from the FormObject.php audit, which achieved a 139% improvement in overall quality score.
+This design document provides a comprehensive blueprint for auditing and fixing the Form Components in CanvaStack framework. The approach follows the proven success pattern from the FormObject.php audit, which achieved a 139% improvement in overall quality score.
 
 **Key Success Factors**:
 1. **Security First**: Address all security vulnerabilities before other improvements

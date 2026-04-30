@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide provides practical examples for common table scenarios using the Canvastack Origin Table Components system.
+This guide provides practical examples for common table scenarios using the CanvaStack Table Components system.
 
 ---
 

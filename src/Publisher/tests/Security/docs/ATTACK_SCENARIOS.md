@@ -874,5 +874,5 @@ php artisan test --group=critical
 **Maintained By:** Security Team  
 **Related Files:** 
 - `tests/Security/PenetrationTest.php`
-- `docs/COMPONENTS/FORM/AUDIT/DESIGN.md`
-- `docs/COMPONENTS/FORM/AUDIT/REQUIREMENTS.md`
+- `.kiro/specs/form-components-audit-fixes/design.md`
+- `.kiro/specs/form-components-audit-fixes/requirements.md`

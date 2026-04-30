@@ -1,0 +1,256 @@
+/**
+ * Canvasign Module Privileges Tab Enhancement
+ * 
+ * Enhanced design for Module Privileges tab in Group Edit page
+ * Features:
+ * - Proper indentation for hierarchical module structure (4 levels)
+ * - Modern checkbox styling with color-coded privilege types
+ * - Responsive table layout with sticky headers
+ * - Dark/Light mode support
+ * - Hover effects and visual feedback
+ * - Accessibility improvements
+ * 
+ * @package CanvaStack
+ * @subpackage Canvasign Theme
+ * @version 1.0.0
+ */
+
+
+/* ============================================
+   PRIVILEGE TABLE CONTAINER
+   
+
+/* ============================================
+   INDENTATION LEVELS (0-3)
+   ============================================ */
+
+/* Level 0: Top-level groups (e.g., "Content", "Admin") */
+.privilege-indent-0 {
+	padding-left: 24px !important;
+	font-weight: 700 !important;
+	font-size: 15px !important;
+	color: var(--primary, #667eea) !important;
+	background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, transparent 100%) !important;
+	border-left: 4px solid var(--primary, #667eea) !important;
+}
+
+.privilege-indent-0 .privilege-icon {
+	font-size: 14px;
+	font-weight: bold;
+	color: var(--primary, #667eea);
+}
+
+/* Level 1: Second-level items (e.g., "Articles", "Users") */
+.privilege-indent-1 {
+	padding-left: 48px !important;
+	font-weight: 600 !important;
+	font-size: 14px !important;
+	color: var(--text-secondary, #4a5568) !important;
+	background: rgba(102, 126, 234, 0.03) !important;
+	border-left: 3px solid rgba(102, 126, 234, 0.3) !important;
+}
+
+.privilege-indent-1 .privilege-icon {
+	font-size: 12px;
+	color: rgba(102, 126, 234, 0.7);
+}
+
+/* Level 2: Third-level items (e.g., "Categories", "Permissions") */
+.privilege-indent-2 {
+	padding-left: 72px !important;
+	font-weight: 500 !important;
+	font-size: 13px !important;
+	color: var(--text, #2d3748) !important;
+	border-left: 2px solid rgba(102, 126, 234, 0.15) !important;
+}
+
+.privilege-indent-2 .privilege-icon {
+	font-size: 11px;
+	color: rgba(102, 126, 234, 0.5);
+}
+
+/* Level 3: Fourth-level items (deepest nesting) */
+.privilege-indent-3 {
+	padding-left: 96px !important;
+	font-weight: 400 !important;
+	font-size: 13px !important;
+	color: var(--text-muted, #718096) !important;
+	border-left: 1px solid rgba(102, 126, 234, 0.1) !important;
+}
+
+.privilege-indent-3 .privilege-icon {
+	font-size: 10px;
+	color: rgba(102, 126, 234, 0.4);
+}
+
+/* Group rows (colspan rows without checkboxes) */
+.privilege-group-row {
+	font-weight: 700 !important;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	padding: 14px 24px !important;
+}
+
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 1200px) {
+	.privilege-table-container {
+		overflow-x: scroll;
+	}
+	
+	table.privilege-table {
+		min-width: 900px;
+	}
+	
+	.privilege-header-module,
+	.privilege-header-backend,
+	.privilege-header-frontend {
+		font-size: 13px !important;
+	}
+	
+	.privilege-subheader {
+		font-size: 12px !important;
+		padding: 10px 6px !important;
+	}
+}
+
+@media (max-width: 768px) {
+	table.privilege-table {
+		min-width: 800px;
+	}
+	
+	.privilege-module-name {
+		font-size: 13px !important;
+		padding: 10px 12px !important;
+	}
+	
+	.privilege-indent-0 {
+		padding-left: 16px !important;
+		font-size: 14px !important;
+	}
+	
+	.privilege-indent-1 {
+		padding-left: 32px !important;
+		font-size: 13px !important;
+	}
+	
+	.privilege-indent-2 {
+		padding-left: 48px !important;
+		font-size: 12px !important;
+	}
+	
+	.privilege-indent-3 {
+		padding-left: 64px !important;
+		font-size: 12px !important;
+	}
+	
+	.privilege-visible-checkbox {
+		width: 18px;
+		height: 18px;
+	}
+	
+	.privilege-checkbox-cell {
+		padding: 8px 6px !important;
+	}
+}
+
+/* ============================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================ */
+
+/* Focus visible for keyboard navigation */
+.privilege-visible-checkbox:focus-visible {
+	outline: 3px solid var(--primary, #667eea);
+	outline-offset: 3px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+	table.privilege-table {
+		border: 2px solid currentColor;
+	}
+	
+	.privilege-module-name {
+		border-bottom: 2px solid currentColor !important;
+	}
+	
+	.privilege-visible-checkbox {
+		border-width: 3px;
+	}
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+	.privilege-visible-checkbox,
+	.privilege-module-name,
+	.privilege-icon,
+	.privilege-checkbox-cell {
+		transition: none !important;
+	}
+	
+	.privilege-module-name:hover .privilege-icon {
+		transform: none !important;
+	}
+	
+	.privilege-visible-checkbox:hover {
+		transform: none !important;
+	}
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+	.privilege-table-container {
+		box-shadow: none;
+		border: 1px solid #000;
+	}
+	
+	table.privilege-table thead {
+		background: #f0f0f0 !important;
+		color: #000 !important;
+	}
+	
+	.privilege-visible-checkbox:checked::after {
+		content: '✓';
+		color: #000;
+	}
+	
+	table.privilege-table tbody tr:hover td {
+		background: transparent !important;
+	}
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Hide specific privilege columns if needed */
+.hide-frontend-privileges .privilege-header-frontend,
+.hide-frontend-privileges .privilege-checkbox-cell:nth-last-child(-n+4) {
+	display: none !important;
+}
+
+/* Compact mode for smaller screens */
+.privilege-table-compact table.privilege-table thead th {
+	padding: 12px 8px !important;
+	font-size: 12px !important;
+}
+
+.privilege-table-compact .privilege-module-name {
+	padding: 8px 12px !important;
+	font-size: 12px !important;
+}
+
+.privilege-table-compact .privilege-checkbox-cell {
+	padding: 8px 4px !important;
+}
+
+.privilege-table-compact .privilege-visible-checkbox {
+	width: 16px;
+	height: 16px;
+}

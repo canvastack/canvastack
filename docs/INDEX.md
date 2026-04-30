@@ -1,4 +1,4 @@
-# CanvaStack Origin Documentation
+# CanvaStack Documentation
 
 **Version:** 2.0.0  
 **Last Updated:** April 4, 2026
@@ -7,7 +7,7 @@
 
 بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
 
-Welcome to the CanvaStack Origin documentation. This comprehensive guide covers all components, features, and best practices for building secure, performant, and accessible web applications.
+Welcome to the CanvaStack documentation. This comprehensive guide covers all components, features, and best practices for building secure, performant, and accessible web applications.
 
 ---
 
@@ -33,6 +33,28 @@ Welcome to the CanvaStack Origin documentation. This comprehensive guide covers 
 
 #### Form Components
 - Coming soon
+
+#### Theme Engine
+- [Theme Engine Overview](./THEMENGINE/README.md)
+- [Getting Started Guide](./THEMENGINE/GETTING_STARTED.md)
+- [Architecture Documentation](./THEMENGINE/ARCHITECTURE.md)
+
+**Framework Guides:**
+- [Bootstrap 4 Guide](./THEMENGINE/BOOTSTRAP4_GUIDE.md)
+- [Bootstrap 5 Guide](./THEMENGINE/BOOTSTRAP5_GUIDE.md)
+- [TailwindCSS Guide](./THEMENGINE/TAILWIND_GUIDE.md)
+
+**Creating Templates:**
+- [Creating Templates Overview](./THEMENGINE/guides/CREATING_TEMPLATES.md)
+- [Bootstrap 4 Template Guide](./THEMENGINE/guides/BOOTSTRAP4_TEMPLATE_GUIDE.md)
+
+**Advanced:**
+- [API Reference](./THEMENGINE/API_REFERENCE.md)
+- [Template Configuration](./THEMENGINE/TEMPLATE_CONFIGURATION.md)
+- [JavaScript Integration](./THEMENGINE/JAVASCRIPT_INTEGRATION.md)
+- [Testing Documentation](./THEMENGINE/TESTING.md)
+- [Migration Guide](./THEMENGINE/MIGRATION_GUIDE.md)
+- [Troubleshooting](./THEMENGINE/TROUBLESHOOTING.md)
 
 ---
 
@@ -129,6 +151,18 @@ return response()->json($result);
 **Use Helper Functions**
 → Read [Helper Functions API](./COMPONENTS/TABLE/api/HELPERS.md)
 
+**Switch CSS Frameworks**
+→ Read [Theme Engine Getting Started](./THEMENGINE/GETTING_STARTED.md)
+
+**Use Bootstrap 5 or TailwindCSS**
+→ Read [Theme Engine Overview](./THEMENGINE/README.md)
+
+**Create a new template**
+→ Read [Creating Templates Guide](./THEMENGINE/guides/CREATING_TEMPLATES.md)
+
+**Build a Bootstrap 4 template from scratch**
+→ Read [Bootstrap 4 Template Guide](./THEMENGINE/guides/BOOTSTRAP4_TEMPLATE_GUIDE.md)
+
 ---
 
 ## 📊 Feature Matrix
@@ -145,6 +179,10 @@ return response()->json($result);
 | Keyboard Navigation | 1 | ✅ | [Getting Started](./COMPONENTS/TABLE/guides/GETTING_STARTED.md) |
 | Advanced Search | 3 | ✅ | [Getting Started](./COMPONENTS/TABLE/guides/GETTING_STARTED.md) |
 | Export Features | 2 | ✅ | [Getting Started](./COMPONENTS/TABLE/guides/GETTING_STARTED.md) |
+| Theme Engine | 2.0 | ✅ | [Theme Engine](./THEMENGINE/README.md) |
+| Bootstrap 4 Support | 2.0 | ✅ | [Bootstrap 4 Guide](./THEMENGINE/BOOTSTRAP4_GUIDE.md) |
+| Bootstrap 5 Support | 2.0 | ✅ | [Bootstrap 5 Guide](./THEMENGINE/BOOTSTRAP5_GUIDE.md) |
+| TailwindCSS Support | 2.0 | ✅ | [TailwindCSS Guide](./THEMENGINE/TAILWIND_GUIDE.md) |
 
 ---
 
@@ -159,6 +197,11 @@ return response()->json($result);
 **File:** `config/canvastack.datatables.php`  
 **Options:** 159  
 **Documentation:** [Configuration Guide](./COMPONENTS/TABLE/CONFIGURATION.md)
+
+### Template Configuration
+**File:** `config/canvastack.templates.php`  
+**Options:** Multiple templates (default, canvasign, canvas)  
+**Documentation:** [Template Configuration Guide](./THEMENGINE/TEMPLATE_CONFIGURATION.md)
 
 ---
 
@@ -250,7 +293,7 @@ We welcome contributions! Please read:
 
 ## 📄 License
 
-CanvaStack Origin is proprietary software.  
+CanvaStack is proprietary software.  
 Copyright © 2018-2026 CanvaStack. All rights reserved.
 
 ---

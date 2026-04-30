@@ -22,12 +22,12 @@ use Canvastack\Canvastack\Controllers\Admin\System\AjaxController;
 use Canvastack\Canvastack\Models\Admin\System\Log;
 
 /**
- * Canvastack Origin Framework - Helper Functions Library
+ * CanvaStack Framework - Helper Functions Library
  * 
  * First Created on 10 Mar 2021
  * Time Created : 13:28:50
  * 
- * This file contains a comprehensive collection of helper functions for the Canvastack Origin framework.
+ * This file contains a comprehensive collection of helper functions for the CanvaStack framework.
  * These functions provide utilities for common tasks including database operations, string manipulation,
  * array operations, file handling, routing, session management, and more.
  * 
@@ -1793,6 +1793,34 @@ if (!function_exists('canvastack_action_buttons')) {
 		}
 
 		return '';
+	}
+}
+
+if (!function_exists('canvastack_page_action_buttons')) {
+
+	/**
+	 * Render page-level action buttons using the active theme adapter.
+	 *
+	 * This is the DRY, template-aware replacement for calling
+	 * canvastack_action_buttons() directly. It delegates to:
+	 *   - DefaultAdapter::renderPageActionButtons()   → Bootstrap 4 HTML
+	 *   - Bootstrap5Adapter::renderPageActionButtons() → Bootstrap 5 HTML
+	 *   - TailwindAdapter::renderPageActionButtons()   → Tailwind HTML
+	 *
+	 * Usage in Blade (any template):
+	 *   {!! canvastack_page_action_buttons($route_info) !!}
+	 *
+	 * @param object|null $route_info  Route info object with action_page property.
+	 * @return string                  Safe HTML ready for {!! !!} output.
+	 */
+	function canvastack_page_action_buttons(?object $route_info): string
+	{
+		if (empty($route_info) || empty($route_info->action_page)) {
+			return '';
+		}
+
+		return \Canvastack\Canvastack\Library\Theme\ThemeAdapterResolver::resolve()
+			->renderPageActionButtons($route_info);
 	}
 }
 

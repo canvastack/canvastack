@@ -17,7 +17,7 @@ use Canvastack\Canvastack\Exceptions\Controller\XSSAttemptException;
  * Provides comprehensive view rendering functionality for Laravel controllers with advanced
  * template management, data compilation, and XSS protection. This trait handles everything
  * from view path resolution to data escaping, ensuring secure and efficient page rendering
- * in the Canvastack Origin framework.
+ * in the CanvaStack framework.
  *
  * The trait offers a complete solution for building secure web applications with features including:
  * - Secure view rendering with comprehensive XSS protection
@@ -1409,6 +1409,9 @@ trait View {
 	 * Sets the view path for admin pages using the configured template directory.
 	 * Admin pages are typically located in resources/views/{template}/pages/admin/.
 	 * 
+	 * Implements fallback logic: if the view for the active template doesn't exist,
+	 * falls back to the default template to ensure the application never breaks.
+	 * 
 	 * @param string $uri View file name (default: 'index')
 	 * @return void Sets $this->viewAdmin and $this->pageView properties
 	 * 
@@ -1423,9 +1426,37 @@ trait View {
 	 * ```php
 	 * $this->uriAdmin('dashboard'); // Sets view to: {template}.pages.admin.dashboard
 	 * ```
+	 * 
+	 * @example Fallback behavior:
+	 * ```php
+	 * // If canvasign.pages.admin.index doesn't exist, falls back to default.pages.admin.index
+	 * ```
 	 */
 	private function uriAdmin(string $uri = 'index'): void {
-		$this->viewAdmin = canvastack_config('template') . '.pages.admin';
+		// Get template from canvastack_current_template() or canvastack_config('template')
+		$template = function_exists('canvastack_current_template') 
+			? canvastack_current_template() 
+			: canvastack_config('template');
+		
+		// Ensure template is not null or empty
+		if (empty($template)) {
+			$template = 'default';
+		}
+		
+		// Build view path as {$template}.pages.admin
+		$viewPath = $template . '.pages.admin';
+		
+		// Build full view path with URI
+		$fullViewPath = $viewPath . '.' . $uri;
+		
+		// Check if view exists using view()->exists()
+		if (!view()->exists($fullViewPath)) {
+			// Fallback to default.pages.admin if view not found
+			$template = 'default';
+			$viewPath = 'default.pages.admin';
+		}
+		
+		$this->viewAdmin = $viewPath;
 		$this->pageView  = $this->getCachedViewPath('admin', $uri);
 	}
 	
@@ -1434,6 +1465,9 @@ trait View {
 	 * 
 	 * Sets the view path for front-end pages using the configured template directory.
 	 * Front-end pages are typically located in resources/views/{template}/pages/front/.
+	 * 
+	 * Implements fallback logic: if the view for the active template doesn't exist,
+	 * falls back to the default template to ensure the application never breaks.
 	 * 
 	 * @param string $uri View file name (default: 'index')
 	 * @return void Sets $this->viewFront and $this->pageView properties
@@ -1449,9 +1483,37 @@ trait View {
 	 * ```php
 	 * $this->uriFront('about'); // Sets view to: {template}.pages.front.about
 	 * ```
+	 * 
+	 * @example Fallback behavior:
+	 * ```php
+	 * // If canvasign.pages.front.index doesn't exist, falls back to default.pages.front.index
+	 * ```
 	 */
 	private function uriFront(string $uri = 'index'): void {
-		$this->viewFront = canvastack_config('template') . '.pages.front';
+		// Get template from canvastack_current_template() or canvastack_config('template')
+		$template = function_exists('canvastack_current_template') 
+			? canvastack_current_template() 
+			: canvastack_config('template');
+		
+		// Ensure template is not null or empty
+		if (empty($template)) {
+			$template = 'default';
+		}
+		
+		// Build view path as {$template}.pages.front
+		$viewPath = $template . '.pages.front';
+		
+		// Build full view path with URI
+		$fullViewPath = $viewPath . '.' . $uri;
+		
+		// Check if view exists using view()->exists()
+		if (!view()->exists($fullViewPath)) {
+			// Fallback to default.pages.front if view not found
+			$template = 'default';
+			$viewPath = 'default.pages.front';
+		}
+		
+		$this->viewFront = $viewPath;
 		$this->pageView  = $this->getCachedViewPath('front', $uri);
 	}
 	

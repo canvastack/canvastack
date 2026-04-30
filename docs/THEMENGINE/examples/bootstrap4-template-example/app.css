@@ -1,0 +1,501 @@
+/**
+ * app.css — Bootstrap 4 Template Custom Stylesheet Example
+ * =========================================================
+ * Template: default (Bootstrap 4)
+ * Location: public/assets/templates/default/css/app.css
+ *
+ * This file contains custom styles for the Bootstrap 4 default template.
+ * It is loaded AFTER Bootstrap 4 CSS so it can override framework defaults.
+ *
+ * Loaded via config/canvastack.templates.php:
+ *   default.position.top.css (last item — highest specificity)
+ *
+ * Structure:
+ *   1. CSS Custom Properties (variables)
+ *   2. Base / Reset overrides
+ *   3. Layout (sidebar, header, footer, content)
+ *   4. Components (cards, buttons, forms, tables)
+ *   5. Utilities
+ *   6. Responsive overrides
+ *   7. Print styles
+ *
+ * Bootstrap 4 specific:
+ *   - Uses Bootstrap 4 variable names where applicable
+ *   - pull-right / pull-left (not float-end / float-start)
+ *   - hide class (not d-none)
+ *   - btn-xs for extra small buttons
+ */
+
+/* ── 1. CSS Custom Properties ─────────────────────────────────────────── */
+
+:root {
+    /* Brand colors */
+    --cs-primary:        #2c3e50;
+    --cs-primary-light:  #34495e;
+    --cs-primary-dark:   #1a252f;
+    --cs-secondary:      #95a5a6;
+    --cs-accent:         #3498db;
+
+    /* Status colors */
+    --cs-success:        #27ae60;
+    --cs-danger:         #e74c3c;
+    --cs-warning:        #f39c12;
+    --cs-info:           #3498db;
+
+    /* Layout dimensions */
+    --cs-sidebar-width:  250px;
+    --cs-header-height:  60px;
+    --cs-footer-height:  50px;
+
+    /* Typography */
+    --cs-font-family:    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --cs-font-size-base: 14px;
+    --cs-line-height:    1.5;
+
+    /* Spacing */
+    --cs-spacing-xs:     4px;
+    --cs-spacing-sm:     8px;
+    --cs-spacing-md:     16px;
+    --cs-spacing-lg:     24px;
+    --cs-spacing-xl:     32px;
+
+    /* Borders */
+    --cs-border-radius:  4px;
+    --cs-border-color:   #dee2e6;
+
+    /* Shadows */
+    --cs-shadow-sm:      0 1px 3px rgba(0,0,0,0.12);
+    --cs-shadow-md:      0 4px 6px rgba(0,0,0,0.1);
+    --cs-shadow-lg:      0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* ── 2. Base / Reset Overrides ────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: var(--cs-font-size-base);
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--cs-font-family);
+    font-size: var(--cs-font-size-base);
+    line-height: var(--cs-line-height);
+    color: #333;
+    background-color: #f4f6f9;
+}
+
+/* Improve focus visibility for keyboard navigation */
+:focus-visible {
+    outline: 2px solid var(--cs-accent);
+    outline-offset: 2px;
+}
+
+/* ── 3. Layout ────────────────────────────────────────────────────────── */
+
+/* Page container — wraps sidebar + main content */
+.page-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar-menu {
+    width: var(--cs-sidebar-width);
+    min-height: 100vh;
+    background-color: var(--cs-primary);
+    color: #fff;
+    flex-shrink: 0;
+    transition: width 0.3s ease;
+    overflow-x: hidden;
+}
+
+.sidebar-menu.collapsed {
+    width: 60px;
+}
+
+.sidebar-header {
+    padding: var(--cs-spacing-md);
+    border-bottom: 1px solid var(--cs-primary-light);
+}
+
+.sidebar-header .logo img {
+    max-height: 40px;
+    width: auto;
+}
+
+/* Main content area */
+.main-content {
+    flex: 1;
+    min-width: 0; /* prevent flex overflow */
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content-inner {
+    flex: 1;
+    padding: var(--cs-spacing-md);
+}
+
+/* Content box */
+.content-box {
+    background-color: #fff;
+    border-radius: var(--cs-border-radius);
+    box-shadow: var(--cs-shadow-sm);
+    padding: var(--cs-spacing-md);
+}
+
+/* Header */
+.header-area {
+    height: var(--cs-header-height);
+    background-color: #fff;
+    border-bottom: 1px solid var(--cs-border-color);
+    padding: 0 var(--cs-spacing-md);
+    display: flex;
+    align-items: center;
+}
+
+/* Footer */
+.footer-area {
+    height: var(--cs-footer-height);
+    background-color: #fff;
+    border-top: 1px solid var(--cs-border-color);
+    padding: 0 var(--cs-spacing-md);
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: #666;
+}
+
+/* ── 4. Components ────────────────────────────────────────────────────── */
+
+/* ── Cards ── */
+.card {
+    border: 1px solid var(--cs-border-color);
+    border-radius: var(--cs-border-radius);
+    box-shadow: var(--cs-shadow-sm);
+    margin-bottom: var(--cs-spacing-md);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid var(--cs-border-color);
+    padding: var(--cs-spacing-sm) var(--cs-spacing-md);
+    font-weight: 600;
+}
+
+/* ── Buttons ── */
+
+/* Bootstrap 4 btn-xs (extra small) — removed in Bootstrap 5 */
+.btn-xs {
+    padding: 1px 5px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
+}
+
+/* Button group spacing */
+.btn-group .btn + .btn {
+    margin-left: 2px;
+}
+
+/* ── Forms ── */
+
+/* Form group spacing */
+.form-group {
+    margin-bottom: var(--cs-spacing-md);
+}
+
+/* Form control focus */
+.form-control:focus {
+    border-color: var(--cs-accent);
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+/* Chosen.js container styling */
+.chosen-container {
+    width: 100% !important; /* override Chosen.js inline width */
+}
+
+.chosen-container .chosen-single {
+    border-radius: var(--cs-border-radius);
+    border-color: var(--cs-border-color);
+    height: 38px;
+    line-height: 36px;
+}
+
+.chosen-container .chosen-drop {
+    border-color: var(--cs-accent);
+    box-shadow: var(--cs-shadow-md);
+}
+
+/* ── Alerts ── */
+
+/* Bootstrap 4 alert-block — adds left border accent */
+.alert-block {
+    border-left: 4px solid transparent;
+}
+
+.alert-block.alert-success { border-left-color: var(--cs-success); }
+.alert-block.alert-danger  { border-left-color: var(--cs-danger); }
+.alert-block.alert-warning { border-left-color: var(--cs-warning); }
+.alert-block.alert-info    { border-left-color: var(--cs-info); }
+
+/* ── Checkboxes (ckbox) ── */
+
+/* Bootstrap 4 custom checkbox wrapper — added by DefaultAdapter */
+.ckbox {
+    display: flex;
+    align-items: center;
+    gap: var(--cs-spacing-sm);
+    margin-bottom: var(--cs-spacing-sm);
+}
+
+.ckbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.ckbox label {
+    margin-bottom: 0;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+/* Color variants */
+.ckbox-primary input[type="checkbox"]:checked { accent-color: var(--cs-accent); }
+.ckbox-success input[type="checkbox"]:checked { accent-color: var(--cs-success); }
+.ckbox-danger  input[type="checkbox"]:checked { accent-color: var(--cs-danger); }
+.ckbox-warning input[type="checkbox"]:checked { accent-color: var(--cs-warning); }
+
+/* ── Tables ── */
+
+/* DataTables wrapper */
+.dataTables_wrapper {
+    padding: var(--cs-spacing-sm) 0;
+}
+
+/* Table action buttons */
+.btn-group.btn-group-sm .btn-xs {
+    padding: 2px 6px;
+    font-size: 11px;
+}
+
+/* ── Modals ── */
+
+/* Bootstrap 4 modal close button */
+.modal .close {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #000;
+    opacity: 0.5;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.modal .close:hover {
+    opacity: 0.75;
+}
+
+/* ── Navigation ── */
+
+/* Sidebar navigation */
+.menu-inner {
+    padding: var(--cs-spacing-sm) 0;
+}
+
+.menu-inner a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: var(--cs-spacing-sm) var(--cs-spacing-md);
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.menu-inner a:hover,
+.menu-inner a.active {
+    color: #fff;
+    background-color: var(--cs-primary-light);
+}
+
+/* Tab navigation */
+.nav-tabs .nav-link {
+    color: #666;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: var(--cs-spacing-sm) var(--cs-spacing-md);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--cs-accent);
+    border-bottom-color: var(--cs-accent);
+    background: none;
+}
+
+/* ── 5. Utilities ─────────────────────────────────────────────────────── */
+
+/* Bootstrap 4 hide class — use d-none in Bootstrap 5 */
+.hide {
+    display: none !important;
+}
+
+/* Bootstrap 4 pull-right — use float-end in Bootstrap 5 */
+.pull-right {
+    float: right !important;
+}
+
+/* Bootstrap 4 pull-left — use float-start in Bootstrap 5 */
+.pull-left {
+    float: left !important;
+}
+
+/* Screen reader only — accessible hidden text */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.sr-only-focusable:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
+
+/* Back to top button */
+#back-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: var(--cs-accent);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 1000;
+}
+
+#back-top.show {
+    opacity: 1;
+}
+
+/* Page preloader */
+#preloader {
+    position: fixed;
+    inset: 0;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loader {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--cs-border-color);
+    border-top-color: var(--cs-accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── 6. Responsive Overrides ──────────────────────────────────────────── */
+
+/* Tablet and below */
+@media (max-width: 768px) {
+    .sidebar-menu {
+        position: fixed;
+        left: -250px;
+        top: 0;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+
+    .sidebar-menu.open {
+        left: 0;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .header-area .search-box {
+        display: none;
+    }
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+    .main-content-inner {
+        padding: var(--cs-spacing-sm);
+    }
+
+    .content-box {
+        padding: var(--cs-spacing-sm);
+    }
+
+    /* Stack notification icons on mobile */
+    .notification-area li {
+        display: none;
+    }
+
+    .notification-area li:last-child {
+        display: block;
+    }
+}
+
+/* ── 7. Print Styles ──────────────────────────────────────────────────── */
+
+@media print {
+    .sidebar-menu,
+    .header-area,
+    .footer-area,
+    .offset-area,
+    #back-top,
+    #preloader,
+    .btn-group {
+        display: none !important;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+    }
+
+    .content-box {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    body {
+        background-color: #fff;
+        font-size: 12px;
+    }
+}

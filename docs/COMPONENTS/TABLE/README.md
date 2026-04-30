@@ -8,7 +8,7 @@
 
 بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
 
-Alhamdulillah, this documentation covers the comprehensive Table Components system for CanvaStack Origin framework with advanced features for security, performance, accessibility, and developer experience.
+Alhamdulillah, this documentation covers the comprehensive Table Components system for CanvaStack framework with advanced features for security, performance, accessibility, and developer experience.
 
 ## Overview
 

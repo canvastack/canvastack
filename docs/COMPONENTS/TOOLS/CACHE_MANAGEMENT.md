@@ -30,7 +30,7 @@ Cache Management Dropdown adalah fitur developer tools yang memungkinkan root us
 
 ### Technologies Used
 
-- **Backend**: PHP (Laravel), Canvastack Origin Framework
+- **Backend**: PHP (Laravel), CanvaStack Framework
 - **Frontend**: JavaScript (Vanilla), Bootstrap 3/4 Modal, jQuery
 - **Security**: CSRF Token, Role-based Access Control
 - **API**: RESTful JSON API
@@ -811,7 +811,7 @@ Cache Management Dropdown adalah implementasi lengkap dari developer tools yang:
 2. **Uses existing infrastructure** (action buttons system) dengan extension untuk dropdown
 3. **Provides clean UI/UX** dengan Bootstrap modal untuk semua interaksi
 4. **Implements security best practices** (RBAC, CSRF, rate limiting, logging)
-5. **Fully integrated** dengan Canvastack Origin framework
+5. **Fully integrated** dengan CanvaStack framework
 
 Sistem ini menggunakan `addCustomDropdownButton()` method yang merupakan extension dari sistem action button yang sudah ada, memungkinkan developer untuk menambahkan dropdown button dengan mudah tanpa perlu modifikasi template atau view files.
 
@@ -820,4 +820,4 @@ Sistem ini menggunakan `addCustomDropdownButton()` method yang merupakan extensi
 **Documentation Version**: 1.0.0  
 **Last Updated**: 2026-04-05  
 **Author**: Canvastack  
-**Framework**: Canvastack Origin 2.0
+**Framework**: CanvaStack 2.0

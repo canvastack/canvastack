@@ -19,7 +19,7 @@ Alhamdulillah, this comprehensive migration guide documents all changes made dur
 
 ### Purpose
 
-This migration guide covers the comprehensive audit and fixes applied to the Canvastack Origin Core Controller Components. The audit addressed security vulnerabilities, performance issues, code quality concerns, and error handling improvements across 10 files (~3720+ lines of code).
+This migration guide covers the comprehensive audit and fixes applied to the CanvaStack Core Controller Components. The audit addressed security vulnerabilities, performance issues, code quality concerns, and error handling improvements across 10 files (~3720+ lines of code).
 
 ### Success Metrics Achieved
 
@@ -3096,5 +3096,5 @@ Alhamdulillah, the Core Controller Components Migration Guide has been completed
 
 **Document Version:** 1.0  
 **Last Updated:** 2024  
-**Compatibility:** Canvastack Origin v2.0+
+**Compatibility:** CanvaStack v2.0+
 

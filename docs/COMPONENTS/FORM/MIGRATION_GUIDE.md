@@ -23,7 +23,7 @@
 
 ### Purpose
 
-This migration guide documents the comprehensive audit and fixes applied to the Form Components system in Canvastack Origin framework. The audit covered:
+This migration guide documents the comprehensive audit and fixes applied to the Form Components system in CanvaStack framework. The audit covered:
 
 - **Objects.php** - Main form class (22 methods)
 - **7 Element Traits** - Check, DateTime, File, Radio, Select, Tab, Text
@@ -762,7 +762,7 @@ tail -f storage/logs/security.log
 
 #### 9. Keep Framework Updated
 
-**Rule:** Always use the latest version of Canvastack Origin.
+**Rule:** Always use the latest version of CanvaStack.
 
 **Practice:**
 ```bash
@@ -1456,5 +1456,5 @@ This migration guide covers the comprehensive audit and fixes applied to Form Co
 
 **Document Version:** 2.0  
 **Last Updated:** April 2026  
-**Maintained By:** Canvastack Origin Team
+**Maintained By:** CanvaStack Team
 
