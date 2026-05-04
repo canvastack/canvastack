@@ -250,13 +250,30 @@
 				}
 				
 				if (~targetClass.indexOf('field_name')) {
+					// CRITICAL: Extract infoClass if undefined
+					if (typeof infoClass === 'undefined' || !infoClass) {
+						// Try to extract from target class
+						// Class format: role__system-config-module__base_modulebase_module__node__XXXfield_name
+						var targetClassParts = targetClass.split('__');
+						if (targetClassParts.length > 1 && targetClassParts[1]) {
+							infoClass = targetClassParts[1];
+							console.log('🔧 Extracted infoClass from target class:', infoClass);
+						} else {
+							console.warn('⚠️ Cannot extract infoClass from target class:', targetClass);
+						}
+					}
+					
 					// CRITICAL: Safe check for infoClass before using replaceAll
 					if (typeof infoClass !== 'undefined' && infoClass) {
 						$('input#qmod-' + idsplit[0] + '.' + infoClass).attr({'name': prefixNode.module + '[' + infoClass.replaceAll('-', '.') + ']'});
 						$targetSelect.attr({'name': prefixNode.field_name + '[' + infoClass.replaceAll('-', '.') + '][' + idsplit[0] + '][]'});
+						console.log('✅ Set field_name attribute with infoClass:', {
+							infoClass: infoClass,
+							name: prefixNode.field_name + '[' + infoClass.replaceAll('-', '.') + '][' + idsplit[0] + '][]'
+						});
 					} else {
-						console.warn('⚠️ infoClass is undefined, skipping name attribute update for field_name');
-						// Fallback: Set name without infoClass
+						console.error('❌ infoClass still undefined, cannot set proper name attribute!');
+						// Last resort fallback
 						$targetSelect.attr({'name': prefixNode.field_name + '[' + idsplit[0] + '][]'});
 					}
 				}
@@ -479,36 +496,81 @@
 				return;
 			}
 			
-			console.log('✅ Checkbox changed!', { 
-				checked: $(this).is(':checked'), 
+			var isChecked = $(this).is(':checked');
+			console.log('🔘 Checkbox changed!', { 
 				id: checkboxId,
+				checked: isChecked,
 				config: config
 			});
 			
-			if ($(this).is(':checked')) {
+			if (isChecked) {
+				console.log('✅ Checkbox CHECKED - showing add button and loading Field Name options');
 				config.node_btn.fadeIn(1800);
 				// DON'T show recycle button here - only show after adding rows
 				setAjaxSelectionBox($(this), config.classInfo, config.target_id, config.url, config.method, config.onError);
 			} else {
+				console.log('❌ Checkbox UNCHECKED - clearing all data and hiding buttons');
+				
 				var actualClass = $(this).attr('class');
 				var idsplit = actualClass.split(nodestring);
 				$('input#qmod-' + idsplit[0] + '.' + idsplit[2]).removeAttr('name');
 				
+				// Clear Field Name select
+				console.log('🧹 Clearing Field Name select:', config.target_id);
 				loader(config.target_id, 'show');
 				loader(config.target_id, 'fadeOut');
 				updateSelectChosen('select#' + config.target_id, true, '');
 				
+				// Clear Field Value select
 				if (null != config.target_opt) {
+					console.log('🧹 Clearing Field Value select:', config.target_opt);
+					
+					var $fieldValueSelect = $('select#' + config.target_opt);
+					
+					// Properly clear Field Value
+					$fieldValueSelect.val(null).html('');
+					
+					// Destroy + reinitialize plugin
+					try {
+						if ($fieldValueSelect[0] && $fieldValueSelect[0].choicesInstance) {
+							$fieldValueSelect[0].choicesInstance.destroy();
+						}
+						$fieldValueSelect.chosen('destroy');
+					} catch(e) {
+						// Ignore
+					}
+					
+					try {
+						$fieldValueSelect.chosen({
+							allow_single_deselect: true,
+							width: '100%',
+							placeholder_text_multiple: 'Select options...'
+						});
+					} catch(e) {
+						console.error('❌ Failed to reinitialize plugin:', e);
+					}
+					
 					loader(config.target_opt, 'show');
 					loader(config.target_opt, 'fadeOut');
 					updateSelectChosen('select#' + config.target_opt, true, '');
 				}
 				
+				// Hide buttons
 				config.firstRemove.fadeOut(1000);
-				
 				config.node_btn.fadeOut(1800);
 				$('#reset' + config.nodebtn).fadeOut(500);
-				$('.' + config.node_add).chosen('destroy').fadeOut(500, function() { $(this).remove(); });
+				
+				// Remove added rows
+				console.log('🧹 Removing added rows with class:', config.node_add);
+				var addedRowsCount = $('.' + config.node_add).length;
+				console.log('📊 Found', addedRowsCount, 'added rows to remove');
+				
+				$('.' + config.node_add).chosen('destroy').fadeOut(500, function() { 
+					$(this).remove(); 
+					console.log('✅ Added row removed');
+				});
+				
+				console.log('✅ Checkbox UNCHECKED completed');
 			}
 		});
 		
@@ -528,6 +590,10 @@
 
 	/**
 	 * Mapping page field name values handler
+	 * 
+	 * Handles Field Name select change event to load Field Value options
+	 * 
+	 * CRITICAL FIX: Use .off() to prevent duplicate event binding
 	 */
 	function mappingPageFieldnameValues(id, target_id, url, method, onError) {
 		url = url || null;
@@ -535,29 +601,51 @@
 		onError = onError || 'Error';
 		
 		var firstRemove = $('span#remove-row' + id);
+		var $fieldNameSelect = $('#' + id);
 		
-		$('#' + id).change(function(e) {
+		console.log('🎯 mappingPageFieldnameValues bound to:', {
+			fieldNameId: id,
+			fieldValueId: target_id,
+			url: url,
+			elementExists: $fieldNameSelect.length
+		});
+		
+		// CRITICAL FIX: Unbind previous change handlers to prevent duplicate AJAX calls
+		$fieldNameSelect.off('change.fieldNameHandler');
+		
+		// Bind with namespace for easy unbinding
+		$fieldNameSelect.on('change.fieldNameHandler', function(e) {
 			var selectedValue = $(this).val();
-			console.log('🔄 Field name changed:', { id: id, value: selectedValue });
+			console.log('🔄 Field name changed:', { 
+				id: id, 
+				value: selectedValue,
+				target: target_id
+			});
 			
 			if (selectedValue !== '' && selectedValue !== null) {
-				console.log('✅ Value is valid, calling AJAX');
+				console.log('✅ Value is valid, calling AJAX to load Field Value options');
 				setAjaxSelectionBox($(this), id, target_id, url, method, onError);
 				
 				// DON'T auto-show recycle button here
 				// It should only show when there are added rows (handled in mappingPageButtonManipulation)
 			} else {
-				console.log('⚠️ Value is empty, skipping AJAX and clearing target');
+				console.log('⚠️ Value is empty, skipping AJAX and clearing Field Value');
 				loader(target_id, 'show');
 				loader(target_id, 'fadeOut');
 				updateSelectChosen('select#' + target_id, true, '');
 				firstRemove.fadeOut(1000);
 			}
 		});
+		
+		console.log('✅ Event handler bound with namespace: change.fieldNameHandler');
 	}
 
 	/**
 	 * First reset row button handler
+	 * 
+	 * CRITICAL FIX: Properly clear Field Value select to prevent:
+	 * 1. Value remaining after recycle
+	 * 2. Server error when changing Field Name after recycle
 	 */
 	function firstResetRowButton(id, target_id, second_target, url, method, onError, withAction) {
 		method = method || 'POST';
@@ -566,19 +654,115 @@
 		
 		var firstRemove = $('span#remove-row' + target_id);
 		
+		console.log('🔄 firstResetRowButton initialized:', {
+			id: id,
+			target_id: target_id,
+			second_target: second_target,
+			withAction: withAction
+		});
+		
 		if (true === withAction) {
 			firstRemove.click(function(e) {
+				console.log('🔵 Recycle button (first row) clicked!', {
+					target_id: target_id,
+					second_target: second_target
+				});
+				
+				// CRITICAL FIX: Properly clear Field Value select
+				var $fieldValueSelect = $('select#' + second_target);
+				
+				console.log('🧹 Clearing Field Value select:', {
+					id: second_target,
+					exists: $fieldValueSelect.length,
+					currentValue: $fieldValueSelect.val(),
+					optionsCount: $fieldValueSelect.find('option').length
+				});
+				
+				// 1. Clear value
+				$fieldValueSelect.val(null);
+				
+				// 2. Clear all options
+				$fieldValueSelect.html('');
+				
+				// 3. Destroy plugin instance
+				try {
+					if ($fieldValueSelect[0] && $fieldValueSelect[0].choicesInstance) {
+						$fieldValueSelect[0].choicesInstance.destroy();
+						console.log('✅ Destroyed Choices.js instance');
+					}
+					$fieldValueSelect.chosen('destroy');
+					console.log('✅ Destroyed Chosen instance');
+				} catch(e) {
+					console.warn('⚠️ Plugin destroy failed (may not exist):', e.message);
+				}
+				
+				// 4. Reinitialize plugin
+				try {
+					$fieldValueSelect.chosen({
+						allow_single_deselect: true,
+						width: '100%',
+						placeholder_text_multiple: 'Select options...'
+					});
+					console.log('✅ Reinitialized Chosen plugin');
+				} catch(e) {
+					console.error('❌ Failed to reinitialize plugin:', e);
+				}
+				
+				// 5. Reload Field Name options
 				setAjaxSelectionBox($('#' + id), id, target_id, url.replace('field_name', 'table_name'), method, onError);
+				
+				// 6. Re-bind Field Name change handler
 				mappingPageFieldnameValues(target_id, second_target, url, method, onError);
+				
+				// 7. Clear Field Name select (updateSelectChosen is OK for this)
 				updateSelectChosen('select#' + second_target, true, '');
+				
+				// 8. Hide recycle button
 				$(this).fadeOut(1000);
+				
+				console.log('✅ Recycle button (first row) completed');
 			});
 			
 		} else {
+			console.log('🔄 firstResetRowButton called without action (programmatic reset)');
+			
+			// Same clearing logic for programmatic reset
+			var $fieldValueSelect = $('select#' + second_target);
+			
+			console.log('🧹 Clearing Field Value select (programmatic):', {
+				id: second_target,
+				exists: $fieldValueSelect.length
+			});
+			
+			// Clear value and options
+			$fieldValueSelect.val(null).html('');
+			
+			// Destroy + reinitialize plugin
+			try {
+				if ($fieldValueSelect[0] && $fieldValueSelect[0].choicesInstance) {
+					$fieldValueSelect[0].choicesInstance.destroy();
+				}
+				$fieldValueSelect.chosen('destroy');
+			} catch(e) {
+				// Ignore
+			}
+			
+			try {
+				$fieldValueSelect.chosen({
+					allow_single_deselect: true,
+					width: '100%',
+					placeholder_text_multiple: 'Select options...'
+				});
+			} catch(e) {
+				console.error('❌ Failed to reinitialize plugin:', e);
+			}
+			
 			setAjaxSelectionBox($('#' + id), id, target_id, url.replace('field_name', 'table_name'), method, onError);
 			mappingPageFieldnameValues(target_id, second_target, url, method, onError);
 			updateSelectChosen('select#' + second_target, true, '');
 			firstRemove.fadeOut();
+			
+			console.log('✅ Programmatic reset completed');
 		}
 	}
 
@@ -599,12 +783,18 @@
 			
 		$('#reset' + node_btn).hide();
 		
-		// CRITICAL: Hide recycle button initially - only show after adding rows
-		firstRemove.hide();
+		// CRITICAL: Do NOT explicitly hide firstRemove here
+		// Let it rely on natural state so attr('style') check works correctly
 		
 		$('#plusn' + node_btn).click(function(e) {
 			console.log('🔵 Add button clicked');
 			$('span.inputloader').removeAttr('style').hide();
+			
+			// CRITICAL: Only show recycle button if it was previously hidden
+			if (firstRemove.attr('style') && firstRemove.attr('style').trim()) {
+				firstRemove.attr({'style': ''}).fadeIn();
+				console.log('✅ Showing recycle button (first row)');
+			}
 			
 			var random_target_id     = target_id     + canvastack_random();
 			var random_second_target = second_target + canvastack_random();
@@ -717,7 +907,7 @@
 					// Update delete button icon and show it
 					$(this).children('span#remove-row' + target_id)
 						.removeAttr('id').attr({'id': node_row})
-						.css('display', 'inline-block')  // Show delete button
+						.css('display', 'flex')  // Show delete button
 						.find('.fa, .bi')  // Support both FA and BI icons
 						.each(function() {
 							// Convert recycle icon to minus/dash icon
@@ -738,13 +928,13 @@
 			// Bind change handler for new field name select
 			mappingPageFieldnameValues(random_target_id, random_second_target, url, method, onError);
 			
-			// CRITICAL: Show recycle button ONLY after adding rows
-			if ($('.' + node_add).length > 0) {
-				console.log('✅ Showing recycle button - added rows exist');
+			// CRITICAL: Show recycle button based on cloned rows
+			if (clonerowbox.length >= 1) {
+				console.log('✅ Showing recycle buttons - row added');
 				firstRemove.fadeIn();
 				$('#reset' + node_btn).fadeIn();
 			} else {
-				console.log('⚠️ Hiding recycle button - no added rows');
+				console.log('⚠️ Hiding recycle buttons - no rows');
 				$('#reset' + node_btn).fadeOut();
 			}
 			
@@ -752,13 +942,6 @@
 			$('span#' + node_row).click(function(x) {
 				$('tr#row-box-' + random_target_id).fadeOut(300, function() { 
 					$(this).remove(); 
-					
-					// Hide recycle button if no more added rows
-					if ($('.' + node_add).length === 0) {
-						console.log('⚠️ Last added row removed - hiding recycle button');
-						firstRemove.fadeOut();
-						$('#reset' + node_btn).fadeOut();
-					}
 				});
 			});
 		});
@@ -768,17 +951,35 @@
 			var tr = $(this).children('tbody').children('tr').length;
 			if (tr > 1) {
 				$('#reset' + node_btn).fadeIn();
-				firstRemove.fadeIn();
+				// Note: Do NOT show firstRemove here - let it be controlled by add/delete logic
 			}
 		});
 		
 		// Reset button handler
 		$('#reset' + node_btn).click(function(e) {
-			console.log('🔄 Reset button clicked');
-			$('.'  + node_add).chosen('destroy').fadeOut(500, function() { $(this).remove(); });
+			console.log('🔄 Reset button (Action column) clicked!', {
+				node_btn: node_btn,
+				id: id,
+				target_id: target_id,
+				second_target: second_target
+			});
+			
+			console.log('🧹 Removing added rows with class:', node_add);
+			var addedRowsCount = $('.' + node_add).length;
+			console.log('📊 Found', addedRowsCount, 'added rows to remove');
+			
+			$('.'  + node_add).chosen('destroy').fadeOut(500, function() { 
+				$(this).remove(); 
+				console.log('✅ Added row removed');
+			});
+			
 			$('#reset' + node_btn).fadeOut(500);
-			firstRemove.fadeOut(500);  // Hide recycle button after reset
+			// Note: Do NOT explicitly hide firstRemove - let firstResetRowButton handle it
+			
+			console.log('🔄 Calling firstResetRowButton (programmatic)...');
 			firstResetRowButton(id, target_id, second_target, url, method, onError, false);
+			
+			console.log('✅ Reset button (Action column) completed');
 		});
 		
 		firstResetRowButton(id, target_id, second_target, url, method, onError);

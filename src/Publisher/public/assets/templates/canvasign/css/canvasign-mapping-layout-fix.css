@@ -48,7 +48,7 @@
  * Center action buttons vertically and horizontally in Action column
  */
 .action-buttons-box {
-	display: flex !important;
+	display: flex;
 	align-items: center !important;
 	justify-content: center !important;
 	height: 100%;
@@ -98,7 +98,7 @@
 	border-radius: 50%;
 	width: 28px;
 	height: 28px;
-	display: flex !important;
+	display: flex;
 	align-items: center;
 	justify-content: center;
 	transition: all 0.2s ease;

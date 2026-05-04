@@ -18,7 +18,16 @@
 
 /* ============================================
    PRIVILEGE TABLE CONTAINER
-   
+   ============================================ */
+.privilege-table-container {
+	border: 1px solid var(--border);
+	border-radius: var(--bs-border-radius);
+}
+
+.table.privilege-table th {
+	text-align: center;
+	vertical-align: middle;
+}
 
 /* ============================================
    INDENTATION LEVELS (0-3)
@@ -31,7 +40,6 @@
 	font-size: 15px !important;
 	color: var(--primary, #667eea) !important;
 	background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, transparent 100%) !important;
-	border-left: 4px solid var(--primary, #667eea) !important;
 }
 
 .privilege-indent-0 .privilege-icon {
@@ -47,7 +55,6 @@
 	font-size: 14px !important;
 	color: var(--text-secondary, #4a5568) !important;
 	background: rgba(102, 126, 234, 0.03) !important;
-	border-left: 3px solid rgba(102, 126, 234, 0.3) !important;
 }
 
 .privilege-indent-1 .privilege-icon {
@@ -61,7 +68,6 @@
 	font-weight: 500 !important;
 	font-size: 13px !important;
 	color: var(--text, #2d3748) !important;
-	border-left: 2px solid rgba(102, 126, 234, 0.15) !important;
 }
 
 .privilege-indent-2 .privilege-icon {
@@ -75,7 +81,6 @@
 	font-weight: 400 !important;
 	font-size: 13px !important;
 	color: var(--text-muted, #718096) !important;
-	border-left: 1px solid rgba(102, 126, 234, 0.1) !important;
 }
 
 .privilege-indent-3 .privilege-icon {

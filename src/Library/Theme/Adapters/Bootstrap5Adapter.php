@@ -382,6 +382,8 @@ class Bootstrap5Adapter implements ThemeAdapterInterface
 
         // Security: Validate and sanitize inputNode (mirrors DefaultAdapter)
         $inputNodeAttr = '';
+        $additionalClasses = '';
+        
         if (!empty($inputNode)) {
             if (!preg_match('/^[a-zA-Z0-9_\-="\'\s.]+$/', $inputNode)) {
                 error_log('SECURITY WARNING: Invalid characters in inputNode: ' . $inputNode);
@@ -395,13 +397,24 @@ class Bootstrap5Adapter implements ThemeAdapterInterface
                     throw new \InvalidArgumentException('Event handler attributes not allowed in inputNode');
                 }
             }
+            
+            // CRITICAL FIX: Extract class from inputNode and merge with form-check-input
+            // This preserves the __node__ class structure needed by mapping-page-handlers.js
+            if (preg_match('/class=["\']([^"\']+)["\']/', $inputNode, $matches)) {
+                $additionalClasses = ' ' . $matches[1];
+                // Remove class attribute from inputNode to avoid duplicate class attributes
+                $inputNode = preg_replace('/\s*class=["\'][^"\']*["\']/', '', $inputNode);
+            }
 
-            $inputNodeAttr = " " . $inputNode;
+            $inputNodeAttr = " " . trim($inputNode);
         }
 
         // Bootstrap 5: form-check wrapper with form-check-input / form-check-label
-        // The $class modifier is appended to the wrapper for custom styling (e.g. form-check-{class})
-        $o = "<div class=\"form-check form-check-{$classEscaped}\"><input class=\"form-check-input\" type=\"checkbox\"{$valueAttr}{$nameAttr}{$idAttr}{$checkBox}{$inputNodeAttr}><label class=\"form-check-label\"{$idForAttr}>{$labelName}</label></div>";
+        // CRITICAL FIX: Merge form-check-input with additional classes from inputNode
+        // This ensures both Bootstrap 5 styling AND JavaScript selectors work correctly
+        $inputClass = "form-check-input" . $additionalClasses;
+        
+        $o = "<div class=\"form-check form-check-{$classEscaped}\"><input class=\"{$inputClass}\" type=\"checkbox\"{$valueAttr}{$nameAttr}{$idAttr}{$checkBox}{$inputNodeAttr}><label class=\"form-check-label\"{$idForAttr}>{$labelName}</label></div>";
 
         return SafeHtml::mark($o);
     }

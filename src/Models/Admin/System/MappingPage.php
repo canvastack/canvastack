@@ -199,6 +199,18 @@ class MappingPage extends Model {
 		$sql        = [];
 		$fieldset   = [];
 		$connection = null;
+		
+		// CRITICAL FIX: Validate $node parameter to prevent explode() error
+		if (empty($node)) {
+			\Log::warning('Empty $node parameter in queryFieldValues, using default', [
+				'tablename' => $tablename,
+				'requests' => $requests
+			]);
+			
+			// Set default node separator
+			$node = '__node__';
+		}
+		
 		if (canvastack_string_contained($tablename, self::$canvastackcon)) {
 			$split      = explode(self::$canvastackcon, $tablename);
 			$tablename  = $split[0];
@@ -256,14 +268,32 @@ class MappingPage extends Model {
 			
 			$explode = explode('::', $requests);
 			
-			$rows['table_name'] = explode($node, $explode[0])[0];
+			// CRITICAL FIX: Validate explode result before using
+			if (empty($explode[0])) {
+				\Log::warning('Empty explode[0] in queryFieldValues', [
+					'tablename' => $tablename,
+					'requests' => $requests,
+					'explode' => $explode
+				]);
+				
+				return [
+					'data' => [],
+					'fieldset' => []
+				];
+			}
+			
+			// CRITICAL FIX: Safe explode with validation
+			$tableNameParts = explode($node, $explode[0]);
+			$rows['table_name'] = $tableNameParts[0] ?? $tablename;
 			$rows['field_name'] = $explode[1] ?? '';
 			
 			// Validate field name is not empty
 			if (empty($rows['field_name'])) {
 				\Log::warning('Empty field name after parsing in queryFieldValues', [
 					'tablename' => $tablename,
-					'requests' => $requests
+					'requests' => $requests,
+					'explode' => $explode,
+					'tableNameParts' => $tableNameParts
 				]);
 				
 				return [
@@ -326,8 +356,17 @@ class MappingPage extends Model {
 	public static function getData($data, $usein, $node_id) {
 		$data = $data[self::$prefixNode];
 		
-		if ('table_name' === $usein) $output = self::getTableFields($data['table_name']);
-		if ('field_name' === $usein) $output = self::getFieldValues($data['field_name'], $node_id);
+		if ('table_name' === $usein) {
+			$output = self::getTableFields($data['table_name']);
+		} elseif ('field_name' === $usein) {
+			$output = self::getFieldValues($data['field_name'], $node_id);
+		} elseif ('field_value' === $usein) {
+			$output = self::getFieldValues($data['field_value'], $node_id);
+		} else {
+			// This should never happen due to validation in rolepage()
+			// But add fallback to prevent undefined variable error
+			$output = json_encode([]);
+		}
 		
 		return $output;
 	}

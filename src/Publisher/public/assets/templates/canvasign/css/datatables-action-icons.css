@@ -1,0 +1,200 @@
+/**
+ * DataTables Action Icons - Font Awesome to Bootstrap Icons Mapping
+ * 
+ * Maps Font Awesome icons in DataTables action buttons to Bootstrap Icons
+ * for Canvasign theme compatibility
+ * 
+ * @author wisnuwidi@canvastack.com
+ * @copyright Canvastack
+ * @version 1.0.0
+ */
+
+/* ========================================================================
+   Base Font Family Override for DataTables Action Buttons
+   ======================================================================== */
+
+.dataTables_wrapper .action-buttons .fa,
+.dataTables_wrapper .action-buttons .fa[class*="fa-"],
+table.dataTable .action-buttons .fa,
+table.dataTable .action-buttons .fa[class*="fa-"] {
+	font-family: 'bootstrap-icons' !important;
+	font-style: normal !important;
+	font-variant: normal !important;
+	text-rendering: auto !important;
+	line-height: 1 !important;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* ========================================================================
+   Common Action Icons Mapping
+   ======================================================================== */
+
+/* View / Eye Icon */
+.dataTables_wrapper .action-buttons .fa.fa-eye::before,
+table.dataTable .action-buttons .fa.fa-eye::before {
+	content: '\F341' !important; /* bi-eye */
+}
+
+/* Edit / Pencil Icon */
+.dataTables_wrapper .action-buttons .fa.fa-pencil::before,
+.dataTables_wrapper .action-buttons .fa.fa-pencil-alt::before,
+.dataTables_wrapper .action-buttons .fa.fa-edit::before,
+table.dataTable .action-buttons .fa.fa-pencil::before,
+table.dataTable .action-buttons .fa.fa-pencil-alt::before,
+table.dataTable .action-buttons .fa.fa-edit::before {
+	content: '\F4CB' !important; /* bi-pencil */
+}
+
+/* Delete / Times / X Icon */
+.dataTables_wrapper .action-buttons .fa.fa-times::before,
+.dataTables_wrapper .action-buttons .fa.fa-close::before,
+.dataTables_wrapper .action-buttons .fa.fa-remove::before,
+table.dataTable .action-buttons .fa.fa-times::before,
+table.dataTable .action-buttons .fa.fa-close::before,
+table.dataTable .action-buttons .fa.fa-remove::before {
+	content: '\F62A' !important; /* bi-x-lg */
+}
+
+/* Trash / Delete Icon */
+.dataTables_wrapper .action-buttons .fa.fa-trash::before,
+.dataTables_wrapper .action-buttons .fa.fa-trash-alt::before,
+table.dataTable .action-buttons .fa.fa-trash::before,
+table.dataTable .action-buttons .fa.fa-trash-alt::before {
+	content: '\F5DE' !important; /* bi-trash */
+}
+
+/* Plus / Add Icon */
+.dataTables_wrapper .action-buttons .fa.fa-plus::before,
+table.dataTable .action-buttons .fa.fa-plus::before {
+	content: '\F4FE' !important; /* bi-plus-lg */
+}
+
+/* Minus / Remove Icon */
+.dataTables_wrapper .action-buttons .fa.fa-minus::before,
+table.dataTable .action-buttons .fa.fa-minus::before {
+	content: '\F457' !important; /* bi-dash-lg */
+}
+
+/* Check / Confirm Icon */
+.dataTables_wrapper .action-buttons .fa.fa-check::before,
+table.dataTable .action-buttons .fa.fa-check::before {
+	content: '\F26B' !important; /* bi-check-lg */
+}
+
+/* Download Icon */
+.dataTables_wrapper .action-buttons .fa.fa-download::before,
+table.dataTable .action-buttons .fa.fa-download::before {
+	content: '\F30E' !important; /* bi-download */
+}
+
+/* Upload Icon */
+.dataTables_wrapper .action-buttons .fa.fa-upload::before,
+table.dataTable .action-buttons .fa.fa-upload::before {
+	content: '\F62C' !important; /* bi-upload */
+}
+
+/* Print Icon */
+.dataTables_wrapper .action-buttons .fa.fa-print::before,
+table.dataTable .action-buttons .fa.fa-print::before {
+	content: '\F4F6' !important; /* bi-printer */
+}
+
+/* Copy Icon */
+.dataTables_wrapper .action-buttons .fa.fa-copy::before,
+.dataTables_wrapper .action-buttons .fa.fa-clone::before,
+table.dataTable .action-buttons .fa.fa-copy::before,
+table.dataTable .action-buttons .fa.fa-clone::before {
+	content: '\F28E' !important; /* bi-clipboard */
+}
+
+/* Search Icon */
+.dataTables_wrapper .action-buttons .fa.fa-search::before,
+table.dataTable .action-buttons .fa.fa-search::before {
+	content: '\F52A' !important; /* bi-search */
+}
+
+/* Info / Information Icon */
+.dataTables_wrapper .action-buttons .fa.fa-info::before,
+.dataTables_wrapper .action-buttons .fa.fa-info-circle::before,
+table.dataTable .action-buttons .fa.fa-info::before,
+table.dataTable .action-buttons .fa.fa-info-circle::before {
+	content: '\F431' !important; /* bi-info-circle */
+}
+
+/* Settings / Gear Icon */
+.dataTables_wrapper .action-buttons .fa.fa-cog::before,
+.dataTables_wrapper .action-buttons .fa.fa-gear::before,
+table.dataTable .action-buttons .fa.fa-cog::before,
+table.dataTable .action-buttons .fa.fa-gear::before {
+	content: '\F3E5' !important; /* bi-gear */
+}
+
+/* Link Icon */
+.dataTables_wrapper .action-buttons .fa.fa-link::before,
+table.dataTable .action-buttons .fa.fa-link::before {
+	content: '\F470' !important; /* bi-link-45deg */
+}
+
+/* External Link Icon */
+.dataTables_wrapper .action-buttons .fa.fa-external-link::before,
+.dataTables_wrapper .action-buttons .fa.fa-external-link-alt::before,
+table.dataTable .action-buttons .fa.fa-external-link::before,
+table.dataTable .action-buttons .fa.fa-external-link-alt::before {
+	content: '\F123' !important; /* bi-box-arrow-up-right */
+}
+
+/* ========================================================================
+   Screen Reader Text - Hide when icon is rendered
+   ======================================================================== */
+
+/* Hide sr-only text when icon is successfully rendered */
+.dataTables_wrapper .action-buttons .btn:has(.fa[class*="fa-"])::before,
+table.dataTable .action-buttons .btn:has(.fa[class*="fa-"])::before {
+	/* Icon is present, sr-only can be hidden */
+}
+
+.dataTables_wrapper .action-buttons .btn .sr-only,
+table.dataTable .action-buttons .btn .sr-only {
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0, 0, 0, 0) !important;
+	white-space: nowrap !important;
+	border: 0 !important;
+}
+
+/* ========================================================================
+   Button Styling Enhancement
+   ======================================================================== */
+
+/* Ensure icons have proper spacing and sizing */
+.dataTables_wrapper .action-buttons .btn .fa,
+table.dataTable .action-buttons .btn .fa {
+	font-size: 1rem;
+	line-height: 1;
+	vertical-align: middle;
+}
+
+/* Ensure buttons have minimum size for touch targets */
+.dataTables_wrapper .action-buttons .btn,
+table.dataTable .action-buttons .btn {
+	min-width: 2rem;
+	min-height: 2rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.375rem 0.5rem;
+}
+
+/* ========================================================================
+   Dark Mode Support
+   ======================================================================== */
+
+html[data-bs-theme="dark"] .dataTables_wrapper .action-buttons .btn,
+html[data-bs-theme="dark"] table.dataTable .action-buttons .btn {
+	/* Icons inherit button color, no additional styling needed */
+}

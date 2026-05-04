@@ -5,7 +5,7 @@
 * { box-sizing: border-box; }
 
 html, body {
-  font-family: var(--font-sans);
+  font-family: var(--bs-body-font-family);
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;

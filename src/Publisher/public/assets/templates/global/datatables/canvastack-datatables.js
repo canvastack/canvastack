@@ -201,6 +201,15 @@ var CanvastackDataTables = (function($) {
         // Initialize DataTable with the provided configuration
         // DOM layout is controlled by config.datatableConfig.dom (e.g., "lBfrtip")
         try {
+            // DEBUG: Log configuration to see if fixedColumns is present
+            console.log('CanvastackDataTables: Initializing table with config:', {
+                tableId: tableId,
+                hasScrollX: !!config.datatableConfig.scrollX,
+                hasScrollY: !!config.datatableConfig.scrollY,
+                hasFixedColumns: !!config.datatableConfig.fixedColumns,
+                fixedColumnsConfig: config.datatableConfig.fixedColumns
+            });
+            
             // Add error handler for AJAX requests
             if (config.datatableConfig.ajax) {
                 var originalAjax = config.datatableConfig.ajax;
@@ -1384,6 +1393,13 @@ var CanvastackDataTables = (function($) {
         
         // Hide processing indicator
         $wrapper.find('.dataTables_processing').hide();
+        
+        // Adjust error message width for canvasign theme
+        if (typeof window.canvasignAdjustErrorMessageWidth === 'function') {
+            setTimeout(function() {
+                window.canvasignAdjustErrorMessageWidth(tableId);
+            }, 100);
+        }
         
         // Setup refresh button handler
         $('.canvastack-table-refresh-btn').off('click').on('click', function() {
