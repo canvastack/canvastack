@@ -1,0 +1,294 @@
+/**
+ * Keyboard Shortcuts Modal - Dark Mode Support
+ * 
+ * Provides proper styling for the keyboard shortcuts help modal
+ * with full dark mode support using theme variables.
+ * 
+ * @package CanvaStack
+ * @subpackage Canvasign Theme
+ * @version 1.0.0
+ */
+
+/* ============================================
+   KEYBOARD SHORTCUTS MODAL
+   ============================================ */
+
+/* Modal Overlay */
+#canvastack-keyboard-help-modal {
+	position: fixed;
+	z-index: 10000;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: none;
+}
+
+/* Modal Container */
+#canvastack-keyboard-help-modal > div {
+	background-color: var(--bg-elev) !important;
+    backdrop-filter: blur(var(--size-18));
+	margin: 5% auto;
+	padding: var(--space-6);
+	border-radius: var(--radius);
+	width: 80%;
+	max-width: 600px;
+	box-shadow: var(--shadow-lg);
+	border: var(--size-1) solid var(--border);
+}
+
+/* Modal Header */
+#canvastack-keyboard-help-modal > div > div:first-child {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: var(--space-5);
+	border-bottom: var(--size-2) solid var(--primary) !important;
+	padding-bottom: var(--space-3);
+}
+
+/* Modal Title */
+#canvastack-keyboard-help-modal h3 {
+	margin: 0 !important;
+	color: var(--primary) !important;
+	font-family: var(--font-condensed);
+	font-weight: var(--font-bold);
+	font-size: var(--font-xl);
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+/* Close Button */
+#canvastack-help-close {
+	background: none !important;
+	border: none !important;
+	font-size: var(--font-3xl) !important;
+	cursor: pointer;
+	color: var(--text-muted) !important;
+	line-height: 1;
+	padding: 0 !important;
+	width: var(--space-8);
+	height: var(--space-8);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-sm);
+	transition: var(--transition);
+}
+
+#canvastack-help-close:hover {
+	background: var(--surface-2) !important;
+	color: var(--text) !important;
+}
+
+/* Table */
+#canvastack-keyboard-help-modal table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+/* Table Header */
+#canvastack-keyboard-help-modal thead tr {
+	background-color: var(--surface-2) !important;
+}
+
+#canvastack-keyboard-help-modal thead th {
+	padding: var(--space-3) !important;
+	text-align: left !important;
+	border-bottom: var(--size-2) solid var(--border) !important;
+	color: var(--text) !important;
+	font-family: var(--font-condensed);
+	font-weight: var(--font-semibold);
+	font-size: var(--font-sm);
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-wide);
+}
+
+/* Table Body */
+#canvastack-keyboard-help-modal tbody tr {
+	transition: var(--transition);
+}
+
+#canvastack-keyboard-help-modal tbody tr:hover {
+	background-color: var(--surface-2);
+}
+
+#canvastack-keyboard-help-modal tbody td {
+	padding: var(--space-3) !important;
+	border-bottom: var(--size-1) solid var(--border) !important;
+	color: var(--text) !important;
+	font-size: var(--font-sm);
+}
+
+/* Keyboard Key Badges */
+#canvastack-keyboard-help-modal span[style*="background:#f8f9fa"] {
+	background: var(--surface-2) !important;
+	padding: var(--space-1) var(--space-2) !important;
+	border: var(--size-1) solid var(--border) !important;
+	border-radius: var(--radius-sm) !important;
+	font-family: var(--font-mono) !important;
+	font-size: var(--font-xs) !important;
+	display: inline-block !important;
+	margin: 0 var(--space-1) !important;
+	box-shadow: 0 var(--size-2) 0 var(--border) !important;
+	color: var(--text) !important;
+	font-weight: var(--font-medium);
+}
+
+/* Tip Box */
+#canvastack-keyboard-help-modal > div > div:last-child {
+	margin-top: var(--space-5) !important;
+	padding: var(--space-3) !important;
+	background-color: var(--warning-alpha-15) !important;
+	border-left: var(--size-4) solid var(--warning) !important;
+	border-radius: var(--radius-sm) !important;
+}
+
+#canvastack-keyboard-help-modal > div > div:last-child small {
+	color: var(--text) !important;
+	font-size: var(--font-sm);
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-2);
+}
+
+#canvastack-keyboard-help-modal > div > div:last-child strong {
+	color: var(--warning) !important;
+	font-weight: var(--font-semibold);
+}
+
+/* Icon Styling */
+#canvastack-keyboard-help-modal i {
+	color: inherit;
+}
+
+/* ============================================
+   DARK MODE SPECIFIC
+   ============================================ */
+
+html[data-bs-theme="dark"] #canvastack-keyboard-help-modal {
+	/* Overlay darker in dark mode */
+	background-color: rgba(0, 0, 0, 0.7);
+}
+
+html[data-bs-theme="dark"] #canvastack-keyboard-help-modal > div {
+	background-color: var(--bg-elev) !important;
+    backdrop-filter: blur(var(--size-18));
+	border-color: var(--border-strong);
+}
+
+html[data-bs-theme="dark"] #canvastack-keyboard-help-modal thead tr {
+	background-color: var(--surface-2) !important;
+}
+
+html[data-bs-theme="dark"] #canvastack-keyboard-help-modal tbody tr:hover {
+	background-color: var(--surface-2);
+}
+
+html[data-bs-theme="dark"] #canvastack-keyboard-help-modal span[style*="background:#f8f9fa"] {
+	background: var(--surface-2) !important;
+	border-color: var(--border-strong) !important;
+	box-shadow: 0 var(--size-2) 0 var(--border-strong) !important;
+}
+
+html[data-bs-theme="dark"] #canvastack-keyboard-help-modal > div > div:last-child {
+	background-color: var(--warning-alpha-15) !important;
+	border-left-color: var(--warning) !important;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+	#canvastack-keyboard-help-modal > div {
+		width: 95%;
+		margin: 10% auto;
+		padding: var(--space-4);
+	}
+	
+	#canvastack-keyboard-help-modal h3 {
+		font-size: var(--font-lg);
+	}
+	
+	#canvastack-keyboard-help-modal table {
+		font-size: var(--font-xs);
+	}
+	
+	#canvastack-keyboard-help-modal thead th,
+	#canvastack-keyboard-help-modal tbody td {
+		padding: var(--space-2) !important;
+	}
+	
+	#canvastack-keyboard-help-modal span[style*="background:#f8f9fa"] {
+		font-size: 11px !important;
+		padding: 2px 6px !important;
+	}
+}
+
+@media (max-width: 480px) {
+	#canvastack-keyboard-help-modal > div {
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		border-radius: 0;
+		max-width: none;
+	}
+	
+	/* Stack table on very small screens */
+	#canvastack-keyboard-help-modal table,
+	#canvastack-keyboard-help-modal thead,
+	#canvastack-keyboard-help-modal tbody,
+	#canvastack-keyboard-help-modal th,
+	#canvastack-keyboard-help-modal td,
+	#canvastack-keyboard-help-modal tr {
+		display: block;
+	}
+	
+	#canvastack-keyboard-help-modal thead tr {
+		position: absolute;
+		top: -9999px;
+		left: -9999px;
+	}
+	
+	#canvastack-keyboard-help-modal tbody tr {
+		margin-bottom: var(--space-3);
+		border: var(--size-1) solid var(--border);
+		border-radius: var(--radius-sm);
+		padding: var(--space-2);
+	}
+	
+	#canvastack-keyboard-help-modal tbody td {
+		border: none !important;
+		position: relative;
+		padding-left: 40% !important;
+	}
+	
+	#canvastack-keyboard-help-modal tbody td:before {
+		content: attr(data-label);
+		position: absolute;
+		left: var(--space-2);
+		width: 35%;
+		font-weight: var(--font-semibold);
+		color: var(--text-muted);
+	}
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+#canvastack-keyboard-help-modal *:focus-visible {
+	outline: var(--size-2) solid var(--primary);
+	outline-offset: var(--size-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#canvastack-keyboard-help-modal,
+	#canvastack-keyboard-help-modal * {
+		transition: none;
+		animation: none;
+	}
+}

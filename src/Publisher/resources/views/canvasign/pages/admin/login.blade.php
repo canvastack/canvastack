@@ -167,6 +167,6 @@ $isEmail = !empty($oldKey) && filter_var($oldKey, FILTER_VALIDATE_EMAIL);
 </div>
 
 {{-- Login-specific JS — loaded inline here so it works even without $components --}}
-<script src="{{ asset('assets/templates/canvasign/js/canvasign-login.js') }}"></script>
+<script src="{{ asset('assets/templates/canvasign/js/pages/canvasign-login.js') }}"></script>
 
 @endsection

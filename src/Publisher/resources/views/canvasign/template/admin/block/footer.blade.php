@@ -14,7 +14,7 @@
 			<div class="container-fluid">
 				<div class="d-flex flex-wrap justify-content-between align-items-center">
 					<span class="text-muted small">
-						&copy; {{ date('Y') }} {{ config('app.name', 'CanvaStack') }}. All rights reserved.
+						&copy; {{ date('Y') }} {{ config('app.name', 'CanvaStack') }}, {{ canvastack_config('location') }} {{ canvastack_config('location_abbr') }}. All rights reserved.
 					</span>
 
 					@if (!empty($footer_content ?? ''))

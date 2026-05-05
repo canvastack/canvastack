@@ -104,12 +104,13 @@
     gap: .5rem;
     padding-top: 1rem;
     margin-bottom: 1rem;
+    margin-right: 1rem;
 }
 
 .canvastack-action-box .btn,
 .canvastack-action-box input[type="submit"] {
     border-radius: 8px;
-    font-size: .875rem;
+    font-size: var(--font-base);
     font-weight: 500;
     padding: .45rem 1.25rem;
 }
@@ -136,7 +137,7 @@
     border: 1px solid transparent;
     border-radius: 8px 8px 0 0;
     padding: .5rem 1rem;
-    font-size: .875rem;
+    font-size: var(--font-base);
     font-weight: 500;
     transition: var(--transition);
 }
@@ -247,7 +248,7 @@
     overflow: hidden;
     cursor: pointer;
     border-radius: 8px !important;
-    font-size: .875rem !important;
+    font-size: var(--font-base) !important;
     font-weight: 500 !important;
     padding: .45rem 1rem !important;
     display: inline-flex !important;
@@ -279,7 +280,7 @@
 /* Remove button */
 .fileinput .btn-danger.fileinput-exists {
     border-radius: 8px !important;
-    font-size: .875rem !important;
+    font-size: var(--font-base) !important;
     font-weight: 500 !important;
     padding: .45rem 1rem !important;
 }
@@ -459,7 +460,7 @@
     border: none;
     outline: none;
     color: var(--text);
-    font-size: .875rem;
+    font-size: var(--font-base);
     min-width: 80px;
     flex: 1;
 }
@@ -481,14 +482,29 @@ table.cke {
     width: 100% !important;
 }
 
+.cke_inner {
+	background: var(--bg-elev) !important;
+    backdrop-filter: blur(var(--size-18));
+}
+
+.cke_inner,
+.cke_top,
+.cke_bottom {
+	background: var(--bg-elev) !important;
+    backdrop-filter: blur(var(--size-18));
+}
+
+.cke_top,
+.cke_bottom {
+    border: 1px solid transparent !important;
+}
+
 .cke_top {
-    background: var(--surface-2) !important;
-    border-bottom: 1px solid var(--border) !important;
+    border-radius: 8px 8px 0 0;
 }
 
 .cke_bottom {
-    background: var(--surface-2) !important;
-    border-top: 1px solid var(--border) !important;
+    border-radius: 0 0 8px 8px;
     color: var(--text-muted) !important;
 }
 
@@ -496,11 +512,6 @@ table.cke {
 .form-group textarea.ckeditor,
 .form-group textarea.form-control.ckeditor {
     width: 100% !important;
-}
-
-.cke_top {
-    background: var(--surface-2) !important;
-    border-bottom: 1px solid var(--border) !important;
 }
 
 /* ── Datatable processing indicator inside form ───────────────────────── */

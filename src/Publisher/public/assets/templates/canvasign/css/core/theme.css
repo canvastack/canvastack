@@ -5,6 +5,8 @@
 :root {
   /* Typography - Font Families */
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-condensed: 'Fira Sans Extra Condensed', sans-serif;
+  --font-display: 'Jost', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
   
   /* ========================================================================
@@ -452,10 +454,11 @@
 
 /* ---------- DARK (default, premium) ---------- */
 html[data-bs-theme="dark"] {
-  --bg: #0b0f1a;
-  --bg-elev: #0f1320;
-  --surface: #131826;
-  --surface-2: #1a2030;
+  --bg: rgba(11, 15, 26, .86);
+  --bg-elev: rgba(15, 19, 32, .86);
+  --surface: rgba(19, 24, 38, 1);
+  --surface-2: rgba(26, 32, 48, .86);
+  --surface-trans: rgba(19, 24, 38, .86);
   --border: rgba(148, 163, 184, .12);
   --border-strong: rgba(148, 163, 184, .22);
   --text: #e5e7eb;

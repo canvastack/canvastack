@@ -148,12 +148,6 @@ table.dataTable .action-buttons .fa.fa-external-link-alt::before {
    Screen Reader Text - Hide when icon is rendered
    ======================================================================== */
 
-/* Hide sr-only text when icon is successfully rendered */
-.dataTables_wrapper .action-buttons .btn:has(.fa[class*="fa-"])::before,
-table.dataTable .action-buttons .btn:has(.fa[class*="fa-"])::before {
-	/* Icon is present, sr-only can be hidden */
-}
-
 .dataTables_wrapper .action-buttons .btn .sr-only,
 table.dataTable .action-buttons .btn .sr-only {
 	position: absolute !important;
@@ -191,10 +185,320 @@ table.dataTable .action-buttons .btn {
 }
 
 /* ========================================================================
-   Dark Mode Support
+   RESPONSIVE BEHAVIOR - Action Buttons
+   Bootstrap 5 Breakpoints:
+   - xs: < 576px (mobile)
+   - sm: >= 576px (mobile landscape)
+   - md: >= 768px (tablet)
+   - lg: >= 992px (desktop)
+   - xl: >= 1200px (large desktop)
    ======================================================================== */
 
-html[data-bs-theme="dark"] .dataTables_wrapper .action-buttons .btn,
-html[data-bs-theme="dark"] table.dataTable .action-buttons .btn {
-	/* Icons inherit button color, no additional styling needed */
+/* Desktop Actions - Show on medium screens and up (>= 768px) */
+.action-buttons-box .hidden-sm.hidden-xs.action-buttons {
+	display: flex !important;
+	gap: var(--space-1);
+	align-items: center;
+}
+
+/* Mobile Dropdown - Hide on medium screens and up (>= 768px) */
+.action-buttons-box .hidden-md.hidden-lg {
+	display: none !important;
+}
+
+/* Mobile Breakpoint (< 768px) */
+@media (max-width: 767px) {
+	/* Hide desktop actions on mobile */
+	.action-buttons-box .hidden-sm.hidden-xs.action-buttons {
+		display: none !important;
+	}
+	
+	/* Show mobile dropdown on mobile */
+	.action-buttons-box .hidden-md.hidden-lg {
+		display: block !important;
+	}
+}
+
+/* ========================================================================
+   ACTION BUTTONS STYLING
+   ======================================================================== */
+
+/* Action buttons container */
+.action-buttons-box {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	min-height: var(--space-10);
+}
+
+/* Desktop action buttons */
+.action-buttons-box .action-buttons {
+	display: flex;
+	gap: var(--space-1);
+	align-items: center;
+	flex-wrap: nowrap;
+}
+
+/* Individual action buttons */
+.action-buttons-box .action-buttons .btn {
+	min-width: var(--space-8);
+	min-height: var(--space-8);
+	padding: var(--space-2) var(--space-3);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-sm);
+	transition: var(--transition);
+	font-size: var(--font-sm);
+	line-height: 1;
+	border: var(--size-1) solid transparent;
+}
+
+/* Button hover states */
+.action-buttons-box .action-buttons .btn:hover {
+	transform: var(--transform-hover-up);
+	box-shadow: var(--shadow-hover);
+}
+
+.action-buttons-box .action-buttons .btn:active {
+	transform: var(--transform-none);
+}
+
+/* Button focus states */
+.action-buttons-box .action-buttons .btn:focus,
+.action-buttons-box .action-buttons .btn:focus-visible {
+	outline: var(--size-2) solid var(--primary);
+	outline-offset: var(--size-2);
+	box-shadow: var(--shadow-focus);
+}
+
+/* View button (Success) */
+.action-buttons-box .action-buttons .btn-success {
+	background: transparent;
+	color: var(--white);
+	border-color: transparent;
+}
+
+.action-buttons-box .action-buttons .btn-success:hover {
+	background: var(--success);
+	color: var(--white);
+	opacity: 0.9;
+}
+
+.action-buttons-box .action-buttons .btn-success i::before {
+	color: var(--success);
+}
+
+.action-buttons-box .action-buttons .btn-success:hover i::before {
+	color: var(--white);
+	opacity: 0.9;
+}
+
+/* Edit button (Primary) */
+.action-buttons-box .action-buttons .btn-primary {
+	background: transparent;
+	color: var(--white);
+	border-color: transparent;
+}
+
+.action-buttons-box .action-buttons .btn-primary:hover {
+	background: var(--primary);
+	color: var(--white);
+	opacity: 0.9;
+}
+
+.action-buttons-box .action-buttons .btn-primary i::before {
+	color: var(--primary);
+}
+
+.action-buttons-box .action-buttons .btn-primary:hover i::before {
+	color: var(--white);
+	opacity: 0.9;
+}
+
+/* Delete button (Danger) */
+.action-buttons-box .action-buttons .btn-danger {
+	background: transparent;
+	color: var(--white);
+	border-color: transparent;
+}
+
+.action-buttons-box .action-buttons .btn-danger:hover {
+	background: var(--danger);
+	opacity: 0.9;
+}
+
+.action-buttons-box .action-buttons .btn-danger i::before {
+	color: var(--danger);
+}
+
+.action-buttons-box .action-buttons .btn-danger:hover i::before {
+	color: var(--white);
+	opacity: 0.9;
+}
+
+/* Delete form wrapper - remove padding */
+.action-buttons-box .action-buttons form.btn_delete {
+	padding: 0 !important;
+	margin: 0;
+	display: inline-flex;
+}
+
+/* ========================================================================
+   MOBILE DROPDOWN STYLING
+   ======================================================================== */
+
+/* Mobile dropdown button */
+.action-buttons-box .hidden-md.hidden-lg .btn-minier {
+	min-width: var(--space-8);
+	min-height: var(--space-8);
+	padding: var(--space-2);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-sm);
+	background: var(--warning);
+	color: var(--white);
+	border: var(--size-1) solid var(--warning);
+	transition: var(--transition);
+}
+
+.action-buttons-box .hidden-md.hidden-lg .btn-minier:hover {
+	background: var(--warning);
+	opacity: 0.9;
+	transform: var(--transform-hover-up);
+	box-shadow: var(--shadow-hover);
+}
+
+.action-buttons-box .hidden-md.hidden-lg .btn-minier:focus {
+	outline: var(--size-2) solid var(--primary);
+	outline-offset: var(--size-2);
+}
+
+/* Dropdown menu */
+.action-buttons-box .dropdown-menu {
+	background: var(--surface);
+	border: var(--size-1) solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	padding: var(--space-2);
+	min-width: var(--size-180);
+}
+
+.action-buttons-box .dropdown-menu li {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.action-buttons-box .dropdown-menu li a {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-3);
+	color: var(--text);
+	text-decoration: none;
+	border-radius: var(--radius-sm);
+	transition: var(--transition);
+	font-size: var(--font-sm);
+}
+
+.action-buttons-box .dropdown-menu li a:hover {
+	background: var(--surface-2);
+	color: var(--text);
+}
+
+.action-buttons-box .dropdown-menu li a:focus {
+	outline: var(--size-2) solid var(--primary);
+	outline-offset: calc(-1 * var(--size-2));
+	background: var(--surface-2);
+}
+
+/* Dropdown menu icons */
+.action-buttons-box .dropdown-menu li a .bi {
+	font-size: var(--font-lg);
+	line-height: 1;
+}
+
+/* Color variants for dropdown items */
+.action-buttons-box .dropdown-menu li a .blue {
+	color: var(--info);
+}
+
+.action-buttons-box .dropdown-menu li a .green {
+	color: var(--success);
+}
+
+.action-buttons-box .dropdown-menu li a .red {
+	color: var(--danger);
+}
+
+/* ========================================================================
+   DARK MODE - Action Buttons
+   ======================================================================== */
+
+html[data-bs-theme="dark"] .action-buttons-box .dropdown-menu {
+	background: var(--surface);
+	border-color: var(--border-strong);
+}
+
+html[data-bs-theme="dark"] .action-buttons-box .dropdown-menu li a {
+	color: var(--text);
+}
+
+html[data-bs-theme="dark"] .action-buttons-box .dropdown-menu li a:hover {
+	background: var(--surface-2);
+}
+
+/* ========================================================================
+   ACCESSIBILITY
+   ======================================================================== */
+
+/* Focus visible for all interactive elements */
+.action-buttons-box *:focus-visible {
+	outline: var(--size-2) solid var(--primary);
+	outline-offset: var(--size-2);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+	.action-buttons-box .btn,
+	.action-buttons-box .dropdown-menu li a {
+		transition: none;
+		transform: none;
+	}
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+	.action-buttons-box .btn {
+		border: var(--size-2) solid currentColor;
+	}
+}
+
+/* ========================================================================
+   SMALL MOBILE SCREENS (< 576px)
+   ======================================================================== */
+
+@media (max-width: 575px) {
+	/* Make buttons slightly smaller on very small screens */
+	.action-buttons-box .action-buttons .btn {
+		min-width: var(--space-6);
+		min-height: var(--space-6);
+		padding: var(--space-1) var(--space-2);
+		font-size: var(--font-xs);
+	}
+	
+	/* Adjust dropdown button */
+	.action-buttons-box .hidden-md.hidden-lg .btn-minier {
+		min-width: var(--space-6);
+		min-height: var(--space-6);
+		padding: var(--space-1);
+	}
+	
+	/* Adjust dropdown menu */
+	.action-buttons-box .dropdown-menu {
+		min-width: var(--size-220);
+	}
 }

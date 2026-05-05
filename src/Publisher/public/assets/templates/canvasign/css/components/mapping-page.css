@@ -47,7 +47,7 @@
 /**
  * Center action buttons vertically and horizontally in Action column
  */
-.action-buttons-box {
+#mapping-page-privileges .action-buttons-box {
 	display: flex;
 	align-items: center !important;
 	justify-content: center !important;
@@ -57,16 +57,16 @@
 	text-align: center;
 }
 
-.action-buttons-box .action-buttons {
+#mapping-page-privileges .action-buttons-box .action-buttons {
 	display: flex;
 	gap: 8px;
 	align-items: center;
 	justify-content: center;
 }
 
-.action-buttons-box .action-buttons .btn {
+#mapping-page-privileges .action-buttons-box .action-buttons .btn {
 	margin: 0 !important;
-	padding: 6px 12px !important;
+	padding: 6px 8px;
 	font-size: 14px !important;
 	line-height: 1.5;
 	display: inline-flex;
@@ -74,7 +74,7 @@
 	justify-content: center;
 }
 
-.action-buttons-box .action-buttons .btn i {
+#mapping-page-privileges .action-buttons-box .action-buttons .btn i {
 	font-size: 16px;
 	line-height: 1;
 }

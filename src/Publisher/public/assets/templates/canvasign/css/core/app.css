@@ -12,7 +12,7 @@
   --bs-body-font-size: var(--font-sm) !important;
   --bs-body-font-weight: var(--font-normal) !important;
   --bs-body-line-height: var(--leading-normal) !important;
-  --bs-body-font-family: var(--font-sans) !important;
+  --bs-body-font-family: var(--font-condensed) !important;
   
   /* Force Bootstrap to use our color variables */
   --bs-body-bg: var(--bg) !important;
@@ -29,7 +29,7 @@ html {
   font-size: var(--font-base) !important;
   font-weight: var(--font-normal) !important;
   line-height: var(--leading-normal) !important;
-  font-family: var(--font-sans) !important;
+  font-family: var(--font-display) !important;
 }
 
 /* ========================================================================
@@ -39,7 +39,7 @@ html {
 * { box-sizing: border-box; }
 
 html, body {
-  font-family: var(--font-sans) !important;
+  font-family: var(--font-display) !important;
   font-size: var(--font-base) !important;
   font-weight: var(--font-normal) !important;
   line-height: var(--leading-normal) !important;
@@ -55,6 +55,10 @@ a:hover { color: var(--primary-glow); }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: var(--radius-sm); }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+h5 {
+  font-size: var(--font-2xl);
+}
 
 /* ---------- App shell ---------- */
 .app {
@@ -511,12 +515,3 @@ hr { border-color: var(--border); }
 .dropdown-item:hover { background: var(--surface-2); color: var(--text); }
 .modal-header, .modal-footer { border-color: var(--border); }
 .list-group-item { background: var(--surface); color: var(--text); border-color: var(--border); }
-
-/* Flatpickr/Choices dark hint */
-.flatpickr-calendar { background: var(--surface); color: var(--text); border: var(--size-1) solid var(--border); box-shadow: var(--shadow); }
-.flatpickr-day { color: var(--text); }
-.flatpickr-day.selected { background: var(--primary); border-color: var(--primary); }
-.flatpickr-months .flatpickr-month, .flatpickr-weekdays, .flatpickr-weekday { background: var(--surface); color: var(--text-muted); }
-.choices__inner { background: var(--surface); border-color: var(--border); color: var(--text); }
-.choices__list--dropdown, .choices__list[aria-expanded] { background: var(--surface); border-color: var(--border); }
-.choices__list--dropdown .choices__item--selectable.is-highlighted { background: var(--surface-2); }

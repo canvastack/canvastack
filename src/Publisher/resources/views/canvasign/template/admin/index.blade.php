@@ -12,7 +12,6 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>{{ config('app.name') }}</title>
         @include('canvasign.template.admin.block.meta')
     </head>
 

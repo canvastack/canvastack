@@ -36,6 +36,13 @@
 @import url('./components/menu.css');
 @import url('./components/mapping-page.css');
 @import url('./components/module-privileges.css');
+@import url('./components/keyboard-shortcuts-modal.css');
+
+/* ========================================================================
+   PLUGINS (Required on all pages)
+   Plugin styles that integrate with theme
+   ======================================================================== */
+@import url('./plugins/flatpickr.css');
 
 /* ========================================================================
    UTILITIES (Required on all pages)

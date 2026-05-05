@@ -46,7 +46,7 @@
 
 		{{-- Sidebar footer with copyright and current year --}}
 		<div class="sidebar-footer">
-			&copy; {{ date('Y') }} {{ config('app.name') }}
+			&copy; {{ date('Y') }} {{ config('app.name', 'CanvaStack') }}
 		</div>
 
 	</aside>

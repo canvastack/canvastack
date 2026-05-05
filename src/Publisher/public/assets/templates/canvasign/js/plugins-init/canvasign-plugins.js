@@ -55,17 +55,9 @@
 
     /** Apply the correct Flatpickr theme class to the calendar element. */
     function applyFlatpickrTheme(theme) {
-        /* Flatpickr renders its calendar outside the normal DOM tree.
-           We toggle a class on the calendar container to match the theme. */
-        document.querySelectorAll('.flatpickr-calendar').forEach(function (cal) {
-            if (theme === 'dark') {
-                cal.classList.add('flatpickr-dark');
-                cal.classList.remove('flatpickr-light');
-            } else {
-                cal.classList.add('flatpickr-light');
-                cal.classList.remove('flatpickr-dark');
-            }
-        });
+        /* Flatpickr calendar now uses CSS variables from theme.css
+           No need to toggle classes - theme variables handle it automatically */
+        console.log('✅ Flatpickr theme applied via CSS variables:', theme);
     }
 
     function initAllFlatpickr() {
@@ -76,6 +68,8 @@
             dateFormat:  'Y-m-d',
             allowInput:  true,
             disableMobile: false,
+            inline: false,  // ✅ CRITICAL: Prevent always-visible calendar
+            static: false,  // ✅ CRITICAL: Use absolute positioning (not static)
             onReady: function () { applyFlatpickrTheme(theme); },
         });
 
@@ -85,6 +79,8 @@
             enableTime:  true,
             time_24hr:   true,
             allowInput:  true,
+            inline: false,  // ✅ CRITICAL: Prevent always-visible calendar
+            static: false,  // ✅ CRITICAL: Use absolute positioning (not static)
             onReady: function () { applyFlatpickrTheme(theme); },
         });
 
@@ -93,6 +89,8 @@
             mode:        'range',
             dateFormat:  'Y-m-d',
             allowInput:  true,
+            inline: false,  // ✅ CRITICAL: Prevent always-visible calendar
+            static: false,  // ✅ CRITICAL: Use absolute positioning (not static)
             onReady: function () { applyFlatpickrTheme(theme); },
         });
     }

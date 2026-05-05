@@ -31,6 +31,7 @@
 
     padding: .6rem 1.5rem;
     background: var(--surface);
+    backdrop-filter: blur(var(--size-18));
     border-bottom: 1px solid var(--border);
 
     /* Sticky: stays below the topbar (64px) while scrolling */

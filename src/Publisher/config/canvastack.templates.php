@@ -252,8 +252,20 @@ return [
 							
 							// Mapping page wrapper (must load before inline scripts)
 							'../global/js/canvastack-mapping-page-wrapper.js',
+							
+							// Flatpickr (must load before canvasign-plugins.js)
+							'https://cdn.jsdelivr.net/npm/flatpickr',
+							
+							// Choices.js (must load before canvasign-plugins.js)
+							'https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js',
 						],
-						'css'	=> []
+						'css'	=> [
+							// Flatpickr CSS
+							'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css',
+							
+							// Choices.js CSS
+							'https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css',
+						]
 					],
 					'last'	=> [
 						'js'	=> [

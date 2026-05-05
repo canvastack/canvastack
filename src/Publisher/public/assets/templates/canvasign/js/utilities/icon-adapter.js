@@ -854,6 +854,8 @@
             if (iconMapping[faClass]) {
                 icon.className = '';
                 icon.classList.add('bi', iconMapping[faClass]);
+                // Mark as converted from Font Awesome to prevent unwanted transformations
+                icon.setAttribute('data-fa-converted', faClass);
                 fixedCount++;
             } else {
                 unmapped.push(faClass);
@@ -867,19 +869,92 @@
             console.warn('⚠️ Unmapped icons (need mapping):', [...new Set(unmapped)]);
         }
     }
+    
+    /**
+     * Fix Delete Button Icons
+     * Convert bi-x to bi-trash for delete buttons
+     * Smart detection: checks button context, not icon origin
+     */
+    function fixDeleteButtonIcons() {
+        // Find all delete buttons with bi-x icon
+        const deleteButtons = document.querySelectorAll('.btn-danger .bi-x, .btn_delete .bi-x, button[data-confirm] .bi-x, button[title*="Delete"] .bi-x, button[aria-label*="Delete"] .bi-x');
+        
+        let fixedCount = 0;
+        deleteButtons.forEach(function(icon) {
+            // Check if parent is a delete button
+            const button = icon.closest('button, a, form');
+            if (!button) return;
+            
+            // Check button context to determine if it's a delete action
+            const isDeleteButton = 
+                button.classList.contains('btn_delete') ||
+                button.hasAttribute('data-confirm') ||
+                (button.getAttribute('title') && button.getAttribute('title').toLowerCase().includes('delete')) ||
+                (button.getAttribute('aria-label') && button.getAttribute('aria-label').toLowerCase().includes('delete')) ||
+                (button.getAttribute('onclick') && button.getAttribute('onclick').toLowerCase().includes('delete'));
+            
+            // Check if it's a close/dismiss button (should stay as X)
+            const isCloseButton = 
+                button.hasAttribute('data-dismiss') ||
+                button.hasAttribute('data-bs-dismiss') ||
+                (button.getAttribute('title') && (
+                    button.getAttribute('title').toLowerCase().includes('close') ||
+                    button.getAttribute('title').toLowerCase().includes('cancel')
+                )) ||
+                (button.getAttribute('aria-label') && (
+                    button.getAttribute('aria-label').toLowerCase().includes('close') ||
+                    button.getAttribute('aria-label').toLowerCase().includes('cancel')
+                )) ||
+                (button.getAttribute('onclick') && (
+                    button.getAttribute('onclick').toLowerCase().includes('close') ||
+                    button.getAttribute('onclick').toLowerCase().includes('cancel')
+                ));
+            
+            // Only convert if it's a delete button AND NOT a close button
+            if (isDeleteButton && !isCloseButton) {
+                // Check if icon was converted from fa-close (should stay as X)
+                const convertedFrom = icon.getAttribute('data-fa-converted');
+                if (convertedFrom === 'fa-close') {
+                    console.log('⏭️ Skipping fa-close conversion (close semantic)');
+                    return; // Keep as bi-x for close/cancel
+                }
+                
+                // Convert bi-x to bi-trash for delete action
+                icon.classList.remove('bi-x');
+                icon.classList.add('bi-trash');
+                fixedCount++;
+                
+                if (convertedFrom) {
+                    console.log(`🗑️ Fixed delete button icon: ${convertedFrom} → bi-trash`);
+                } else {
+                    console.log('🗑️ Fixed delete button icon: bi-x → bi-trash');
+                }
+            }
+        });
+        
+        if (fixedCount > 0) {
+            console.log(`✅ Fixed ${fixedCount} delete button icon(s)`);
+        }
+    }
+    
+    // Run delete button icon fix after main icon conversion
+    function runAllIconFixes() {
+        forceFixIcons();
+        fixDeleteButtonIcons();
+    }
 
     // Run on DOMContentLoaded
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', forceFixIcons);
+        document.addEventListener('DOMContentLoaded', runAllIconFixes);
     } else {
-        forceFixIcons();
+        runAllIconFixes();
     }
 
     // Run after short delay to catch dynamically rendered content
-    setTimeout(forceFixIcons, 500);
+    setTimeout(runAllIconFixes, 500);
     
     // Run after longer delay for DataTables initialization
-    setTimeout(forceFixIcons, 1500);
+    setTimeout(runAllIconFixes, 1500);
 
     // Watch for dynamically added icons (e.g., DataTables buttons)
     const observer = new MutationObserver(function(mutations) {
@@ -887,15 +962,24 @@
         mutations.forEach(function(mutation) {
             mutation.addedNodes.forEach(function(node) {
                 if (node.nodeType === 1) { // Element node
-                    // Check if added node contains FA icons
-                    if (node.classList && (node.classList.contains('fa') || node.querySelector && node.querySelector('.fa[class*="fa-"]'))) {
+                    // Check if added node contains FA icons or delete buttons
+                    if (node.classList && (
+                        node.classList.contains('fa') ||
+                        node.classList.contains('btn-danger') ||
+                        node.classList.contains('btn_delete') ||
+                        (node.querySelector && (
+                            node.querySelector('.fa[class*="fa-"]') ||
+                            node.querySelector('.btn-danger') ||
+                            node.querySelector('.btn_delete')
+                        ))
+                    )) {
                         shouldRerun = true;
                     }
                 }
             });
         });
         if (shouldRerun) {
-            forceFixIcons();
+            runAllIconFixes();
         }
     });
 
@@ -909,16 +993,17 @@
     document.addEventListener('show.bs.modal', function(event) {
         console.log('🔄 Modal opening, converting icons...');
         // Run conversion after modal is shown
-        setTimeout(forceFixIcons, 100);
+        setTimeout(runAllIconFixes, 100);
     });
 
     // Also listen for modal shown event (after animation)
     document.addEventListener('shown.bs.modal', function(event) {
         console.log('✅ Modal opened, converting icons...');
-        forceFixIcons();
+        runAllIconFixes();
     });
 
     // Expose globally for manual trigger if needed
-    window.forceFixIcons = forceFixIcons;
+    window.forceFixIcons = runAllIconFixes;
+    window.fixDeleteButtonIcons = fixDeleteButtonIcons;
 
 })();
