@@ -211,21 +211,22 @@ return [
 					 * CSS and critical JS loaded in head
 					 */
 					'js'	=> [
+						// jQuery - Load first for compatibility
+						'https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js',
+						
+						// DataTables - Load after jQuery
+						'https://cdn.datatables.net/v/bs5/jszip-2.5.0/dt-1.13.4/b-2.3.6/b-colvis-2.3.6/b-html5-2.3.6/b-print-2.3.6/r-2.4.1/datatables.min.js',
+						'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js',
+						'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js',
+						
+						// Theme JS (must load before body to prevent FOUC)
+						'js/core/theme.js',
+						
+						// Console filter
 						'../global/js/canvastack-console-filter.js',
 					],
 					'css'	=> [
-						'css/fonts.css',
-						'css/bootstrap.css',
-						'css/theme.css',
-						'css/app.css',
-						'css/action-bar.css',             // Sticky action bar
-						'css/canvasign-form-adapter.css', // Bootstrap 4 form → canvasign adapter
-						'css/icons.css',                  // Bootstrap Icons CDN
-						'css/canvasign-menu-style.css',   // CanvaStack menu styling adapter
-						'css/fontawesome-to-bootstrap-icons.css',  // Complete FA to BI mapping
-						'css/force-bootstrap-icons.css',  // Aggressive override (last resort)
-						'css/canvasign-mapping-layout-fix.css',  // Mapping page button positioning fix
-						'css/canvasign-module-privileges.css',   // Module Privileges tab enhancement
+						'css/canvasign-base.css',  // ✅ BASE: Core + Components (loaded on all pages)
 					]
 				],
 				'bottom'	=> [
@@ -234,7 +235,10 @@ return [
 						 * Core libraries and plugins loaded first
 						 */
 						'js'	=> [
-							'js/bootstrap.js',
+							// Bootstrap 5.3.3 JavaScript Bundle (CDN)
+							'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js',
+							
+							'js/plugins/bootstrap.js',
 							'../default/js/owl.carousel.min.js',
 							'../default/js/jquery.slicknav.min.js',
 							
@@ -253,24 +257,23 @@ return [
 					],
 					'last'	=> [
 						'js'	=> [
-							// Template-specific scripts
-							'js/app.js',
-							'js/canvasign-bs5-patch.js',       // Bootstrap 4→5 attribute patch (load early)
-							'js/canvasign-fileinput.js',       // File input / image preview handler
-							'js/canvasign-sidebar.js',
-							'js/canvasign-menu.js',  // Bootstrap 5 native menu (replaces metisMenu)
-							'js/canvasign-scripts.js',
-							'js/canvasign-plugins.js',
-							'js/canvasign-charts.js',
+							// Core framework
+							'js/core/app.js',
+							'js/core/canvasign-scripts.js',
 							
-							// Debug script (TEMPORARY - remove after debugging)
-							'js/debug-unmapped-icons.js',
+							// UI Components
+							'js/components/canvasign-bs5-patch.js',       // Bootstrap 4→5 attribute patch
+							'js/components/canvasign-sidebar.js',
+							'js/components/canvasign-menu.js',            // Bootstrap 5 native menu
 							
-							// Force icon fix (TEMPORARY - backup if CSS fails)
-							'js/force-icon-fix.js',
+							// Plugin Initialization
+							'js/plugins-init/canvasign-plugins.js',       // Flatpickr + Choices.js
+							'js/plugins-init/canvasign-fileinput.js',     // File input handler
+							'js/plugins-init/canvasign-charts.js',        // ECharts integration
+							'js/plugins-init/canvasign-datatables.js',    // DataTables BS5 integration
 							
-							// Deep icon rendering analysis (TEMPORARY)
-							'js/debug-icon-rendering.js',
+							// Icon Utilities
+							'js/utilities/force-icon-fix.js',             // FA→BI icon conversion
 							
 							// Global adapters (used in design)
 							'../global/adapters/canvastack-modal-adapter.js',
@@ -295,12 +298,10 @@ return [
 							'../global/pages/preference-smtp-test.js',
 							'../global/pages/canvastack-cache-manager.js',
 							
-							// Canvasign-specific fixes
-							'js/canvasign-mapping-icons-fix.js',  // Fix FA→BI icons for mapping page
-							'js/canvasign-mapping-saved-data-fix.js',  // Fix Choices.js for saved data
-							'js/canvasign-filter-fix.js',
-							'js/canvasign-debug.js',
-							'js/canvasign-datatables.js'
+							// Canvasign-specific fixes (CRITICAL for mapping page)
+							'js/fixes/canvasign-mapping-icons-fix.js',      // Fix FA→BI icons for mapping page
+							'js/fixes/canvasign-mapping-saved-data-fix.js', // Fix Choices.js for saved data
+							'js/fixes/canvasign-filter-fix.js',             // Fix filter AJAX errors
 						],
 						'css'	=> []
 					]
@@ -308,17 +309,17 @@ return [
 			],
 
 			/**
-			 * DATATABLES — Bootstrap 5 styling via local proxy
+			 * DATATABLES — Bootstrap 5 styling via global vendor (includes FixedColumns)
 			 */
 			'datatable' => [
 				'js'	=> [
-					'js/datatables.js',
+					'../global/vendor/DataTables/js/datatables.min.js',
+					'../global/vendor/DataTables/js/pdfmake.js',
+					'../global/vendor/DataTables/js/vfs_fonts.js',
 					'../global/datatables/canvastack-datatables-filters.js',
 					'../global/datatables/canvastack-datatables-export.js'
 				],
-				'css'	=> [
-					'css/datatables.css',
-				]
+				'css'	=> ['css/plugins-datatables.css']  // ✅ Loaded only on DataTables pages
 			],
 
 			'textarea'	=> [
@@ -340,43 +341,43 @@ return [
 			 * SELECT — Choices.js for enhanced select elements
 			 */
 			'select' => [
-				'js'	=> ['js/choices.js'],
-				'css'	=> ['css/choices.css']
+				'js'	=> ['js/plugins/choices.js'],
+				'css'	=> ['css/plugins-forms.css']  // ✅ Loaded only on pages with select/date inputs
 			],
 
 			'selectMonth' => [
-				'js'	=> ['js/choices.js'],
-				'css'	=> ['css/choices.css']
+				'js'	=> ['js/plugins/choices.js'],
+				'css'	=> ['css/plugins-forms.css']  // ✅ Loaded only on pages with select/date inputs
 			],
 
 			/**
 			 * DATE / DATETIME / DATERANGE — Flatpickr
 			 */
 			'date' => [
-				'js'	=> ['js/flatpickr.js'],
-				'css'	=> ['css/flatpickr.css']
+				'js'	=> ['js/plugins/flatpickr.js'],
+				'css'	=> ['css/plugins-forms.css']  // ✅ Loaded only on pages with select/date inputs
 			],
 
 			'datetime'	=> [
-				'js'	=> ['js/flatpickr.js'],
-				'css'	=> ['css/flatpickr.css']
+				'js'	=> ['js/plugins/flatpickr.js'],
+				'css'	=> ['css/plugins-forms.css']  // ✅ Loaded only on pages with select/date inputs
 			],
 
 			'daterange' => [
-				'js'	=> ['js/flatpickr.js'],
-				'css'	=> ['css/flatpickr.css']
+				'js'	=> ['js/plugins/flatpickr.js'],
+				'css'	=> ['css/plugins-forms.css']  // ✅ Loaded only on pages with select/date inputs
 			],
 
 			'time' => [
-				'js'	=> ['js/flatpickr.js'],
-				'css'	=> ['css/flatpickr.css']
+				'js'	=> ['js/plugins/flatpickr.js'],
+				'css'	=> ['css/plugins-forms.css']  // ✅ Loaded only on pages with select/date inputs
 			],
 
 			/**
 			 * CHART — Apache ECharts
 			 */
 			'chart' => [
-				'js'  => ['js/echarts.js'],
+				'js'  => ['js/plugins/echarts.js'],
 				'css' => []
 			],
 

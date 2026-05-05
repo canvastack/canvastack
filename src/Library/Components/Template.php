@@ -88,6 +88,23 @@ class Template extends Scripts {
     }
     
     private function templatePath($scriptPath) {
+        // 1. Check if it's a CDN URL (http:// or https://)
+        if (str_contains($scriptPath, 'https://') || str_contains($scriptPath, 'http://')) {
+            return $scriptPath;  // Return CDN URL as-is
+        }
+        
+        // 2. Check if it's a parent directory path (../)
+        if (str_starts_with($scriptPath, '../')) {
+            // Get base URL and template folder
+            $baseURL = canvastack_config("baseURL");
+            $baseTemplate = canvastack_config("base_template");
+            
+            // Remove '../' and build path from base template folder  
+            $relativePath = ltrim($scriptPath, './');  // Remove leading ../ or ./
+            return "{$baseURL}/{$baseTemplate}/{$relativePath}";
+        }
+        
+        // 3. Local path - prepend with asset path
         return "{$this->assetPath}/{$scriptPath}";
     }
     

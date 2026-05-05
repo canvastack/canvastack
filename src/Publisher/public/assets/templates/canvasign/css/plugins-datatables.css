@@ -1,0 +1,13 @@
+/**
+ * Canvasign Theme - DataTables Plugin CSS
+ * 
+ * Loaded only on pages that use DataTables
+ * 
+ * @author wisnuwidi@canvastack.com
+ * @copyright Canvastack
+ * @version 2.0.0
+ */
+
+@import url('./plugins/datatables/datatables.css');
+@import url('./plugins/datatables/datatables-error-message.css');
+@import url('./plugins/datatables/datatables-action-icons.css');

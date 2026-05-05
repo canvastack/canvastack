@@ -56,14 +56,33 @@ if (!function_exists('canvastack_script_check_string_path')) {
     /**
      * Check string path
      * 
-     * @param string $string
+     * Handles three types of paths:
+     * 1. CDN URLs (http:// or https://) - returned as-is
+     * 2. Parent directory paths (../) - resolved relative to base template path
+     * 3. Local paths - prepended with asset path
      * 
-     * @return string
+     * @param string $string Path to check
+     * @param bool $exist_check Whether to check if path exists
+     * 
+     * @return string Processed path
      */
     function canvastack_script_check_string_path($string, $exist_check = false) {
-        if ((str_contains($string, 'https://') || str_contains($string, 'http://'))) {
-            $path = $string;
-        } else {
+        // 1. Check if it's a CDN URL (http:// or https://)
+        if (str_contains($string, 'https://') || str_contains($string, 'http://')) {
+            $path = $string;  // Return CDN URL as-is
+        }
+        // 2. Check if it's a parent directory path (../)
+        else if (str_starts_with($string, '../')) {
+            // Get base URL and template folder
+            $baseURL = canvastack_config("baseURL");
+            $baseTemplate = canvastack_config("base_template");
+            
+            // Remove '../' and build path from base template folder
+            $relativePath = ltrim($string, './');  // Remove leading ../ or ./
+            $path = "{$baseURL}/{$baseTemplate}/{$relativePath}";
+        }
+        // 3. Local path - prepend with asset path
+        else {
             $path = canvastack_script_asset_path() . "/{$string}";
         }
         

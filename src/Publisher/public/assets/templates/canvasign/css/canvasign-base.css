@@ -1,0 +1,48 @@
+/**
+ * Canvasign Theme - Base CSS (Required on All Pages)
+ * 
+ * This file contains only the essential styles needed on every page
+ * Plugin-specific styles are loaded conditionally
+ * 
+ * @author wisnuwidi@canvastack.com
+ * @copyright Canvastack
+ * @version 2.0.0 - OPTIMIZED LOADING
+ */
+
+/* ========================================================================
+   CORE FRAMEWORK (Required on all pages)
+   Base styles, theme variables, and application layout
+   ======================================================================== */
+@import url('./core/bootstrap.css');
+@import url('./core/theme.css');
+@import url('./core/app.css');
+
+/* ========================================================================
+   FONTS & ICONS (Required on all pages)
+   Font families and icon libraries
+   ======================================================================== */
+@import url('./fonts/fonts.css');
+@import url('./fonts/icons.css');
+
+/* ========================================================================
+   COMPONENTS (Required on all pages)
+   Custom component styles specific to Canvasign theme
+   ======================================================================== */
+@import url('./components/action-bar.css');
+@import url('./components/forms.css');
+@import url('./components/menu.css');
+@import url('./components/mapping-page.css');
+@import url('./components/module-privileges.css');
+
+/* ========================================================================
+   UTILITIES (Required on all pages)
+   Helper classes and icon mappings
+   ======================================================================== */
+@import url('./utilities/icons-mapping.css');
+
+/**
+ * END OF CANVASIGN BASE CSS
+ * 
+ * Note: Plugin-specific CSS (DataTables, Flatpickr, Choices) 
+ * are loaded conditionally based on page requirements
+ */

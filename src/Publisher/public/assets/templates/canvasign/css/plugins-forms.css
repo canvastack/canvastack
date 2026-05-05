@@ -1,0 +1,12 @@
+/**
+ * Canvasign Theme - Form Plugins CSS
+ * 
+ * Loaded only on pages that use form plugins (date pickers, select boxes)
+ * 
+ * @author wisnuwidi@canvastack.com
+ * @copyright Canvastack
+ * @version 2.0.0
+ */
+
+@import url('./plugins/flatpickr.css');
+@import url('./plugins/choices.css');

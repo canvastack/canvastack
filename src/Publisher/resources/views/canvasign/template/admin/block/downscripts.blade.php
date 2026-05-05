@@ -19,26 +19,20 @@ if (!empty($components->template->scripts['js']['bottom_last']))  $scripts['bott
 ?>
 	<!-- ============ DOWNSCRIPTS OPEN ============ -->
 
-	{{-- 1. Bootstrap 5.3.3 JavaScript Bundle (CDN) --}}
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-	{{-- 2. bottom_first scripts — plugins loaded before app.js (DataTables, Flatpickr, Choices.js, ECharts, etc.) --}}
+	{{-- 1. bottom_first scripts — Bootstrap CDN, plugins, and core utilities --}}
 	@foreach ($scripts['bottom_first'] as $script)
 		{!! $script->html !!}
 	@endforeach
 
-	{{-- 3. App JS — application interactions and sidebar toggle --}}
-	<script src="{{ asset('assets/templates/canvasign/js/app.js') }}"></script>
-
-	{{-- 4. Template identifier for CanvaStack adapters --}}
+	{{-- 2. Template identifier for CanvaStack adapters (must load before bottom scripts) --}}
 	<script>window.canvastackTemplate = 'canvasign';</script>
 
-	{{-- 5. bottom scripts — inline scripts and dynamic scripts (filter cascading, etc.) --}}
+	{{-- 3. bottom scripts — inline scripts and dynamic scripts (filter cascading, etc.) --}}
 	@foreach ($scripts['bottom'] as $script)
 		{!! $script->html !!}
 	@endforeach
 
-	{{-- 6. bottom_last scripts — includes adapters, page-specific scripts, and initialisation --}}
+	{{-- 4. bottom_last scripts — includes app.js, adapters, page-specific scripts, and initialisation --}}
 	@foreach ($scripts['bottom_last'] as $script)
 		{!! $script->html !!}
 	@endforeach

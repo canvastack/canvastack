@@ -35,8 +35,7 @@
 	"support": {
 		"issues": "https://github.com/canvastack/canvastack/issues",
 		"source": "https://github.com/canvastack/canvastack",
-		"docs": "https://github.com/canvastack/canvastack/tree/main/docs",
-		"security": "mailto:security@canvastack.com"
+		"docs": "https://github.com/canvastack/canvastack/tree/main/docs"
 	},
 	"autoload" : {
 		"psr-4" : {
