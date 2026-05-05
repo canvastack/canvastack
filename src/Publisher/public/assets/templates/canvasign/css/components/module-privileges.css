@@ -35,65 +35,65 @@
 
 /* Level 0: Top-level groups (e.g., "Content", "Admin") */
 .privilege-indent-0 {
-	padding-left: 24px !important;
-	font-weight: 700 !important;
-	font-size: 15px !important;
-	color: var(--primary, #667eea) !important;
-	background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, transparent 100%) !important;
+	padding-left: var(--space-6) !important;
+	font-weight: var(--font-bold) !important;
+	font-size: var(--font-sm) !important;
+	color: var(--primary) !important;
+	background: linear-gradient(90deg, var(--primary-alpha-8) 0%, transparent 100%) !important;
 }
 
 .privilege-indent-0 .privilege-icon {
-	font-size: 14px;
-	font-weight: bold;
-	color: var(--primary, #667eea);
+	font-size: var(--font-sm);
+	font-weight: var(--font-bold);
+	color: var(--primary);
 }
 
 /* Level 1: Second-level items (e.g., "Articles", "Users") */
 .privilege-indent-1 {
-	padding-left: 48px !important;
-	font-weight: 600 !important;
-	font-size: 14px !important;
-	color: var(--text-secondary, #4a5568) !important;
-	background: rgba(102, 126, 234, 0.03) !important;
+	padding-left: var(--space-12) !important;
+	font-weight: var(--font-semibold) !important;
+	font-size: var(--font-sm) !important;
+	color: var(--text) !important;
+	background: var(--primary-alpha-3) !important;
 }
 
 .privilege-indent-1 .privilege-icon {
-	font-size: 12px;
-	color: rgba(102, 126, 234, 0.7);
+	font-size: var(--font-xs);
+	color: var(--primary-alpha-70);
 }
 
 /* Level 2: Third-level items (e.g., "Categories", "Permissions") */
 .privilege-indent-2 {
-	padding-left: 72px !important;
-	font-weight: 500 !important;
-	font-size: 13px !important;
-	color: var(--text, #2d3748) !important;
+	padding-left: var(--space-18) !important;
+	font-weight: var(--font-medium) !important;
+	font-size: var(--font-sm) !important;
+	color: var(--text) !important;
 }
 
 .privilege-indent-2 .privilege-icon {
-	font-size: 11px;
-	color: rgba(102, 126, 234, 0.5);
+	font-size: var(--font-xs);
+	color: var(--primary-alpha-50);
 }
 
 /* Level 3: Fourth-level items (deepest nesting) */
 .privilege-indent-3 {
-	padding-left: 96px !important;
-	font-weight: 400 !important;
-	font-size: 13px !important;
-	color: var(--text-muted, #718096) !important;
+	padding-left: var(--space-24) !important;
+	font-weight: var(--font-normal) !important;
+	font-size: var(--font-sm) !important;
+	color: var(--text-muted) !important;
 }
 
 .privilege-indent-3 .privilege-icon {
-	font-size: 10px;
-	color: rgba(102, 126, 234, 0.4);
+	font-size: var(--font-xs);
+	color: var(--primary-alpha-40);
 }
 
 /* Group rows (colspan rows without checkboxes) */
 .privilege-group-row {
-	font-weight: 700 !important;
+	font-weight: var(--font-bold) !important;
 	text-transform: uppercase;
-	letter-spacing: 0.5px;
-	padding: 14px 24px !important;
+	letter-spacing: var(--tracking-wide);
+	padding: var(--space-3) var(--space-6) !important;
 }
 
 
@@ -113,12 +113,12 @@
 	.privilege-header-module,
 	.privilege-header-backend,
 	.privilege-header-frontend {
-		font-size: 13px !important;
+		font-size: var(--font-sm) !important;
 	}
 	
 	.privilege-subheader {
-		font-size: 12px !important;
-		padding: 10px 6px !important;
+		font-size: var(--font-xs) !important;
+		padding: var(--space-2) var(--space-1) !important;
 	}
 }
 
@@ -128,28 +128,28 @@
 	}
 	
 	.privilege-module-name {
-		font-size: 13px !important;
-		padding: 10px 12px !important;
+		font-size: var(--font-sm) !important;
+		padding: var(--space-2) var(--space-3) !important;
 	}
 	
 	.privilege-indent-0 {
-		padding-left: 16px !important;
-		font-size: 14px !important;
+		padding-left: var(--space-4) !important;
+		font-size: var(--font-sm) !important;
 	}
 	
 	.privilege-indent-1 {
-		padding-left: 32px !important;
-		font-size: 13px !important;
+		padding-left: var(--space-8) !important;
+		font-size: var(--font-sm) !important;
 	}
 	
 	.privilege-indent-2 {
-		padding-left: 48px !important;
-		font-size: 12px !important;
+		padding-left: var(--space-12) !important;
+		font-size: var(--font-xs) !important;
 	}
 	
 	.privilege-indent-3 {
-		padding-left: 64px !important;
-		font-size: 12px !important;
+		padding-left: var(--space-16) !important;
+		font-size: var(--font-xs) !important;
 	}
 	
 	.privilege-visible-checkbox {
@@ -158,7 +158,7 @@
 	}
 	
 	.privilege-checkbox-cell {
-		padding: 8px 6px !important;
+		padding: var(--space-2) var(--space-1) !important;
 	}
 }
 
@@ -168,7 +168,7 @@
 
 /* Focus visible for keyboard navigation */
 .privilege-visible-checkbox:focus-visible {
-	outline: 3px solid var(--primary, #667eea);
+	outline: 3px solid var(--primary);
 	outline-offset: 3px;
 }
 
@@ -242,17 +242,17 @@
 
 /* Compact mode for smaller screens */
 .privilege-table-compact table.privilege-table thead th {
-	padding: 12px 8px !important;
-	font-size: 12px !important;
+	padding: var(--space-3) var(--space-2) !important;
+	font-size: var(--font-xs) !important;
 }
 
 .privilege-table-compact .privilege-module-name {
-	padding: 8px 12px !important;
-	font-size: 12px !important;
+	padding: var(--space-2) var(--space-3) !important;
+	font-size: var(--font-xs) !important;
 }
 
 .privilege-table-compact .privilege-checkbox-cell {
-	padding: 8px 4px !important;
+	padding: var(--space-2) var(--space-1) !important;
 }
 
 .privilege-table-compact .privilege-visible-checkbox {

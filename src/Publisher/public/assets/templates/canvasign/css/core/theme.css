@@ -3,11 +3,451 @@
    ======================================================================== */
 
 :root {
+  /* Typography - Font Families */
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+  
+  /* ========================================================================
+     BOOTSTRAP 5 OVERRIDES
+     Map Bootstrap variables to our theme variables
+     This makes Bootstrap use our design system as priority
+     ======================================================================== */
+  
+  /* Typography - Bootstrap overrides */
+  --bs-font-sans-serif: var(--font-sans);
+  --bs-font-monospace: var(--font-mono);
+  --bs-body-font-family: var(--font-sans);
+  --bs-body-font-size: var(--font-base);
+  --bs-body-font-weight: var(--font-normal);
+  --bs-body-line-height: var(--leading-normal);
+  
+  /* Headings */
+  --bs-heading-font-family: var(--font-sans);
+  --bs-heading-font-weight: var(--font-bold);
+  --bs-heading-line-height: var(--leading-tight);
+  
+  /* Code */
+  --bs-code-font-size: var(--font-sm);
+  --bs-code-color: var(--primary);
+  
+  /* Links */
+  --bs-link-color: var(--primary);
+  --bs-link-hover-color: var(--primary-glow);
+  --bs-link-decoration: none;
+  --bs-link-hover-decoration: underline;
+  
+  /* Typography - Font Sizes */
+  --font-xs: 0.75rem;      /* 12px */
+  --font-sm: 0.875rem;     /* 14px */
+  --font-base: 1rem;       /* 16px */
+  --font-lg: 1.125rem;     /* 18px */
+  --font-xl: 1.25rem;      /* 20px */
+  --font-2xl: 1.5rem;      /* 24px */
+  --font-3xl: 1.875rem;    /* 30px */
+  --font-4xl: 2.25rem;     /* 36px */
+  --font-5xl: 3rem;        /* 48px */
+  --font-6xl: 3.75rem;     /* 60px */
+  
+  /* Typography - Line Heights */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+  
+  /* Typography - Font Weights */
+  --font-thin: 100;
+  --font-extralight: 200;
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
+  
+  /* Typography - Letter Spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+  
+  /* Border Radius */
   --radius: 0.75rem;
   --radius-sm: 0.5rem;
   --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-full: 9999px;
+  
+  /* Spacing Scale */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-18: 4.5rem;   /* 72px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+  
+  /* Transitions */
   --transition: all .2s ease;
+  --transition-fast: all .15s ease;
+  --transition-slow: all .3s ease;
+  
+  /* State Colors - Error */
+  --error: #ef4444;
+  --error-bg: #fff5f5;
+  --error-border: #fee;
+  --error-text: #dc2626;
+  --error-text-dark: #991b1b;
+  --error-surface: #fef2f2;
+  --error-border-accent: #fecaca;
+  
+  /* State Colors - Warning */
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --warning-text: #92400e;
+  --warning-text-dark: #78350f;
+  
+  /* Neutral Grays */
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  
+  /* Primary Alpha Variations */
+  --primary-alpha-3: rgba(79, 70, 229, 0.03);
+  --primary-alpha-5: rgba(79, 70, 229, 0.05);
+  --primary-alpha-8: rgba(79, 70, 229, 0.08);
+  --primary-alpha-10: rgba(79, 70, 229, 0.10);
+  --primary-alpha-15: rgba(79, 70, 229, 0.15);
+  --primary-alpha-40: rgba(79, 70, 229, 0.4);
+  --primary-alpha-50: rgba(79, 70, 229, 0.5);
+  --primary-alpha-70: rgba(79, 70, 229, 0.7);
+  
+  /* Semantic Color Alpha Variations */
+  --success-alpha-15: rgba(22, 163, 74, 0.15);
+  --warning-alpha-15: rgba(217, 119, 6, 0.15);
+  --danger-alpha-15: rgba(220, 38, 38, 0.15);
+  --info-alpha-15: rgba(8, 145, 178, 0.15);
+  
+  /* White/Black Alpha Variations */
+  --white: #ffffff;
+  --white-alpha-18: rgba(255, 255, 255, 0.18);
+  --black-alpha-25: rgba(0, 0, 0, 0.25);
+  --black-alpha-50: rgba(0, 0, 0, 0.5);
+  
+  /* Layout Sizes */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 76px;
+  --topbar-height: 64px;
+  --icon-size-sm: 22px;
+  --icon-size-md: 36px;
+  --icon-size-lg: 44px;
+  --avatar-size-sm: 32px;
+  --avatar-size-md: 48px;
+  --avatar-size-lg: 96px;
+  
+  /* Additional Sizes */
+  --size-1: 1px;
+  --size-2: 2px;
+  --size-3: 3px;
+  --size-4: 4px;
+  --size-6: 6px;
+  --size-8: 8px;
+  --size-10: 10px;
+  --size-12: 12px;
+  --size-13: 13px;
+  --size-15: 15px;
+  --size-18: 18px;
+  --size-44: 44px;
+  --size-48: 48px;
+  --size-50: 50px;
+  --size-80: 80px;
+  --size-180: 180px;
+  --size-200: 200px;
+  --size-220: 220px;
+  --size-360: 360px;
+  --size-420: 420px;
+  --size-900: 900px;
+  --size-1100: 1100px;
+  
+  /* Percentage Values */
+  --percent-20: 20%;
+  --percent-40: 40%;
+  --percent-50: 50%;
+  --percent-80: 80%;
+  --percent-100: 100%;
+  
+  /* Negative Values */
+  --neg-48: -48px;
+  
+  /* Z-Index Scale */
+  --z-1030: 1030;
+  --z-1035: 1035;
+  --z-1040: 1040;
+  
+  /* Blur Values */
+  --blur-sm: 4px;
+  --blur-md: 8px;
+  --blur-lg: 10px;
+  --blur-xl: 16px;
+  --blur-2xl: 24px;
+  
+  /* Box Shadow - DataTables Specific */
+  --shadow-focus: 0 0 0 var(--size-2) rgba(79, 70, 229, 0.1);
+  --shadow-focus-strong: 0 0 0 var(--size-2) rgba(79, 70, 229, 0.2);
+  --shadow-hover: 0 var(--size-2) var(--size-4) rgba(0, 0, 0, 0.1);
+  
+  /* Transform Values */
+  --transform-hover-up: translateY(-1px);
+  --transform-none: translateY(0);
+  
+  /* Letter Spacing - Additional */
+  --tracking-loose: 0.5px;
+  
+  /* ========================================================================
+     BOOTSTRAP 5 COMPONENT OVERRIDES
+     Override Bootstrap component variables with our theme
+     ======================================================================== */
+  
+  /* Border Radius - Bootstrap overrides */
+  --bs-border-radius: var(--radius-sm);
+  --bs-border-radius-sm: calc(var(--radius-sm) * 0.75);
+  --bs-border-radius-lg: var(--radius);
+  --bs-border-radius-xl: var(--radius-lg);
+  --bs-border-radius-2xl: var(--radius-xl);
+  --bs-border-radius-pill: var(--radius-full);
+  
+  /* Spacing - Bootstrap overrides */
+  --bs-gutter-x: var(--space-6);
+  --bs-gutter-y: var(--space-6);
+  
+  /* Transitions */
+  --bs-transition: var(--transition);
+  
+  /* Focus Ring */
+  --bs-focus-ring-width: 0.25rem;
+  --bs-focus-ring-opacity: 0.25;
+  --bs-focus-ring-color: var(--primary);
+  
+  /* Box Shadow */
+  --bs-box-shadow: var(--shadow-sm);
+  --bs-box-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --bs-box-shadow-lg: var(--shadow);
+  --bs-box-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.075);
+  
+  /* ========================================================================
+     BOOTSTRAP 5 FORM CONTROLS
+     Override Bootstrap form variables with our theme
+     ======================================================================== */
+  
+  /* Form Controls */
+  --bs-form-control-bg: var(--surface);
+  --bs-form-control-disabled-bg: var(--surface-2);
+  --bs-form-control-color: var(--text);
+  --bs-form-control-border-color: var(--border);
+  --bs-form-control-border-width: 1px;
+  --bs-form-control-border-radius: var(--radius-sm);
+  --bs-form-control-focus-border-color: var(--primary);
+  --bs-form-control-focus-box-shadow: 0 0 0 0.25rem var(--primary-alpha-10);
+  
+  /* Form Select */
+  --bs-form-select-bg: var(--surface);
+  --bs-form-select-color: var(--text);
+  --bs-form-select-border-color: var(--border);
+  --bs-form-select-border-radius: var(--radius-sm);
+  --bs-form-select-focus-border-color: var(--primary);
+  --bs-form-select-focus-box-shadow: 0 0 0 0.25rem var(--primary-alpha-10);
+  
+  /* Form Check (Checkbox/Radio) */
+  --bs-form-check-input-bg: var(--surface);
+  --bs-form-check-input-border: 1px solid var(--border);
+  --bs-form-check-input-border-radius: var(--radius-sm);
+  --bs-form-check-input-focus-border: var(--primary);
+  --bs-form-check-input-focus-box-shadow: 0 0 0 0.25rem var(--primary-alpha-10);
+  --bs-form-check-input-checked-bg-color: var(--primary);
+  --bs-form-check-input-checked-border-color: var(--primary);
+  
+  /* Form Switch */
+  --bs-form-switch-bg: var(--surface);
+  --bs-form-switch-border-color: var(--border);
+  --bs-form-switch-focus-border-color: var(--primary);
+  --bs-form-switch-checked-bg: var(--primary);
+  
+  /* Input Group */
+  --bs-input-group-addon-bg: var(--surface-2);
+  --bs-input-group-addon-color: var(--text-muted);
+  --bs-input-group-addon-border-color: var(--border);
+  
+  /* ========================================================================
+     BOOTSTRAP 5 BUTTONS
+     Override Bootstrap button variables with our theme
+     ======================================================================== */
+  
+  /* Button Base */
+  --bs-btn-padding-x: var(--space-4);
+  --bs-btn-padding-y: var(--space-2);
+  --bs-btn-font-family: var(--font-sans);
+  --bs-btn-font-size: var(--font-sm);
+  --bs-btn-font-weight: var(--font-medium);
+  --bs-btn-line-height: var(--leading-normal);
+  --bs-btn-border-radius: var(--radius-sm);
+  --bs-btn-border-width: 1px;
+  --bs-btn-box-shadow: var(--shadow-sm);
+  --bs-btn-focus-box-shadow: 0 0 0 0.25rem var(--primary-alpha-10);
+  --bs-btn-transition: var(--transition);
+  
+  /* Button Sizes */
+  --bs-btn-padding-x-sm: var(--space-3);
+  --bs-btn-padding-y-sm: var(--space-1);
+  --bs-btn-font-size-sm: var(--font-xs);
+  --bs-btn-border-radius-sm: calc(var(--radius-sm) * 0.75);
+  
+  --bs-btn-padding-x-lg: var(--space-5);
+  --bs-btn-padding-y-lg: var(--space-3);
+  --bs-btn-font-size-lg: var(--font-base);
+  --bs-btn-border-radius-lg: var(--radius);
+  
+  /* ========================================================================
+     BOOTSTRAP 5 COMPONENTS
+     Override Bootstrap component variables with our theme
+     ======================================================================== */
+  
+  /* Card */
+  --bs-card-bg: var(--surface);
+  --bs-card-border-color: var(--border);
+  --bs-card-border-radius: var(--radius);
+  --bs-card-box-shadow: var(--shadow-sm);
+  --bs-card-cap-bg: transparent;
+  --bs-card-color: var(--text);
+  
+  /* Modal */
+  --bs-modal-bg: var(--surface);
+  --bs-modal-border-color: var(--border);
+  --bs-modal-border-radius: var(--radius);
+  --bs-modal-box-shadow: var(--shadow-lg);
+  --bs-modal-color: var(--text);
+  --bs-modal-header-border-color: var(--border);
+  --bs-modal-footer-border-color: var(--border);
+  
+  /* Dropdown */
+  --bs-dropdown-bg: var(--surface);
+  --bs-dropdown-border-color: var(--border);
+  --bs-dropdown-border-radius: var(--radius);
+  --bs-dropdown-box-shadow: var(--shadow);
+  --bs-dropdown-color: var(--text);
+  --bs-dropdown-link-color: var(--text);
+  --bs-dropdown-link-hover-color: var(--text);
+  --bs-dropdown-link-hover-bg: var(--surface-2);
+  --bs-dropdown-link-active-color: var(--text);
+  --bs-dropdown-link-active-bg: var(--primary-alpha-10);
+  --bs-dropdown-divider-bg: var(--border);
+  
+  /* Navbar */
+  --bs-navbar-brand-color: var(--text);
+  --bs-navbar-brand-hover-color: var(--text);
+  --bs-navbar-nav-link-color: var(--text-muted);
+  --bs-navbar-nav-link-hover-color: var(--text);
+  --bs-navbar-toggler-border-color: var(--border);
+  
+  /* Nav Tabs */
+  --bs-nav-tabs-border-color: var(--border);
+  --bs-nav-tabs-link-hover-border-color: var(--border);
+  --bs-nav-tabs-link-active-color: var(--text);
+  --bs-nav-tabs-link-active-bg: var(--surface);
+  --bs-nav-tabs-link-active-border-color: var(--border);
+  
+  /* Pagination */
+  --bs-pagination-bg: var(--surface);
+  --bs-pagination-border-color: var(--border);
+  --bs-pagination-color: var(--text);
+  --bs-pagination-hover-color: var(--text);
+  --bs-pagination-hover-bg: var(--surface-2);
+  --bs-pagination-hover-border-color: var(--border);
+  --bs-pagination-focus-color: var(--text);
+  --bs-pagination-focus-bg: var(--surface-2);
+  --bs-pagination-focus-box-shadow: 0 0 0 0.25rem var(--primary-alpha-10);
+  --bs-pagination-active-color: #fff;
+  --bs-pagination-active-bg: var(--primary);
+  --bs-pagination-active-border-color: var(--primary);
+  --bs-pagination-disabled-color: var(--text-dim);
+  --bs-pagination-disabled-bg: var(--surface);
+  --bs-pagination-disabled-border-color: var(--border);
+  
+  /* Alert */
+  --bs-alert-border-radius: var(--radius);
+  --bs-alert-padding-x: var(--space-4);
+  --bs-alert-padding-y: var(--space-3);
+  
+  /* Badge */
+  --bs-badge-padding-x: var(--space-2);
+  --bs-badge-padding-y: var(--space-1);
+  --bs-badge-font-size: var(--font-xs);
+  --bs-badge-font-weight: var(--font-semibold);
+  --bs-badge-border-radius: var(--radius-sm);
+  
+  /* Breadcrumb */
+  --bs-breadcrumb-divider-color: var(--text-muted);
+  --bs-breadcrumb-item-active-color: var(--text);
+  
+  /* List Group */
+  --bs-list-group-bg: var(--surface);
+  --bs-list-group-border-color: var(--border);
+  --bs-list-group-border-radius: var(--radius);
+  --bs-list-group-color: var(--text);
+  --bs-list-group-hover-bg: var(--surface-2);
+  --bs-list-group-active-color: var(--text);
+  --bs-list-group-active-bg: var(--primary-alpha-10);
+  --bs-list-group-active-border-color: var(--primary);
+  
+  /* Toast */
+  --bs-toast-bg: var(--surface);
+  --bs-toast-border-color: var(--border);
+  --bs-toast-border-radius: var(--radius);
+  --bs-toast-box-shadow: var(--shadow);
+  --bs-toast-header-bg: var(--surface-2);
+  --bs-toast-header-border-color: var(--border);
+  
+  /* Tooltip */
+  --bs-tooltip-bg: var(--surface);
+  --bs-tooltip-color: var(--text);
+  --bs-tooltip-opacity: 1;
+  --bs-tooltip-border-radius: var(--radius-sm);
+  
+  /* Popover */
+  --bs-popover-bg: var(--surface);
+  --bs-popover-border-color: var(--border);
+  --bs-popover-border-radius: var(--radius);
+  --bs-popover-box-shadow: var(--shadow);
+  --bs-popover-header-bg: var(--surface-2);
+  --bs-popover-header-color: var(--text);
+  --bs-popover-body-color: var(--text);
+  
+  /* Progress */
+  --bs-progress-bg: var(--surface-2);
+  --bs-progress-border-radius: var(--radius-full);
+  --bs-progress-bar-bg: var(--primary);
+  
+  /* Accordion */
+  --bs-accordion-bg: var(--surface);
+  --bs-accordion-border-color: var(--border);
+  --bs-accordion-border-radius: var(--radius);
+  --bs-accordion-color: var(--text);
+  --bs-accordion-button-bg: var(--surface);
+  --bs-accordion-button-color: var(--text);
+  --bs-accordion-button-active-bg: var(--surface-2);
+  --bs-accordion-button-active-color: var(--text);
+  --bs-accordion-button-focus-border-color: var(--primary);
+  --bs-accordion-button-focus-box-shadow: 0 0 0 0.25rem var(--primary-alpha-10);
 }
 
 /* ---------- DARK (default, premium) ---------- */
@@ -53,6 +493,69 @@ html[data-bs-theme="dark"] {
   --bs-primary-rgb: 59,130,246;
   --bs-secondary-rgb: 139,92,246;
   --bs-emphasis-color: var(--text);
+  
+  /* Bootstrap semantic colors - Dark mode */
+  --bs-secondary: var(--secondary);
+  --bs-success: var(--success);
+  --bs-info: var(--info);
+  --bs-warning: var(--warning);
+  --bs-danger: var(--danger);
+  --bs-light: var(--surface-2);
+  --bs-dark: var(--bg);
+  
+  /* Bootstrap text colors */
+  --bs-body-color-rgb: 229, 231, 235;
+  --bs-secondary-color: var(--text-muted);
+  --bs-secondary-color-rgb: 148, 163, 184;
+  --bs-tertiary-color: var(--text-dim);
+  --bs-tertiary-color-rgb: 100, 116, 139;
+  --bs-emphasis-color-rgb: 229, 231, 235;
+  
+  /* Bootstrap background colors */
+  --bs-body-bg-rgb: 11, 15, 26;
+  --bs-secondary-bg: var(--surface);
+  --bs-secondary-bg-rgb: 19, 24, 38;
+  --bs-tertiary-bg: var(--surface-2);
+  --bs-tertiary-bg-rgb: 26, 32, 48;
+  
+  /* Bootstrap borders */
+  --bs-border-color-rgb: 148, 163, 184;
+  --bs-border-color-translucent: var(--border);
+  --bs-border-width: 1px;
+  --bs-border-style: solid;
+  
+  /* Bootstrap headings */
+  --bs-heading-color: var(--text);
+  
+  /* Bootstrap links */
+  --bs-link-color-rgb: 59, 130, 246;
+  --bs-link-hover-color-rgb: 96, 165, 250;
+  
+  /* Dark mode - Error states */
+  --error-bg: #1f1f23;
+  --error-border: #3f1f1f;
+  --error-surface: #18181b;
+  --error-border-accent: #27272a;
+  
+  /* Dark mode - Warning states */
+  --warning-bg: #1f1f1a;
+  --warning-border: #3f3f1f;
+  
+  /* Dark mode - Primary alpha variations */
+  --primary-alpha-3: rgba(59, 130, 246, 0.03);
+  --primary-alpha-5: rgba(59, 130, 246, 0.05);
+  --primary-alpha-8: rgba(59, 130, 246, 0.08);
+  --primary-alpha-10: rgba(59, 130, 246, 0.10);
+  --primary-alpha-15: rgba(59, 130, 246, 0.15);
+  --primary-alpha-40: rgba(59, 130, 246, 0.4);
+  --primary-alpha-50: rgba(59, 130, 246, 0.5);
+  --primary-alpha-70: rgba(59, 130, 246, 0.7);
+  
+  /* Dark mode - Semantic color alpha variations */
+  --success-alpha-15: rgba(34, 197, 94, 0.15);
+  --warning-alpha-15: rgba(245, 158, 11, 0.15);
+  --danger-alpha-15: rgba(239, 68, 68, 0.15);
+  --info-alpha-15: rgba(6, 182, 212, 0.15);
 }
 
 /* ---------- LIGHT ---------- */
@@ -97,4 +600,57 @@ html[data-bs-theme="light"] {
   --bs-primary-rgb: 79,70,229;
   --bs-secondary-rgb: 124,58,237;
   --bs-emphasis-color: var(--text);
+  
+  /* Bootstrap semantic colors - Light mode */
+  --bs-secondary: var(--secondary);
+  --bs-success: var(--success);
+  --bs-info: var(--info);
+  --bs-warning: var(--warning);
+  --bs-danger: var(--danger);
+  --bs-light: var(--surface-2);
+  --bs-dark: var(--text);
+  
+  /* Bootstrap text colors */
+  --bs-body-color-rgb: 31, 41, 55;
+  --bs-secondary-color: var(--text-muted);
+  --bs-secondary-color-rgb: 107, 114, 128;
+  --bs-tertiary-color: var(--text-dim);
+  --bs-tertiary-color-rgb: 156, 163, 175;
+  --bs-emphasis-color-rgb: 31, 41, 55;
+  
+  /* Bootstrap background colors */
+  --bs-body-bg-rgb: 245, 247, 251;
+  --bs-secondary-bg: var(--surface);
+  --bs-secondary-bg-rgb: 255, 255, 255;
+  --bs-tertiary-bg: var(--surface-2);
+  --bs-tertiary-bg-rgb: 241, 244, 250;
+  
+  /* Bootstrap borders */
+  --bs-border-color-rgb: 228, 232, 240;
+  --bs-border-color-translucent: var(--border);
+  --bs-border-width: 1px;
+  --bs-border-style: solid;
+  
+  /* Bootstrap headings */
+  --bs-heading-color: var(--text);
+  
+  /* Bootstrap links */
+  --bs-link-color-rgb: 79, 70, 229;
+  --bs-link-hover-color-rgb: 129, 140, 248;
+  
+  /* Light mode - Primary alpha variations (using light mode primary) */
+  --primary-alpha-3: rgba(79, 70, 229, 0.03);
+  --primary-alpha-5: rgba(79, 70, 229, 0.05);
+  --primary-alpha-8: rgba(79, 70, 229, 0.08);
+  --primary-alpha-10: rgba(79, 70, 229, 0.10);
+  --primary-alpha-15: rgba(79, 70, 229, 0.15);
+  --primary-alpha-40: rgba(79, 70, 229, 0.4);
+  --primary-alpha-50: rgba(79, 70, 229, 0.5);
+  --primary-alpha-70: rgba(79, 70, 229, 0.7);
+  
+  /* Light mode - Semantic color alpha variations */
+  --success-alpha-15: rgba(22, 163, 74, 0.15);
+  --warning-alpha-15: rgba(217, 119, 6, 0.15);
+  --danger-alpha-15: rgba(220, 38, 38, 0.15);
+  --info-alpha-15: rgba(8, 145, 178, 0.15);
 }

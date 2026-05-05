@@ -1,8 +1,8 @@
 /**
- * Canvasign Mapping Page Icons Fix
+ * Canvasign Mapping Page - Icons Adapter
  * 
  * Converts FontAwesome icons to Bootstrap Icons for mapping page functionality.
- * This is necessary because the backend generates FA icons but Canvasign uses BI.
+ * This adapter is necessary because the backend generates FA icons but Canvasign uses BI.
  * 
  * Features:
  * - Converts fa-plus-circle → bi-plus-circle (Add Row button)
@@ -18,7 +18,7 @@
 (function($) {
 	'use strict';
 	
-	console.log('🎨 Canvasign Mapping Icons Fix loaded');
+	console.log('🎨 Canvasign Mapping Icons Adapter loaded');
 	
 	/**
 	 * Convert FontAwesome icons to Bootstrap Icons

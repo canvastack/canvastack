@@ -1,10 +1,15 @@
 /**
- * Canvasign Filter Fix
+ * Canvasign Filter Adapter
  * 
  * Provides enhanced error handling for DataTables filter AJAX calls
  * to prevent JSON parse errors from breaking the page functionality.
  * 
- * This file patches the filter.js functionality with better error handling.
+ * This adapter bridges the gap between backend AJAX responses and
+ * frontend expectations, ensuring graceful error handling.
+ * 
+ * @package CanvaStack
+ * @subpackage Canvasign Theme
+ * @version 1.0.0
  */
 
 (function($) {
@@ -214,6 +219,6 @@
         };
     });
     
-    console.log('Canvasign Filter Fix loaded - Enhanced error handling active');
+    console.log('Canvasign Filter Adapter loaded - Enhanced error handling active');
     
 })(jQuery);

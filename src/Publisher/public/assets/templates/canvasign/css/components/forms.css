@@ -103,8 +103,7 @@
     justify-content: flex-end;
     gap: .5rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 .canvastack-action-box .btn,
@@ -507,7 +506,8 @@ table.cke {
 /* ── Datatable processing indicator inside form ───────────────────────── */
 
 .dataTables_processing {
-    background: var(--surface);
+    background: var(--topbar-bg);
+    backdrop-filter: blur(var(--size-18));
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--text-muted);

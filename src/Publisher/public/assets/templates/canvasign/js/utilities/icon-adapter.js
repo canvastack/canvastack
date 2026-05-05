@@ -826,12 +826,19 @@
     // =============================================
 
     function forceFixIcons() {
-        // Target icons inside sidebar AND anywhere on page
+        // Target icons inside sidebar, menu, DataTables buttons, AND modals
         const selectors = [
             '.sidebar-nav .fa[class*="fa-"]',
             '#menu .fa[class*="fa-"]',
             '.main-menu .fa[class*="fa-"]',
             '.sidebar .fa[class*="fa-"]',
+            '.dt-buttons .fa[class*="fa-"]',           // DataTables export buttons
+            '.dataTables_wrapper .fa[class*="fa-"]',   // All DataTables icons
+            'button .fa[class*="fa-"]',                // All button icons
+            '.modal .fa[class*="fa-"]',                // All modal icons
+            '.modal-header .fa[class*="fa-"]',         // Modal header icons
+            '.modal-body .fa[class*="fa-"]',           // Modal body icons
+            '.modal-footer .fa[class*="fa-"]',         // Modal footer icons
         ];
 
         const faIcons = document.querySelectorAll(selectors.join(', '));
@@ -870,6 +877,46 @@
 
     // Run after short delay to catch dynamically rendered content
     setTimeout(forceFixIcons, 500);
+    
+    // Run after longer delay for DataTables initialization
+    setTimeout(forceFixIcons, 1500);
+
+    // Watch for dynamically added icons (e.g., DataTables buttons)
+    const observer = new MutationObserver(function(mutations) {
+        let shouldRerun = false;
+        mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                if (node.nodeType === 1) { // Element node
+                    // Check if added node contains FA icons
+                    if (node.classList && (node.classList.contains('fa') || node.querySelector && node.querySelector('.fa[class*="fa-"]'))) {
+                        shouldRerun = true;
+                    }
+                }
+            });
+        });
+        if (shouldRerun) {
+            forceFixIcons();
+        }
+    });
+
+    // Start observing
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    // Listen for Bootstrap modal show events
+    document.addEventListener('show.bs.modal', function(event) {
+        console.log('🔄 Modal opening, converting icons...');
+        // Run conversion after modal is shown
+        setTimeout(forceFixIcons, 100);
+    });
+
+    // Also listen for modal shown event (after animation)
+    document.addEventListener('shown.bs.modal', function(event) {
+        console.log('✅ Modal opened, converting icons...');
+        forceFixIcons();
+    });
 
     // Expose globally for manual trigger if needed
     window.forceFixIcons = forceFixIcons;

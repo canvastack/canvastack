@@ -14,7 +14,7 @@
  */
 
 /* ========================================================================
-   SECTION 1: BASE FONT FAMILY OVERRIDE
+   BASE FONT FAMILY OVERRIDE
    ======================================================================== */
 
 .sidebar-nav .fa,
@@ -29,7 +29,7 @@
 }
 
 /* ========================================================================
-   SECTION 2: ICON MAPPINGS (100+ mappings)
+   ICON MAPPINGS (100+ mappings)
    ======================================================================== */
 
 /* Dashboard & Home Icons */
@@ -281,7 +281,7 @@
 .sidebar-nav .fa.fa-plane::before { content: '\F12C' !important; } /* bi-airplane */
 
 /* ========================================================================
-   SECTION 3: AGGRESSIVE OVERRIDES (for problematic cases)
+   AGGRESSIVE OVERRIDES (for problematic cases)
    High specificity overrides for deeply nested menu items
    ======================================================================== */
 
@@ -395,7 +395,7 @@
 .sidebar-nav i.fa-bookmark::before { content: '\F22E' !important; }
 
 /* ========================================================================
-   SECTION 4: FALLBACK FOR UNMAPPED ICONS
+   FALLBACK FOR UNMAPPED ICONS
    ======================================================================== */
 
 /* Generic fallback for any unmapped Font Awesome icon */
@@ -420,7 +420,7 @@
 .sidebar-nav .main-menu .fa.fa-bookmark::before { content: '\F22E' !important; }
 
 /* ========================================================================
-   SECTION 5: DEBUG HELPERS (commented out by default)
+   DEBUG HELPERS (commented out by default)
    Uncomment to visually identify unmapped icons
    ======================================================================== */
 

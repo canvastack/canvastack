@@ -32,12 +32,12 @@
 	max-width: 100%;
 	width: 100%;
 	margin: 0 auto;
-	padding: 2.5rem;
-	background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
-	border: 1px solid #fee;
-	border-left: 4px solid #ef4444;
-	border-radius: 1rem;
-	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	padding: var(--space-10);
+	background: linear-gradient(135deg, var(--error-bg) 0%, var(--surface) 100%);
+	border: 1px solid var(--error-border);
+	border-left: 4px solid var(--danger);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-sm);
 	animation: slideDown 0.3s ease-out;
 	box-sizing: border-box;
 }
@@ -59,13 +59,13 @@
 
 .canvastack-error-icon {
 	text-align: center;
-	margin-bottom: 1.5rem;
+	margin-bottom: var(--space-6);
 }
 
 .canvastack-error-icon .fa {
 	font-family: 'bootstrap-icons' !important;
-	font-size: 4rem;
-	color: #ef4444;
+	font-size: var(--font-6xl);
+	color: var(--danger);
 	opacity: 0.9;
 	animation: pulse 2s ease-in-out infinite;
 }
@@ -90,11 +90,11 @@
 
 .canvastack-error-title {
 	text-align: center;
-	font-size: 1.5rem;
-	font-weight: 700;
-	color: #dc2626;
-	margin: 0 0 1.5rem 0;
-	letter-spacing: -0.025em;
+	font-size: var(--font-2xl);
+	font-weight: var(--font-bold);
+	color: var(--error-text);
+	margin: 0 0 var(--space-6) 0;
+	letter-spacing: var(--tracking-tight);
 }
 
 /* ========================================================================
@@ -102,45 +102,45 @@
    ======================================================================== */
 
 .canvastack-error-message-box {
-	background: #ffffff;
-	border: 1px solid #fecaca;
-	border-radius: 0.75rem;
-	padding: 1.5rem;
-	margin-bottom: 1.5rem;
-	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+	background: var(--surface);
+	border: 1px solid var(--error-border-accent);
+	border-radius: var(--radius);
+	padding: var(--space-6);
+	margin-bottom: var(--space-6);
+	box-shadow: var(--shadow-sm);
 }
 
 .canvastack-error-label {
-	font-size: 0.75rem;
-	font-weight: 600;
+	font-size: var(--font-xs);
+	font-weight: var(--font-semibold);
 	text-transform: uppercase;
-	letter-spacing: 0.05em;
-	color: #991b1b;
-	margin: 0 0 0.5rem 0;
+	letter-spacing: var(--tracking-wider);
+	color: var(--error-text-dark);
+	margin: 0 0 var(--space-2) 0;
 }
 
 .canvastack-error-text {
-	font-size: 0.9375rem;
-	font-weight: 500;
-	color: #dc2626;
-	margin: 0 0 1.5rem 0;
-	line-height: 1.6;
-	padding: 0.75rem;
-	background: #fef2f2;
-	border-radius: 0.5rem;
-	border-left: 3px solid #ef4444;
+	font-size: var(--font-base);
+	font-weight: var(--font-medium);
+	color: var(--error-text);
+	margin: 0 0 var(--space-6) 0;
+	line-height: var(--leading-relaxed);
+	padding: var(--space-3);
+	background: var(--error-surface);
+	border-radius: var(--radius-sm);
+	border-left: 3px solid var(--danger);
 }
 
 .canvastack-error-details-label {
-	font-size: 0.75rem;
-	font-weight: 600;
+	font-size: var(--font-xs);
+	font-weight: var(--font-semibold);
 	text-transform: uppercase;
-	letter-spacing: 0.05em;
-	color: #6b7280;
-	margin: 0 0 0.5rem 0;
+	letter-spacing: var(--tracking-wider);
+	color: var(--gray-500);
+	margin: 0 0 var(--space-2) 0;
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--space-2);
 }
 
 .canvastack-error-details-label::before {
@@ -153,16 +153,16 @@
 }
 
 .canvastack-error-details-text {
-	font-size: 0.8125rem;
-	font-family: 'Courier New', monospace;
-	color: #6b7280;
+	font-size: var(--font-sm);
+	font-family: var(--font-mono);
+	color: var(--gray-500);
 	margin: 0;
-	padding: 0.75rem;
-	background: #f9fafb;
-	border-radius: 0.5rem;
-	border: 1px solid #e5e7eb;
+	padding: var(--space-3);
+	background: var(--surface-2);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--border);
 	overflow-x: auto;
-	line-height: 1.5;
+	line-height: var(--leading-normal);
 	white-space: pre-wrap;
 	word-break: break-word;
 }
@@ -172,27 +172,27 @@
    ======================================================================== */
 
 .canvastack-error-suggestions {
-	background: #fffbeb;
-	border: 1px solid #fde68a;
-	border-radius: 0.75rem;
-	padding: 1.25rem;
-	margin-bottom: 1.5rem;
+	background: var(--warning-bg);
+	border: 1px solid var(--warning-border);
+	border-radius: var(--radius);
+	padding: var(--space-5);
+	margin-bottom: var(--space-6);
 }
 
 .canvastack-error-suggestions-label {
-	font-size: 0.875rem;
-	font-weight: 600;
-	color: #92400e;
-	margin: 0 0 0.75rem 0;
+	font-size: var(--font-sm);
+	font-weight: var(--font-semibold);
+	color: var(--warning-text);
+	margin: 0 0 var(--space-3) 0;
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--space-2);
 }
 
 .canvastack-error-suggestions-label .fa {
 	font-family: 'bootstrap-icons' !important;
-	font-size: 1.125rem;
-	color: #f59e0b;
+	font-size: var(--font-lg);
+	color: var(--warning);
 }
 
 /* Map FA lightbulb to Bootstrap Icons */
@@ -203,24 +203,24 @@
 
 .canvastack-error-suggestions-list {
 	margin: 0;
-	padding-left: 1.5rem;
+	padding-left: var(--space-6);
 	list-style: none;
 }
 
 .canvastack-error-suggestions-list li {
-	font-size: 0.875rem;
-	color: #78350f;
-	margin-bottom: 0.5rem;
-	line-height: 1.6;
+	font-size: var(--font-sm);
+	color: var(--warning-text-dark);
+	margin-bottom: var(--space-2);
+	line-height: var(--leading-relaxed);
 	position: relative;
 }
 
 .canvastack-error-suggestions-list li::before {
 	content: '→';
 	position: absolute;
-	left: -1.25rem;
-	color: #f59e0b;
-	font-weight: 700;
+	left: calc(-1 * var(--space-5));
+	color: var(--warning);
+	font-weight: var(--font-bold);
 }
 
 .canvastack-error-suggestions-list li:last-child {
@@ -233,39 +233,39 @@
 
 .canvastack-error-actions {
 	text-align: center;
-	margin-bottom: 1.5rem;
+	margin-bottom: var(--space-6);
 }
 
 .canvastack-table-refresh-btn {
-	background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+	background: var(--gradient-primary);
 	border: none;
 	color: white;
-	font-weight: 600;
-	font-size: 0.9375rem;
-	padding: 0.75rem 2rem;
-	border-radius: 0.75rem;
-	box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -1px rgba(59, 130, 246, 0.2);
-	transition: all 0.2s ease;
+	font-weight: var(--font-semibold);
+	font-size: var(--font-base);
+	padding: var(--space-3) var(--space-8);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	transition: var(--transition);
 	display: inline-flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--space-2);
 	cursor: pointer;
 }
 
 .canvastack-table-refresh-btn:hover {
-	background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-	box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4), 0 4px 6px -2px rgba(59, 130, 246, 0.3);
+	filter: brightness(1.1);
+	box-shadow: var(--shadow-lg);
 	transform: translateY(-2px);
 }
 
 .canvastack-table-refresh-btn:active {
 	transform: translateY(0);
-	box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+	box-shadow: var(--shadow);
 }
 
 .canvastack-table-refresh-btn .fa {
 	font-family: 'bootstrap-icons' !important;
-	font-size: 1rem;
+	font-size: var(--font-base);
 	animation: spin 0s linear infinite;
 }
 
@@ -295,14 +295,14 @@
 
 .canvastack-error-help {
 	text-align: center;
-	padding-top: 1rem;
-	border-top: 1px solid #fee;
+	padding-top: var(--space-4);
+	border-top: 1px solid var(--error-border);
 }
 
 .canvastack-error-help-text {
-	font-size: 0.8125rem;
-	color: #9ca3af;
-	line-height: 1.5;
+	font-size: var(--font-sm);
+	color: var(--gray-400);
+	line-height: var(--leading-normal);
 	margin: 0;
 }
 
@@ -311,46 +311,46 @@
    ======================================================================== */
 
 html[data-bs-theme="dark"] .canvastack-error-container {
-	background: linear-gradient(135deg, #1f1f23 0%, #18181b 100%);
-	border-color: #3f1f1f;
-	border-left-color: #dc2626;
+	background: linear-gradient(135deg, var(--error-bg) 0%, var(--surface) 100%);
+	border-color: var(--error-border);
+	border-left-color: var(--danger);
 }
 
 html[data-bs-theme="dark"] .canvastack-error-message-box {
-	background: #18181b;
-	border-color: #3f1f1f;
+	background: var(--surface);
+	border-color: var(--error-border);
 }
 
 html[data-bs-theme="dark"] .canvastack-error-text {
-	background: #1f1f23;
-	color: #fca5a5;
+	background: var(--error-surface);
+	color: var(--error-text);
 }
 
 html[data-bs-theme="dark"] .canvastack-error-details-text {
-	background: #18181b;
-	border-color: #27272a;
-	color: #9ca3af;
+	background: var(--surface);
+	border-color: var(--border);
+	color: var(--gray-400);
 }
 
 html[data-bs-theme="dark"] .canvastack-error-suggestions {
-	background: #1f1f1a;
-	border-color: #3f3f1f;
+	background: var(--warning-bg);
+	border-color: var(--warning-border);
 }
 
 html[data-bs-theme="dark"] .canvastack-error-suggestions-label {
-	color: #fbbf24;
+	color: var(--warning);
 }
 
 html[data-bs-theme="dark"] .canvastack-error-suggestions-list li {
-	color: #d4d4d8;
+	color: var(--text-muted);
 }
 
 html[data-bs-theme="dark"] .canvastack-error-help {
-	border-top-color: #3f1f1f;
+	border-top-color: var(--error-border);
 }
 
 html[data-bs-theme="dark"] .canvastack-error-help-text {
-	color: #71717a;
+	color: var(--text-dim);
 }
 
 /* ========================================================================
@@ -359,24 +359,24 @@ html[data-bs-theme="dark"] .canvastack-error-help-text {
 
 @media (max-width: 768px) {
 	.canvastack-table-error-row td {
-		padding: 2rem 1rem !important;
+		padding: var(--space-8) var(--space-4) !important;
 	}
 	
 	.canvastack-error-container {
-		padding: 1.5rem;
-		border-radius: 0.75rem;
+		padding: var(--space-6);
+		border-radius: var(--radius);
 	}
 	
 	.canvastack-error-icon .fa {
-		font-size: 3rem;
+		font-size: var(--font-5xl);
 	}
 	
 	.canvastack-error-title {
-		font-size: 1.25rem;
+		font-size: var(--font-xl);
 	}
 	
 	.canvastack-error-message-box {
-		padding: 1rem;
+		padding: var(--space-4);
 	}
 	
 	.canvastack-table-refresh-btn {
@@ -390,7 +390,7 @@ html[data-bs-theme="dark"] .canvastack-error-help-text {
    ======================================================================== */
 
 .canvastack-table-refresh-btn:focus-visible {
-	outline: 2px solid #3b82f6;
+	outline: 2px solid var(--primary);
 	outline-offset: 2px;
 }
 

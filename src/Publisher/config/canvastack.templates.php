@@ -273,7 +273,7 @@ return [
 							'js/plugins-init/canvasign-datatables.js',    // DataTables BS5 integration
 							
 							// Icon Utilities
-							'js/utilities/force-icon-fix.js',             // FA→BI icon conversion
+							'js/utilities/icon-adapter.js',               // FA→BI icon conversion
 							
 							// Global adapters (used in design)
 							'../global/adapters/canvastack-modal-adapter.js',
@@ -298,10 +298,10 @@ return [
 							'../global/pages/preference-smtp-test.js',
 							'../global/pages/canvastack-cache-manager.js',
 							
-							// Canvasign-specific fixes (CRITICAL for mapping page)
-							'js/fixes/canvasign-mapping-icons-fix.js',      // Fix FA→BI icons for mapping page
-							'js/fixes/canvasign-mapping-saved-data-fix.js', // Fix Choices.js for saved data
-							'js/fixes/canvasign-filter-fix.js',             // Fix filter AJAX errors
+							// Canvasign-specific adapters (CRITICAL for mapping page)
+							'js/adapters/canvasign-mapping-icons-adapter.js',  // FA→BI icons for mapping page
+							'js/adapters/canvasign-mapping-data-adapter.js',   // Choices.js for saved data
+							'js/adapters/canvasign-filter-adapter.js',         // AJAX filter error handling
 						],
 						'css'	=> []
 					]

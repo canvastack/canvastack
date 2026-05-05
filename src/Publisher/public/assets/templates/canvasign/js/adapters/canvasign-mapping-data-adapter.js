@@ -1,7 +1,8 @@
 /**
- * Canvasign Mapping Page - Saved Data Fix
+ * Canvasign Mapping Page - Data Adapter
  * 
  * Fixes Choices.js initialization for saved data in mapping page privileges.
+ * This adapter bridges the gap between server-rendered HTML and Choices.js expectations.
  * 
  * PROBLEM:
  * - Server renders class attributes WITHOUT SPACES between classes
@@ -23,7 +24,7 @@
 (function() {
     'use strict';
     
-    console.log('🔧 Canvasign Mapping Saved Data Fix loaded');
+    console.log('🔧 Canvasign Mapping Data Adapter loaded');
     
     /**
      * Fix malformed class attributes by adding proper spacing
@@ -200,7 +201,7 @@
     }
     
     // Export to global scope
-    window.CanvasignMappingSavedDataFix = {
+    window.CanvasignMappingDataAdapter = {
         fixClassAttribute: fixClassAttribute,
         initializeChoicesForElement: initializeChoicesForElement,
         processMappingPageSelects: processMappingPageSelects

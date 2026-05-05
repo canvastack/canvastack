@@ -12,9 +12,12 @@
 /* ========================================================================
    CORE FRAMEWORK (Required on all pages)
    Base styles, theme variables, and application layout
+   
+   IMPORTANT: theme.css MUST be loaded BEFORE bootstrap.css
+   This ensures our CSS variables override Bootstrap's defaults
    ======================================================================== */
-@import url('./core/bootstrap.css');
 @import url('./core/theme.css');
+@import url('./core/bootstrap.css');
 @import url('./core/app.css');
 
 /* ========================================================================
