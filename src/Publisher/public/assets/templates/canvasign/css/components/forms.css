@@ -525,3 +525,245 @@ table.cke {
     font-size: .85rem;
     padding: .5rem 1rem;
 }
+
+/* ================================================================
+   DISABLED STATE STYLING
+   ================================================================ */
+
+/* ── Input, Select, Textarea Disabled State ───────────────────────────── */
+
+input[disabled],
+input[disabled="disabled"],
+input:disabled,
+select[disabled],
+select[disabled="disabled"],
+select:disabled,
+textarea[disabled],
+textarea[disabled="disabled"],
+textarea:disabled,
+.form-control[disabled],
+.form-control[disabled="disabled"],
+.form-control:disabled,
+.form-select[disabled],
+.form-select[disabled="disabled"],
+.form-select:disabled {
+    background: var(--surface-2) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--border) !important;
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* ── Button Disabled State ────────────────────────────────────────────── */
+
+button[disabled],
+button[disabled="disabled"],
+button:disabled,
+.btn[disabled],
+.btn[disabled="disabled"],
+.btn:disabled,
+input[type="submit"][disabled],
+input[type="submit"][disabled="disabled"],
+input[type="submit"]:disabled,
+input[type="button"][disabled],
+input[type="button"][disabled="disabled"],
+input[type="button"]:disabled {
+    background: var(--surface-2) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--border) !important;
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+}
+
+/* ── Checkbox & Radio Disabled State ──────────────────────────────────── */
+
+input[type="checkbox"][disabled],
+input[type="checkbox"][disabled="disabled"],
+input[type="checkbox"]:disabled,
+input[type="radio"][disabled],
+input[type="radio"][disabled="disabled"],
+input[type="radio"]:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* Label for disabled checkbox/radio */
+input[type="checkbox"][disabled] + label,
+input[type="checkbox"][disabled="disabled"] + label,
+input[type="checkbox"]:disabled + label,
+input[type="radio"][disabled] + label,
+input[type="radio"][disabled="disabled"] + label,
+input[type="radio"]:disabled + label {
+    color: var(--text-muted) !important;
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+/* ── Input Group with Disabled Input ──────────────────────────────────── */
+
+.input-group:has(input[disabled]),
+.input-group:has(input[disabled="disabled"]),
+.input-group:has(input:disabled),
+.input-group:has(select[disabled]),
+.input-group:has(select[disabled="disabled"]),
+.input-group:has(select:disabled) {
+    opacity: 0.7 !important;
+}
+
+.input-group-text:has(+ input[disabled]),
+.input-group-text:has(+ input[disabled="disabled"]),
+.input-group-text:has(+ input:disabled) {
+    background: var(--surface-2) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--border) !important;
+    opacity: 0.7 !important;
+}
+
+/* ── Disabled Form Group ──────────────────────────────────────────────── */
+
+.form-group:has(input[disabled]),
+.form-group:has(input[disabled="disabled"]),
+.form-group:has(input:disabled),
+.form-group:has(select[disabled]),
+.form-group:has(select[disabled="disabled"]),
+.form-group:has(select:disabled),
+.form-group:has(textarea[disabled]),
+.form-group:has(textarea[disabled="disabled"]),
+.form-group:has(textarea:disabled) {
+    opacity: 0.8 !important;
+}
+
+/* Label for disabled form group */
+.form-group:has(input[disabled]) label,
+.form-group:has(input[disabled="disabled"]) label,
+.form-group:has(input:disabled) label,
+.form-group:has(select[disabled]) label,
+.form-group:has(select[disabled="disabled"]) label,
+.form-group:has(select:disabled) label,
+.form-group:has(textarea[disabled]) label,
+.form-group:has(textarea[disabled="disabled"]) label,
+.form-group:has(textarea:disabled) label {
+    color: var(--text-muted) !important;
+    opacity: 0.7 !important;
+}
+
+/* ── Flatpickr Disabled Input ─────────────────────────────────────────── */
+
+input.flatpickr-input[disabled],
+input.flatpickr-input[disabled="disabled"],
+input.flatpickr-input:disabled {
+    background: var(--surface-2) !important;
+    color: var(--text-muted) !important;
+    cursor: not-allowed !important;
+}
+
+/* ── Choices.js Disabled Select ───────────────────────────────────────── */
+
+.choices[data-type*="select-one"] .choices__inner,
+.choices[data-type*="select-multiple"] .choices__inner {
+    /* Will be styled when select is disabled */
+}
+
+select[disabled] + .choices,
+select[disabled="disabled"] + .choices,
+select:disabled + .choices {
+    opacity: 0.6 !important;
+    pointer-events: none !important;
+}
+
+select[disabled] + .choices .choices__inner,
+select[disabled="disabled"] + .choices .choices__inner,
+select:disabled + .choices .choices__inner {
+    background: var(--surface-2) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--border) !important;
+    cursor: not-allowed !important;
+}
+
+/* ── File Input Disabled ──────────────────────────────────────────────── */
+
+.fileinput:has(input[type="file"][disabled]),
+.fileinput:has(input[type="file"][disabled="disabled"]),
+.fileinput:has(input[type="file"]:disabled) {
+    opacity: 0.6 !important;
+    pointer-events: none !important;
+}
+
+.fileinput:has(input[type="file"][disabled]) .btn-file,
+.fileinput:has(input[type="file"][disabled="disabled"]) .btn-file,
+.fileinput:has(input[type="file"]:disabled) .btn-file {
+    background: var(--surface-2) !important;
+    color: var(--text-muted) !important;
+    cursor: not-allowed !important;
+}
+
+/* ── Readonly State (similar to disabled but can be focused) ──────────── */
+
+input[readonly],
+input[readonly="readonly"],
+select[readonly],
+select[readonly="readonly"],
+textarea[readonly],
+textarea[readonly="readonly"],
+.form-control[readonly],
+.form-control[readonly="readonly"] {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+    opacity: 0.8 !important;
+    cursor: default !important;
+}
+
+/* Readonly can still be focused (unlike disabled) */
+input[readonly]:focus,
+input[readonly="readonly"]:focus,
+textarea[readonly]:focus,
+textarea[readonly="readonly"]:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px var(--primary-alpha) !important;
+    opacity: 1 !important;
+}
+
+/* ── Disabled Link/Anchor ─────────────────────────────────────────────── */
+
+a[disabled],
+a[disabled="disabled"],
+a.disabled {
+    color: var(--text-muted) !important;
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    text-decoration: none !important;
+}
+
+/* ── Disabled Badge/Tag ───────────────────────────────────────────────── */
+
+.badge[disabled],
+.badge[disabled="disabled"],
+.badge.disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+
+/* ── Accessibility: Focus Visible for Disabled Elements ───────────────── */
+
+/* Remove focus outline from disabled elements */
+input[disabled]:focus,
+input[disabled="disabled"]:focus,
+input:disabled:focus,
+select[disabled]:focus,
+select[disabled="disabled"]:focus,
+select:disabled:focus,
+textarea[disabled]:focus,
+textarea[disabled="disabled"]:focus,
+textarea:disabled:focus,
+button[disabled]:focus,
+button[disabled="disabled"]:focus,
+button:disabled:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}

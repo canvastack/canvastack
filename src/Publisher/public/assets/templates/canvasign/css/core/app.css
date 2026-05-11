@@ -64,14 +64,21 @@ h5 {
 .app {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  grid-template-rows: var(--topbar-height) 1fr;
+  grid-template-rows: var(--topbar-height) 1fr auto;
   grid-template-areas:
     "sidebar topbar"
-    "sidebar main";
+    "sidebar main"
+    "footer footer";
   min-height: 100vh;
   transition: grid-template-columns var(--transition);
 }
-.app.collapsed { grid-template-columns: var(--sidebar-collapsed-width) 1fr; }
+.app.collapsed { 
+  grid-template-columns: var(--sidebar-collapsed-width) 1fr;
+  grid-template-areas:
+    "sidebar topbar"
+    "sidebar main"
+    "footer footer";
+}
 
 /* ---------- Sidebar ---------- */
 .sidebar {
@@ -252,6 +259,39 @@ h5 {
 .page-header h1 { font-size: var(--font-2xl); font-weight: var(--font-bold); margin: 0; }
 .page-header .crumbs { color: var(--text-muted); font-size: var(--font-sm); }
 .page-header .crumbs a { color: var(--text-muted); }
+
+/* ---------- Footer ---------- */
+.footer {
+  grid-area: footer;
+  grid-column: 1 / -1;  /* ✅ Span all columns */
+  background: var(--surface);
+  border-top: var(--size-1) solid var(--border);
+  padding: var(--space-4) var(--space-6);
+  padding-left: calc(var(--sidebar-width) + var(--space-6));  /* ✅ CRITICAL: Offset for sidebar */
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  width: 100%;
+  transition: padding-left var(--transition);
+}
+
+/* Footer when sidebar is collapsed */
+.app.collapsed .footer {
+  padding-left: calc(var(--sidebar-collapsed-width) + var(--space-6));
+}
+
+.footer .container-fluid {
+  max-width: 100%;
+  padding: 0;
+}
+
+.footer a {
+  color: var(--text-muted);
+  transition: color var(--transition);
+}
+
+.footer a:hover {
+  color: var(--primary);
+}
 
 /* ---------- Cards ---------- */
 .card {

@@ -280,6 +280,43 @@ if (!function_exists('canvastack_sidebar_menu')) {
 		$icons['after_label']	= false;
 		
 		if (true === is_array($links)) {
+			// Check if any child menu is active (matches current URL or is parent of current URL)
+			$currentUrl = url()->current();
+			$hasActiveChild = false;
+			
+			foreach ($links as $child_title => $child_url) {
+				if (is_array($child_url)) {
+					// Check third-level menu items
+					foreach ($child_url as $thirdChild => $thirdURL) {
+						// Match if current URL starts with menu URL (for nested routes like /user/1/edit)
+						$normalizedCurrentUrl = rtrim($currentUrl, '/');
+						$normalizedMenuUrl = rtrim($thirdURL, '/');
+						
+						if ($normalizedCurrentUrl === $normalizedMenuUrl || 
+							str_starts_with($normalizedCurrentUrl, $normalizedMenuUrl . '/')) {
+							$hasActiveChild = true;
+							break 2; // Break out of both loops
+						}
+					}
+				} else {
+					// Check second-level menu items
+					// Match if current URL starts with menu URL (for nested routes like /user/1/edit)
+					$normalizedCurrentUrl = rtrim($currentUrl, '/');
+					$normalizedMenuUrl = rtrim($child_url, '/');
+					
+					if ($normalizedCurrentUrl === $normalizedMenuUrl || 
+						str_starts_with($normalizedCurrentUrl, $normalizedMenuUrl . '/')) {
+						$hasActiveChild = true;
+						break;
+					}
+				}
+			}
+			
+			// Update parent submenu class if any child is active
+			if ($hasActiveChild) {
+				$o = '<li id="' . $escapedIdLabel . '" class="submenu active">';
+			}
+			
 			$o .= '<a class="arrow-node" href="javascript:void(0);">';
 			
 			if (false !== $icon) {
@@ -309,7 +346,16 @@ if (!function_exists('canvastack_sidebar_menu')) {
 						$escapedThirdURL = htmlspecialchars($thirdURL, ENT_QUOTES, 'UTF-8');
 						$escapedThirdId = clean_strings($label) . '-' . clean_strings($child_title) . '-' . clean_strings($thirdChild);
 						
-						$o .= '<li id="' . $escapedThirdId . '"><a class="menu-url" href="' . $escapedThirdURL . '">' . $escapedThirdChild . '</a></li>';
+						// Only add menu-active-pointer class if current URL matches or starts with menu URL
+						$currentUrl = url()->current();
+						$normalizedCurrentUrl = rtrim($currentUrl, '/');
+						$normalizedMenuUrl = rtrim($thirdURL, '/');
+						
+						$isActive = ($normalizedCurrentUrl === $normalizedMenuUrl || 
+									str_starts_with($normalizedCurrentUrl, $normalizedMenuUrl . '/'));
+						$activeClass = $isActive ? ' menu-active-pointer' : '';
+						
+						$o .= '<li id="' . $escapedThirdId . '" class="' . trim($activeClass) . '"><a class="menu-url" href="' . $escapedThirdURL . '">' . $escapedThirdChild . '</a></li>';
 					}
 					$o .= '</ul>';
 					$o .= '</li>';
@@ -318,7 +364,16 @@ if (!function_exists('canvastack_sidebar_menu')) {
 					$escapedChildTitle = htmlspecialchars(canvastack_underscore_to_camelcase($child_title), ENT_QUOTES, 'UTF-8');
 					$escapedChildUrl = htmlspecialchars($child_url, ENT_QUOTES, 'UTF-8');
 					
-					$o .= '<li class="menu-active-pointer"><a class="menu-url" href="' . $escapedChildUrl . '">' . $escapedChildTitle . '</a></li>';
+					// Only add menu-active-pointer class if current URL matches or starts with menu URL
+					$currentUrl = url()->current();
+					$normalizedCurrentUrl = rtrim($currentUrl, '/');
+					$normalizedMenuUrl = rtrim($child_url, '/');
+					
+					$isActive = ($normalizedCurrentUrl === $normalizedMenuUrl || 
+								str_starts_with($normalizedCurrentUrl, $normalizedMenuUrl . '/'));
+					$activeClass = $isActive ? ' menu-active-pointer' : '';
+					
+					$o .= '<li class="' . trim($activeClass) . '"><a class="menu-url" href="' . $escapedChildUrl . '">' . $escapedChildTitle . '</a></li>';
 				}
 			}
 			$o .= '</ul>';

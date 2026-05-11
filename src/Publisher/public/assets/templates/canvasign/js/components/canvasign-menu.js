@@ -133,31 +133,46 @@
             });
         });
         
-        // Initialize: Close all submenus on page load
-        console.log('🔒 Initializing: Closing all submenus by default');
+        // Initialize: Close all submenus EXCEPT those with active class
+        console.log('🔒 Initializing: Closing inactive submenus, keeping active ones open');
         const allSubmenus = menu.querySelectorAll('li.submenu > ul');
         const allToggleButtons = menu.querySelectorAll('a.arrow-node');
         
-        console.log('🔍 Found submenus to close:', allSubmenus.length);
+        console.log('🔍 Found submenus to process:', allSubmenus.length);
         console.log('🔍 Found toggle buttons:', allToggleButtons.length);
         
         allSubmenus.forEach((submenu, index) => {
-            console.log(`🔒 Closing submenu ${index}:`, submenu.previousElementSibling?.textContent?.trim());
-            submenu.classList.remove('in');
-            submenu.style.display = 'none';
+            const parentLi = submenu.closest('li.submenu');
+            const hasActiveClass = parentLi && parentLi.classList.contains('active');
+            
+            if (hasActiveClass) {
+                // Keep active submenu open
+                console.log(`✅ Keeping submenu ${index} OPEN (has active child):`, submenu.previousElementSibling?.textContent?.trim());
+                submenu.classList.add('in');
+                submenu.style.display = 'block';
+                const button = parentLi.querySelector('a.arrow-node');
+                if (button) {
+                    button.setAttribute('aria-expanded', 'true');
+                }
+            } else {
+                // Close inactive submenu
+                console.log(`🔒 Closing submenu ${index}:`, submenu.previousElementSibling?.textContent?.trim());
+                submenu.classList.remove('in');
+                submenu.style.display = 'none';
+            }
         });
         
         allToggleButtons.forEach((button, index) => {
-            console.log(`🔒 Setting button ${index} to collapsed:`, button.textContent?.trim());
-            button.setAttribute('aria-expanded', 'false');
+            const parentLi = button.closest('li.submenu');
+            const hasActiveClass = parentLi && parentLi.classList.contains('active');
+            
+            if (!hasActiveClass) {
+                console.log(`🔒 Setting button ${index} to collapsed:`, button.textContent?.trim());
+                button.setAttribute('aria-expanded', 'false');
+            }
         });
         
-        // Remove active class from all submenu items
-        const allSubmenuItems = menu.querySelectorAll('li.submenu');
-        allSubmenuItems.forEach((item, index) => {
-            console.log(`🔒 Removing active from item ${index}:`, item.querySelector('a')?.textContent?.trim());
-            item.classList.remove('active');
-        });
+        console.log('✅ Menu initialization complete - active submenus kept open');
         
         console.log('✅ All submenus closed by default:', allSubmenus.length, 'submenus hidden');
         
