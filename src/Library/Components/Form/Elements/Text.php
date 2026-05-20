@@ -698,4 +698,201 @@ trait Text {
 		$this->inputDraw('qrcode', $name);
 	}
 
+
+	
+	/**
+	 * Create Input Chain Field
+	 * 
+	 * Auto-generates field value from multiple source fields in real-time.
+	 * Perfect for generating SKU, slug, product codes, or any composite identifier.
+	 * 
+	 * @param string $name Target field name (will be auto-populated)
+	 * @param array $sources Source field names to chain together
+	 * @param array $options Configuration options for chaining behavior
+	 * @param bool|string|null $label Whether to display label (true for auto-generate, false for none, string for custom)
+	 * 
+	 * @return void Output is rendered via inputDraw()
+	 * 
+	 * @security All parameters are escaped in setParams() and renderInputChain()
+	 * @security Follows same pattern as text(), barcode(), qrcode() methods
+	 * 
+	 * ============================================================================
+	 * AVAILABLE OPTIONS
+	 * ============================================================================
+	 * 
+	 * BASIC OPTIONS:
+	 * - separator: string - Separator between values (default: '-')
+	 * - transform: 'uppercase'|'lowercase'|'title'|'slug'|'code' - Text transformation (default: 'uppercase')
+	 * - prefix: string - Prefix for generated value (default: '')
+	 * - suffix: string - Suffix for generated value (default: '')
+	 * - max_words: int - Maximum words to take from text fields (default: 2)
+	 * - readonly: bool - Make field readonly (default: true)
+	 * - placeholder: string - Input placeholder text (default: 'Auto-generated')
+	 * - format: 'default'|'slug'|'code' - Predefined format (default: 'default')
+	 * - debounce: int - Debounce delay in milliseconds (default: 300)
+	 * - auto_update: bool - Enable real-time auto-update (default: true)
+	 * - help: bool - Show help button with modal (default: true)
+	 * 
+	 * ADVANCED OPTIONS:
+	 * - skip_empty: bool - Skip empty source values (default: true)
+	 * - trim_spaces: bool - Trim spaces from sources (default: true)
+	 * - remove_special: bool - Remove special characters (default: true)
+	 * - word_separator: string - Separator for multi-word fields (default: '-')
+	 * 
+	 * ============================================================================
+	 * TRANSFORM TYPES
+	 * ============================================================================
+	 * 
+	 * 1. uppercase (default):
+	 *    Input: "Office Chair Ergonomic"
+	 *    Output: "OFFICE-CHAIR"
+	 * 
+	 * 2. lowercase:
+	 *    Input: "Office Chair Ergonomic"
+	 *    Output: "office-chair"
+	 * 
+	 * 3. title:
+	 *    Input: "office chair ergonomic"
+	 *    Output: "Office-Chair"
+	 * 
+	 * 4. slug:
+	 *    Input: "Office Chair Ergonomic"
+	 *    Output: "office-chair-ergonomic"
+	 * 
+	 * 5. code:
+	 *    Input: "Office Chair Ergonomic"
+	 *    Output: "OCE" (abbreviation)
+	 * 
+	 * ============================================================================
+	 * EXAMPLES
+	 * ============================================================================
+	 * 
+	 * @example
+	 * // Example 1: Basic 2-field chain (Name + ID)
+	 * $form->inputChain('sku', ['name', 'id']);
+	 * // Input: name="Office Chair", id=123
+	 * // Output: OFFICE-CHAIR-123
+	 * 
+	 * @example
+	 * // Example 2: Full 3-field chain (Name + ID + Barcode)
+	 * $form->inputChain('sku', ['name', 'id', 'barcode']);
+	 * // Input: name="Office Chair Ergonomic", id=123, barcode="BC1234567890"
+	 * // Output: OFFICE-CHAIR-123-BC1234567890
+	 * 
+	 * @example
+	 * // Example 3: Custom configuration
+	 * $form->inputChain('product_code', ['category_id', 'name', 'id'], [
+	 *     'separator' => '-',
+	 *     'transform' => 'uppercase',
+	 *     'max_words' => 2,
+	 *     'prefix' => 'PROD-',
+	 *     'suffix' => '-2024'
+	 * ]);
+	 * // Input: category="Furniture", name="Office Chair", id=123
+	 * // Output: PROD-FURNITURE-OFFICE-CHAIR-123-2024
+	 * 
+	 * @example
+	 * // Example 4: Slug format (for URLs)
+	 * $form->inputChain('slug', ['name'], [
+	 *     'transform' => 'slug',
+	 *     'separator' => '-',
+	 *     'max_words' => 10
+	 * ]);
+	 * // Input: name="Office Chair Ergonomic"
+	 * // Output: office-chair-ergonomic
+	 * 
+	 * @example
+	 * // Example 5: Code format (abbreviation)
+	 * $form->inputChain('short_code', ['category_id', 'name'], [
+	 *     'transform' => 'code',
+	 *     'separator' => '-',
+	 *     'max_words' => 1
+	 * ]);
+	 * // Input: category="Furniture", name="Office Chair"
+	 * // Output: FUR-OFF
+	 * 
+	 * @example
+	 * // Example 6: Conditional sources (skip ID on create)
+	 * $sources = isset($this->model_data->id) 
+	 *     ? ['name', 'id', 'barcode']  // Edit mode: include ID
+	 *     : ['name', 'barcode'];        // Create mode: skip ID
+	 * $form->inputChain('sku', $sources);
+	 * 
+	 * @example
+	 * // Example 7: Category-based SKU
+	 * $form->inputChain('sku', ['category_id', 'name', 'id'], [
+	 *     'transform' => 'uppercase',
+	 *     'max_words' => 2,
+	 *     'separator' => '-'
+	 * ]);
+	 * // Input: category="Home & Living", name="Office Chair", id=5
+	 * // Output: HOME-LIVING-OFFICE-CHAIR-5
+	 * 
+	 * ============================================================================
+	 * REAL-WORLD USE CASES
+	 * ============================================================================
+	 * 
+	 * Use Case 1: Product SKU Generation
+	 * - Sources: ['category', 'name', 'id']
+	 * - Format: CATEGORY-PRODUCT-ID
+	 * - Example: FURNITURE-OFFICE-CHAIR-123
+	 * 
+	 * Use Case 2: URL Slug Generation
+	 * - Sources: ['name']
+	 * - Format: lowercase-with-hyphens
+	 * - Example: office-chair-ergonomic
+	 * 
+	 * Use Case 3: Short Product Code
+	 * - Sources: ['category', 'name']
+	 * - Format: Abbreviation
+	 * - Example: FUR-OFF
+	 * 
+	 * Use Case 4: Barcode-based SKU
+	 * - Sources: ['name', 'barcode']
+	 * - Format: NAME-BARCODE
+	 * - Example: OFFICE-CHAIR-BC1234567890
+	 * 
+	 * ============================================================================
+	 * NOTES
+	 * ============================================================================
+	 * 
+	 * - Field is readonly by default (user cannot manually edit)
+	 * - Updates in real-time as user types in source fields
+	 * - Debounced to prevent excessive updates (300ms default)
+	 * - Skips empty source values automatically
+	 * - Handles special characters and spaces intelligently
+	 * - Works in both create and edit modes
+	 * - Supports both themes (default and canvasign)
+	 */
+	public function inputChain(string $name, array $sources, array $options = [], bool|string|null $label = true): void {
+		// Register input-chain plugin for automatic asset loading
+		$this->element_plugins[$name] = 'input-chain';
+		
+		// Extract label from options if provided
+		if (isset($options['label'])) {
+			$label = $options['label'];
+			unset($options['label']);
+		}
+		
+		// Get value from model if available (for edit mode)
+		$value = null;
+		if (isset($this->model_data->$name)) {
+			$value = $this->model_data->$name;
+		}
+		
+		// Store sources and options in attributes for renderInputChain
+		$attributes = [
+			'chain_sources' => $sources,
+			'chain_options' => $options
+		];
+		
+		// Merge ARIA attributes for accessibility
+		$ariaAttributes = $this->getTextAriaAttributes($name, $attributes);
+		$attributes = array_merge($attributes, $ariaAttributes);
+		
+		// Use standard Canvastack pattern: setParams + inputDraw
+		$this->setParams('input-chain', $name, $value, $attributes, $label);
+		$this->inputDraw('input-chain', $name);
+	}
+
 }

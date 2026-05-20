@@ -54,6 +54,7 @@
                 autoSeparator: $input.data('barcode-auto-separator') || '-',
                 autoPrefix: $input.data('barcode-auto-prefix') || '',
                 autoLength: $input.data('barcode-auto-length') || 13,
+                entityType: $input.data('barcode-entity-type') || 'product',  // ⭐ NEW
                 previewPosition: $input.data('barcode-preview-position') || 'top',
                 previewWidth: $input.data('barcode-preview-width') || 2,
                 previewHeight: $input.data('barcode-preview-height') || 60
@@ -253,16 +254,30 @@
         },
         
         /**
-         * Auto-generate barcode from source field(s)
+         * Auto-generate barcode from source field(s) OR from API
          */
         autoGenerate: function($input, config) {
+            var self = this;
+            
+            // ⭐ NEW: If autoSource is 'api', call API endpoint
+            if (config.autoSource === 'api') {
+                self.generateFromApi($input, config);
+                return;
+            }
+            
+            // ⭐ OLD: Generate from source fields (legacy support)
             var sources = Array.isArray(config.autoSource) ? config.autoSource : [config.autoSource];
             var parts = [];
             
             // Collect values from all source fields
             for (var i = 0; i < sources.length; i++) {
                 var sourceField = sources[i];
-                var $source = $('#' + sourceField);
+                
+                // ⭐ FIX: Try both name and id selectors
+                var $source = $('[name="' + sourceField + '"]');
+                if ($source.length === 0) {
+                    $source = $('#' + sourceField);
+                }
                 
                 if ($source.length === 0 || !$source.val()) {
                     console.warn('Auto-generate source field not found or empty:', sourceField);
@@ -299,6 +314,111 @@
             }
             
             $input.val(barcode).trigger('input');
+        },
+        
+        /**
+         * Generate barcode from API (Sequential Counter)
+         */
+        generateFromApi: function($input, config) {
+            var self = this;
+            var entityType = config.entityType || 'product';
+            
+            // Show loading state
+            var $generateBtn = $('[data-barcode-generate="' + ($input.attr('name') || $input.attr('id')) + '"]');
+            var originalHtml = $generateBtn.html();
+            $generateBtn.prop('disabled', true).html('<i class="spinner-border spinner-border-sm"></i>');
+            
+            // Extract base URL up to /public/
+            var pathParts = window.location.pathname.split('/');
+            var publicIndex = pathParts.indexOf('public');
+            var baseUrl;
+            
+            if (publicIndex > -1) {
+                // Build URL: origin + path up to /public/
+                baseUrl = window.location.origin + pathParts.slice(0, publicIndex + 1).join('/');
+            } else {
+                // Fallback to origin if 'public' not found
+                baseUrl = window.location.origin;
+            }
+            
+            var apiUrl = baseUrl + '/api/barcode/generate';
+            
+            // Call API
+            $.ajax({
+                url: apiUrl,
+                method: 'POST',
+                data: {
+                    entity_type: entityType
+                },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Accept': 'application/json'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $input.val(response.barcode).trigger('input');
+                        console.log('✅ Barcode generated from API:', response.barcode);
+                        
+                        // Show success toast (optional)
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success('Barcode generated: ' + response.barcode);
+                        }
+                    } else {
+                        var errorMsg = response.message || 'Failed to generate barcode';
+                        console.error('❌ Barcode generation failed:', errorMsg);
+                        self.showError(errorMsg);
+                    }
+                },
+                error: function(xhr) {
+                    var message = 'Failed to generate barcode';
+                    
+                    if (xhr.status === 404) {
+                        message = 'Barcode API endpoint not found. Please check your routes.';
+                    } else if (xhr.status === 401) {
+                        message = 'Unauthorized. Please login first.';
+                    } else if (xhr.status === 500) {
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            // Check if sequence not found
+                            if (xhr.responseJSON.message.includes('not found')) {
+                                message = 'Barcode sequence for "' + entityType + '" not found. Please create it in System → Config → Barcode Sequences.';
+                            } else {
+                                message = xhr.responseJSON.message;
+                            }
+                        } else {
+                            message = 'Server error. Please try again.';
+                        }
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    
+                    console.error('❌ Barcode API error:', {
+                        status: xhr.status,
+                        message: message,
+                        response: xhr.responseJSON,
+                        url: apiUrl
+                    });
+                    
+                    self.showError(message);
+                },
+                complete: function() {
+                    // Restore button state
+                    $generateBtn.prop('disabled', false).html(originalHtml);
+                }
+            });
+        },
+        
+        /**
+         * Show error message
+         */
+        showError: function(message) {
+            // Try toastr first
+            if (typeof toastr !== 'undefined') {
+                toastr.error(message, 'Barcode Generation Error');
+                return;
+            }
+            
+            // Fallback to alert
+            alert('Barcode Generation Error:\n\n' + message);
         },
         
         /**

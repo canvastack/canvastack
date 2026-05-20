@@ -228,6 +228,7 @@
             
             if ($form.length === 0) return;
             
+            var formFields = config.formFields || 'all'; // ⭐ Get formFields config
             var formFormat = config.formFormat || 'json';
             var formExclude = config.formExclude || ['_token', '_method', 'image', 'file'];
             var formData = {};
@@ -243,6 +244,20 @@
                 }
                 
                 if ($field.is($input)) return;
+                
+                // Skip all QR code and barcode fields to prevent recursive inclusion
+                if ($field.attr('data-qrcode-field') === 'true' || $field.attr('data-barcode-field') === 'true') {
+                    return;
+                }
+                
+                // ⭐ NEW: If specific fields are requested, only include those
+                if (Array.isArray(formFields) && formFields.length > 0) {
+                    // Only include if field name is in the formFields array
+                    if (formFields.indexOf(fieldName) === -1) {
+                        return; // Skip this field
+                    }
+                }
+                // If formFields is 'all' or not an array, include all fields (default behavior)
                 
                 var fieldLabel = self.getFieldLabel($field);
                 

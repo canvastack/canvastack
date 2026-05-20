@@ -60,3 +60,6 @@
 
 /* QR Code Component */
 @import 'components/qrcode.css';
+
+/* Input Chain Component */
+@import 'components/input-chain.css';

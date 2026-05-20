@@ -1,0 +1,67 @@
+/**
+ * Canvastack Input Chain Component Styles (Canvasign Theme)
+ * 
+ * @version 1.0.0
+ */
+
+/* Input Chain Field */
+[data-chain-field="true"] {
+    font-family: 'Courier New', monospace;
+    font-weight: 500;
+}
+
+[data-chain-field="true"]:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+[data-chain-field="true"][readonly] {
+    cursor: not-allowed;
+}
+
+/* Generate Button */
+[data-chain-generate] {
+    transition: all 0.3s ease;
+}
+
+[data-chain-generate]:hover {
+    transform: rotate(180deg);
+}
+
+[data-chain-generate]:active {
+    transform: rotate(360deg) scale(0.95);
+}
+
+/* Help Text */
+.form-text.text-muted {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+/* Input Group Styling */
+.input-group [data-chain-field="true"] {
+    border-right: 0;
+}
+
+.input-group [data-chain-generate] {
+    border-left: 0;
+}
+
+/* Modal Styling */
+#chainHelpModal code {
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    color: #d63384;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    [data-chain-field="true"] {
+        font-size: 0.875rem;
+    }
+    
+    .input-group [data-chain-generate] {
+        padding: 0.375rem 0.75rem;
+    }
+}

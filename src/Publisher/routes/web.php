@@ -114,5 +114,12 @@ Route::group(['middleware' => ['web']], function() {
 			Route::post('post',   ['uses' => 'App\Http\Controllers\Admin\System\AjaxController@post',   'as' => 'ajax.post']);			
 			Route::post('export', ['uses' => 'App\Http\Controllers\Admin\System\AjaxController@export', 'as' => 'ajax.export']);
 		});
+		
+		// Barcode Generation API (Web-based, uses session auth)
+		Route::prefix('api/barcode')->group(function() {
+			Route::post('/generate', 'App\Http\Controllers\Api\BarcodeController@generate')->name('api.barcode.generate');
+			Route::post('/preview', 'App\Http\Controllers\Api\BarcodeController@preview')->name('api.barcode.preview');
+			Route::post('/info', 'App\Http\Controllers\Api\BarcodeController@info')->name('api.barcode.info');
+		});
 	});
 });

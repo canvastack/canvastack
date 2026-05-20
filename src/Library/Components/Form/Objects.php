@@ -1072,6 +1072,203 @@ class Objects {
 	}
 	
 	/**
+	 * Add raw HTML to form
+	 * 
+	 * Allows inserting custom HTML content into the form.
+	 * Useful for custom layouts, alerts, or any HTML that doesn't fit standard form elements.
+	 * 
+	 * @param string $html Raw HTML content to insert
+	 * 
+	 * @return void
+	 * 
+	 * @security WARNING: This method does NOT escape HTML content
+	 * @security Only use with trusted HTML or properly escaped content
+	 * @security HTML output is marked with SafeHtml::mark() to prevent double-encoding
+	 * 
+	 * @example
+	 * ```php
+	 * // Custom alert
+	 * $form->html('<div class="alert alert-info">Custom message</div>');
+	 * 
+	 * // Custom layout
+	 * $form->html('<div class="row"><div class="col-md-6">');
+	 * $form->text('field1');
+	 * $form->html('</div><div class="col-md-6">');
+	 * $form->text('field2');
+	 * $form->html('</div></div>');
+	 * ```
+	 */
+	public function html(string $html): void {
+		// Security: Mark HTML as safe (assumes caller has already escaped if needed)
+		$this->draw(SafeHtml::mark($html));
+	}
+	
+	/**
+	 * Add alert/info box to form (Hybrid: Inline + Optional Modal)
+	 * 
+	 * Creates a Bootstrap alert box with optional modal for detailed information.
+	 * 
+	 * **Inline Mode (default):**
+	 * - Displays alert directly in form
+	 * - Always visible
+	 * - Good for short messages
+	 * 
+	 * **Modal Mode (optional):**
+	 * - Shows button that opens modal
+	 * - Good for long/detailed information
+	 * - Doesn't clutter form layout
+	 * 
+	 * @param string $type Alert type: 'info', 'success', 'warning', 'danger', 'primary', 'secondary'
+	 * @param string $message Alert message (HTML allowed, will be escaped if needed)
+	 * @param array $options Optional configuration:
+	 *   - 'modal' (bool): Use modal instead of inline alert (default: false)
+	 *   - 'title' (string): Modal title (required if modal=true)
+	 *   - 'button_text' (string): Button text for modal (default: 'Show Info')
+	 *   - 'button_icon' (string): Icon class for button (default: 'bi bi-info-circle')
+	 *   - 'dismissible' (bool): Add close button to inline alert (default: false)
+	 *   - 'id' (string): Custom ID for modal (auto-generated if not provided)
+	 * 
+	 * @return void
+	 * 
+	 * @security Message content is NOT escaped - caller must escape if needed
+	 * @security HTML output is marked with SafeHtml::mark() to prevent double-encoding
+	 * 
+	 * @example
+	 * ```php
+	 * // Inline alert (simple)
+	 * $form->alert('info', 'This is an information message');
+	 * 
+	 * // Inline alert with HTML
+	 * $form->alert('warning', '<strong>Warning:</strong> Please check your input');
+	 * 
+	 * // Dismissible inline alert
+	 * $form->alert('success', 'Operation completed!', ['dismissible' => true]);
+	 * 
+	 * // Modal alert (for long content)
+	 * $form->alert('info', 'Long detailed information here...', [
+	 *     'modal' => true,
+	 *     'title' => 'Important Information',
+	 *     'button_text' => 'Read More'
+	 * ]);
+	 * ```
+	 */
+	public function alert(string $type = 'info', string $message = '', array $options = []): void {
+		// Default options
+		$defaults = [
+			'modal' => false,
+			'title' => 'Information',
+			'button_text' => 'Show Info',
+			'button_icon' => 'bi bi-info-circle',
+			'dismissible' => false,
+			'id' => 'alertModal_' . uniqid(),
+		];
+		
+		$config = array_merge($defaults, $options);
+		
+		// Validate type
+		$validTypes = ['info', 'success', 'warning', 'danger', 'primary', 'secondary', 'light', 'dark'];
+		if (!in_array($type, $validTypes)) {
+			$type = 'info';
+		}
+		
+		// Generate HTML based on mode
+		if ($config['modal']) {
+			// Modal mode: Button + Modal
+			$html = $this->buildAlertModal($type, $message, $config);
+		} else {
+			// Inline mode: Bootstrap alert
+			$html = $this->buildInlineAlert($type, $message, $config);
+		}
+		
+		// Security: Mark HTML as safe
+		$this->draw(SafeHtml::mark($html));
+	}
+	
+	/**
+	 * Build inline Bootstrap alert
+	 * 
+	 * @param string $type Alert type
+	 * @param string $message Alert message
+	 * @param array $config Configuration options
+	 * 
+	 * @return string HTML for inline alert
+	 */
+	private function buildInlineAlert(string $type, string $message, array $config): string {
+		$dismissible = $config['dismissible'] ? ' alert-dismissible fade show' : '';
+		$closeButton = '';
+		
+		if ($config['dismissible']) {
+			$closeButton = '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+		}
+		
+		return '<div class="alert alert-' . $type . $dismissible . '" role="alert">' 
+			. $message 
+			. $closeButton 
+			. '</div>';
+	}
+	
+	/**
+	 * Build modal alert with button
+	 * 
+	 * @param string $type Alert type
+	 * @param string $message Alert message
+	 * @param array $config Configuration options
+	 * 
+	 * @return string HTML for button + modal
+	 */
+	private function buildAlertModal(string $type, string $message, array $config): string {
+		$modalId = htmlspecialchars($config['id']);
+		$title = htmlspecialchars($config['title']);
+		$buttonText = htmlspecialchars($config['button_text']);
+		$buttonIcon = htmlspecialchars($config['button_icon']);
+		
+		// Map alert type to button color
+		$buttonColorMap = [
+			'info' => 'info',
+			'success' => 'success',
+			'warning' => 'warning',
+			'danger' => 'danger',
+			'primary' => 'primary',
+			'secondary' => 'secondary',
+		];
+		$buttonColor = $buttonColorMap[$type] ?? 'info';
+		
+		// Button
+		$html = '<div class="mb-3">';
+		$html .= '<button type="button" class="btn btn-' . $buttonColor . '" data-bs-toggle="modal" data-bs-target="#' . $modalId . '">';
+		$html .= '<i class="' . $buttonIcon . '"></i> ' . $buttonText;
+		$html .= '</button>';
+		$html .= '</div>';
+		
+		// Modal
+		$html .= '<div class="modal fade" id="' . $modalId . '" tabindex="-1" aria-labelledby="' . $modalId . 'Label" aria-hidden="true">';
+		$html .= '<div class="modal-dialog modal-lg">';
+		$html .= '<div class="modal-content">';
+		
+		// Modal Header
+		$html .= '<div class="modal-header">';
+		$html .= '<h5 class="modal-title" id="' . $modalId . 'Label">' . $title . '</h5>';
+		$html .= '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>';
+		$html .= '</div>';
+		
+		// Modal Body
+		$html .= '<div class="modal-body">';
+		$html .= '<div class="alert alert-' . $type . '" role="alert">';
+		$html .= $message;
+		$html .= '</div>';
+		$html .= '</div>';
+		
+		// Modal Footer
+		$html .= '<div class="modal-footer">';
+		$html .= '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
+		$html .= '</div>';
+		
+		$html .= '</div></div></div>';
+		
+		return $html;
+	}
+	
+	/**
 	 * Generate Label Element
 	 * 
 	 * Creates a label element with proper for attribute that matches the input id.
@@ -1908,6 +2105,10 @@ class Objects {
 			return $this->renderQrcodeInput($name, $value, $attributes);
 		}
 		
+		if ('input-chain' === $function_name) {
+			return $this->renderInputChain($name, $value, $attributes);
+		}
+		
 		if ($this->isDateTimeInput($function_name)) {
 			$function_name = 'text';
 		}
@@ -2020,6 +2221,7 @@ class Objects {
 			'auto_generate_separator' => '-',
 			'auto_generate_prefix' => '',
 			'auto_generate_length' => 13,
+			'entity_type' => 'product',  // ⭐ NEW: Entity type for API generation
 			'validate' => false,
 			'help' => true,
 			'help_title' => 'Barcode Input Guide',
@@ -2049,6 +2251,11 @@ class Objects {
 				$dataAttrs['data-barcode-auto-source'] = json_encode($config['auto_generate_source']);
 			} else {
 				$dataAttrs['data-barcode-auto-source'] = $config['auto_generate_source'];
+			}
+			
+			// ⭐ NEW: Add entity_type for API generation
+			if ($config['auto_generate_source'] === 'api') {
+				$dataAttrs['data-barcode-entity-type'] = $config['entity_type'];
 			}
 			
 			$dataAttrs['data-barcode-auto-separator'] = $config['auto_generate_separator'];
@@ -2450,6 +2657,195 @@ class Objects {
 			$html .= '<li><strong>WiFi:</strong> WiFi credentials</li>';
 			$html .= '</ul>';
 		}
+		
+		$html .= '</div><div class="modal-footer">';
+		$html .= '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
+		$html .= '</div></div></div></div>';
+		
+		return $html;
+	}
+	
+	/**
+	 * Render Input Chain field with auto-generation from multiple sources
+	 * 
+	 * @param string $name Field name
+	 * @param mixed $value Current value
+	 * @param array $attributes HTML attributes (includes chain_sources and chain_options)
+	 * @return string HTML output
+	 */
+	private function renderInputChain(string $name, mixed $value, array $attributes): string {
+		// Extract chain sources and options from attributes
+		$sources = $attributes['chain_sources'] ?? [];
+		$options = $attributes['chain_options'] ?? [];
+		
+		// Default options
+		$defaults = [
+			'separator' => '-',
+			'transform' => 'uppercase',
+			'prefix' => '',
+			'suffix' => '',
+			'max_words' => 2,
+			'readonly' => true,
+			'placeholder' => 'Auto-generated',
+			'format' => 'default',
+			'debounce' => 300,
+			'auto_update' => true,
+			'help' => true,
+			'skip_empty' => true,
+			'trim_spaces' => true,
+			'remove_special' => true,
+			'word_separator' => '-',
+		];
+		
+		$config = array_merge($defaults, $options);
+		
+		// Build data attributes for input chain functionality
+		$dataAttrs = [
+			'data-chain-field' => 'true',
+			'data-chain-sources' => json_encode($sources),
+			'data-chain-separator' => $config['separator'],
+			'data-chain-transform' => $config['transform'],
+			'data-chain-prefix' => $config['prefix'],
+			'data-chain-suffix' => $config['suffix'],
+			'data-chain-max-words' => (string)$config['max_words'],
+			'data-chain-format' => $config['format'],
+			'data-chain-debounce' => (string)$config['debounce'],
+			'data-chain-skip-empty' => $config['skip_empty'] ? 'true' : 'false',
+			'data-chain-trim-spaces' => $config['trim_spaces'] ? 'true' : 'false',
+			'data-chain-remove-special' => $config['remove_special'] ? 'true' : 'false',
+			'data-chain-word-separator' => $config['word_separator'],
+		];
+		
+		if (!$config['auto_update']) {
+			$dataAttrs['data-chain-auto-update'] = 'false';
+		}
+		
+		// Build clean attributes for Form::text() - only scalar values allowed
+		$cleanAttributes = [];
+		
+		// Standard HTML attributes
+		$allowedAttributes = [
+			'class', 'id', 'style', 'placeholder', 'required', 'disabled', 'readonly',
+			'maxlength', 'minlength', 'pattern', 'title', 'autocomplete', 'autofocus',
+			'aria-label', 'aria-required', 'aria-invalid', 'aria-describedby'
+		];
+		
+		// Copy allowed attributes from original attributes (only if scalar)
+		foreach ($attributes as $key => $val) {
+			if ($key === 'chain_sources' || $key === 'chain_options') continue;
+			
+			if (is_scalar($val) || $val === null) {
+				if (in_array($key, $allowedAttributes) || strpos($key, 'data-') === 0) {
+					$cleanAttributes[$key] = $val;
+				}
+			}
+		}
+		
+		// Merge chain data attributes
+		$cleanAttributes = array_merge($cleanAttributes, $dataAttrs);
+		$cleanAttributes['placeholder'] = $config['placeholder'];
+		
+		// ⭐ FIX: Make field readonly if configured (must be set AFTER merge)
+		if ($config['readonly']) {
+			$cleanAttributes['readonly'] = true;  // Use boolean true, not string
+		}
+		
+		// Build HTML - wrap everything in col-sm-9 for consistent form layout
+		$html = '<div class="col-sm-9">';
+		
+		// Input group start
+		$html .= '<div class="input-group">';
+		
+		// Input field using Laravel Form facade with cleaned attributes
+		$html .= Form::text($name, $value, $cleanAttributes);
+		
+		// Manual generate button
+		$html .= '<button type="button" class="btn btn-primary" ';
+		$html .= 'data-chain-generate="' . htmlspecialchars($name) . '" title="Generate now">';
+		$html .= '<i class="bi bi-arrow-repeat"></i>';
+		$html .= '</button>';
+		
+		// ⭐ FIX: Help button - only show if help is enabled
+		if ($config['help']) {
+			$html .= '<button type="button" class="btn btn-outline-secondary" ';
+			$html .= 'data-bs-toggle="modal" data-bs-target="#chainHelpModal_' . htmlspecialchars($name) . '" ';
+			$html .= 'title="Input Chain Help">';
+			$html .= '<i class="bi bi-question-circle"></i>';
+			$html .= '</button>';
+		}
+		
+		$html .= '</div>'; // Close input-group
+		
+		// Help text
+		$html .= '<small class="form-text text-muted">';
+		$html .= 'Auto-generated from: ' . htmlspecialchars(implode(', ', $sources));
+		$html .= '</small>';
+		
+		// Help modal
+		if ($config['help']) {
+			$html .= $this->buildInputChainHelpModal($name, $config, $sources);
+		}
+		
+		$html .= '</div>'; // Close col-sm-9
+		
+		// Assets will be loaded automatically by Canvastack based on element_plugins registration
+		// No need for inline script loading - Canvastack handles this dynamically per template
+		
+		// Return marked HTML string
+		return SafeHtml::mark($html);
+	}
+	
+	/**
+	 * Build help modal HTML for input chain
+	 */
+	private function buildInputChainHelpModal(string $fieldName, array $config, array $sources): string {
+		$modalId = 'chainHelpModal_' . $fieldName;
+		
+		$html = '<div class="modal fade" id="' . htmlspecialchars($modalId) . '" tabindex="-1">';
+		$html .= '<div class="modal-dialog modal-lg"><div class="modal-content">';
+		$html .= '<div class="modal-header">';
+		$html .= '<h5 class="modal-title">Input Chain Help</h5>';
+		$html .= '<button type="button" class="btn-close" data-bs-dismiss="modal"></button>';
+		$html .= '</div><div class="modal-body">';
+		
+		$html .= '<h6>How It Works</h6>';
+		$html .= '<p>This field automatically generates its value by combining data from other fields:</p>';
+		$html .= '<ul>';
+		foreach ($sources as $source) {
+			$html .= '<li><strong>' . htmlspecialchars($source) . '</strong></li>';
+		}
+		$html .= '</ul>';
+		
+		$html .= '<h6>Configuration</h6>';
+		$html .= '<ul>';
+		$html .= '<li><strong>Transform:</strong> ' . htmlspecialchars($config['transform']) . '</li>';
+		$html .= '<li><strong>Separator:</strong> ' . htmlspecialchars($config['separator']) . '</li>';
+		$html .= '<li><strong>Max Words:</strong> ' . htmlspecialchars($config['max_words']) . '</li>';
+		if ($config['prefix']) {
+			$html .= '<li><strong>Prefix:</strong> ' . htmlspecialchars($config['prefix']) . '</li>';
+		}
+		if ($config['suffix']) {
+			$html .= '<li><strong>Suffix:</strong> ' . htmlspecialchars($config['suffix']) . '</li>';
+		}
+		$html .= '</ul>';
+		
+		$html .= '<h6>Example</h6>';
+		$html .= '<p>If you enter:</p>';
+		$html .= '<ul>';
+		$html .= '<li><strong>name:</strong> "Office Chair Ergonomic"</li>';
+		$html .= '<li><strong>id:</strong> 123</li>';
+		$html .= '</ul>';
+		$html .= '<p>The generated value will be: <code>';
+		$html .= htmlspecialchars($config['prefix']) . 'OFFICE-CHAIR-123' . htmlspecialchars($config['suffix']);
+		$html .= '</code></p>';
+		
+		$html .= '<h6>Tips</h6>';
+		$html .= '<ul>';
+		$html .= '<li>The field updates automatically as you type</li>';
+		$html .= '<li>Click the refresh button to regenerate manually</li>';
+		$html .= '<li>Empty source fields are skipped automatically</li>';
+		$html .= '<li>Special characters are removed for clean output</li>';
+		$html .= '</ul>';
 		
 		$html .= '</div><div class="modal-footer">';
 		$html .= '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';

@@ -1,4 +1,4 @@
-<?php
+	<?php
 /**
  * Created on Nov 2, 2018
  * Time Created	: 11:51:34 PM
@@ -200,6 +200,31 @@ return [
 					'charts/chartjs/Chart.min.js'
 				],
 				'css' => [null]
+			],
+			
+			'barcode' => [
+				'js'  => [
+					'../global/vendor/jsbarcode/JsBarcode.all.min.js',
+					'../global/vendor/quagga/quagga.min.js',
+					'js/barcode.js?v=1.1.3'
+				],
+				'css' => ['css/barcode.css']
+			],
+			
+			'qrcode' => [
+				'js'  => [
+					'../global/vendor/qrcode/qrcode.min.js',
+					'../global/vendor/html5-qrcode/html5-qrcode.min.js',
+					'js/qrcode.js?v=1.0.9'
+				],
+				'css' => ['css/qrcode.css?v=1.0.9']
+			],
+			
+			'input-chain' => [
+				'js'  => [
+					'js/input-chain.js?v=1779299197'
+				],
+				'css' => ['css/input-chain.css?v=1779299197']
 			]
 		],
 
@@ -226,7 +251,7 @@ return [
 						'../global/js/canvastack-console-filter.js',
 					],
 					'css'	=> [
-						'css/canvasign-base.css',  // ✅ BASE: Core + Components (loaded on all pages)
+						'css/canvasign-base.css?v=1779299197',  // ✅ BASE: Core + Components (loaded on all pages)
 					]
 				],
 				'bottom'	=> [
@@ -401,6 +426,43 @@ return [
 			'chartjs' => [
 				'js'  => [],
 				'css' => []
+			],
+			
+			/**
+			 * BARCODE — JsBarcode + QuaggaJS for barcode generation and scanning
+			 */
+			'barcode' => [
+				'js'  => [
+					'../global/vendor/jsbarcode/JsBarcode.all.min.js',
+					'../global/vendor/quagga/quagga.min.js',
+					'js/plugins/barcode.js?v=1.1.3',
+					'js/plugins-init/canvasign-barcode.js?v=1.1.3'
+				],
+				'css' => []  // Already included in canvasign-base.css via @import
+			],
+			
+			/**
+			 * QRCODE — QRCode.js + Html5Qrcode for QR code generation and scanning
+			 */
+			'qrcode' => [
+				'js'  => [
+					'../global/vendor/qrcode/qrcode.min.js',
+					'../global/vendor/html5-qrcode/html5-qrcode.min.js',
+					'js/plugins/qrcode.js?v=1.0.9',
+					'js/plugins-init/canvasign-qrcode.js?v=1.0.9'
+				],
+				'css' => []  // Already included in canvasign-base.css via @import
+			],
+			
+			/**
+			 * INPUT-CHAIN — Auto-generate field value from multiple sources
+			 */
+			'input-chain' => [
+				'js'  => [
+					'js/plugins/input-chain.js?v=1779299197',
+					'js/plugins-init/canvasign-input-chain.js?v=1779299197'
+				],
+				'css' => []  // Already included in canvasign-base.css via @import
 			]
 		],
 
