@@ -37,6 +37,7 @@
 @import url('./components/mapping-page.css');
 @import url('./components/module-privileges.css');
 @import url('./components/keyboard-shortcuts-modal.css');
+@import url('./components/barcode.css');
 
 /* ========================================================================
    PLUGINS (Required on all pages)
@@ -56,3 +57,6 @@
  * Note: Plugin-specific CSS (DataTables, Flatpickr, Choices) 
  * are loaded conditionally based on page requirements
  */
+
+/* QR Code Component */
+@import 'components/qrcode.css';

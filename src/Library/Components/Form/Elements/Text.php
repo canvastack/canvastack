@@ -402,4 +402,300 @@ trait Text {
 	 * @security All attribute values are escaped
 	 */
 	// Method moved to AriaHelper trait to avoid duplication across element traits
+	
+	/**
+	 * Create Barcode Input Field
+	 * 
+	 * Generates a barcode input field with preview, scanner, and auto-generate capabilities.
+	 * Follows the standard Canvastack form pattern using setParams() and inputDraw().
+	 * 
+	 * @param string $name Field name attribute
+	 * @param array $options Configuration options for barcode functionality
+	 * @param bool|string|null $label Whether to display label (true for auto-generate, false for none, string for custom)
+	 * 
+	 * @return void Output is rendered via inputDraw()
+	 * 
+	 * @security All parameters are escaped in setParams() and renderBarcodeInput()
+	 * @security Follows same pattern as text(), email(), password(), tags() methods
+	 * 
+	 * @example
+	 * // Basic barcode input with scanner
+	 * $form->barcode('barcode', ['scanner' => true, 'format' => 'CODE128']);
+	 * 
+	 * // Barcode with auto-generate from ID field
+	 * $form->barcode('barcode', [
+	 *     'auto_generate' => true,
+	 *     'auto_generate_source' => 'id',
+	 *     'auto_generate_prefix' => 'PRD'
+	 * ]);
+	 * 
+	 * // Barcode with multiple source fields
+	 * $form->barcode('barcode', [
+	 *     'auto_generate' => true,
+	 *     'auto_generate_source' => ['id', 'sku'],
+	 *     'auto_generate_separator' => '-'
+	 * ]);
+	 */
+	public function barcode(string $name, array $options = [], bool|string|null $label = true): void {
+		// Register barcode plugin for automatic asset loading
+		$this->element_plugins[$name] = 'barcode';
+		
+		// Extract label from options if provided
+		if (isset($options['label'])) {
+			$label = $options['label'];
+			unset($options['label']);
+		}
+		
+		// Get value from model if available (for edit mode)
+		$value = null;
+		if (isset($this->model_data->$name)) {
+			$value = $this->model_data->$name;
+		}
+		
+		// Store options in attributes for renderBarcodeInput
+		$attributes = ['barcode_options' => $options];
+		
+		// Merge ARIA attributes for accessibility
+		$ariaAttributes = $this->getTextAriaAttributes($name, $attributes);
+		$attributes = array_merge($attributes, $ariaAttributes);
+		
+		// Use standard Canvastack pattern: setParams + inputDraw
+		$this->setParams('barcode', $name, $value, $attributes, $label);
+		$this->inputDraw('barcode', $name);
+	}
+	
+	/**
+	 * Create QR Code Input Field
+	 * 
+	 * Generates a QR code input field with preview, scanner, auto-generate, and form data generation capabilities.
+	 * Supports multiple data formats (text, URL, JSON, vCard, WiFi) and real-time updates.
+	 * Follows the standard Canvastack form pattern using setParams() and inputDraw().
+	 * 
+	 * @param string $name Field name attribute
+	 * @param array $options Configuration options for QR code functionality
+	 * @param bool|string|null $label Whether to display label (true for auto-generate, false for none, string for custom)
+	 * 
+	 * @return void Output is rendered via inputDraw()
+	 * 
+	 * @security All parameters are escaped in setParams() and renderQrcodeInput()
+	 * @security Follows same pattern as text(), email(), password(), barcode() methods
+	 * 
+	 * ============================================================================
+	 * AVAILABLE OPTIONS
+	 * ============================================================================
+	 * 
+	 * BASIC OPTIONS:
+	 * - format: 'text'|'url'|'vcard'|'wifi' - QR code data format (default: 'text')
+	 * - size: int - QR code size in pixels (default: 200)
+	 * - error_correction: 'L'|'M'|'Q'|'H' - Error correction level (default: 'M')
+	 * - preview: bool - Show QR code preview (default: true)
+	 * - preview_position: 'top'|'bottom' - Preview position (default: 'top')
+	 * - scanner: bool - Enable webcam scanner (default: false)
+	 * - scanner_button_text: string - Scanner button text (default: 'Scan')
+	 * - validate: bool - Enable QR code validation (default: false)
+	 * - help: bool - Show help button with modal (default: true)
+	 * - placeholder: string - Input placeholder text
+	 * 
+	 * AUTO-GENERATE OPTIONS (Simple ID/URL Generator):
+	 * Purpose: Generate QR code from specific field IDs (1-3 fields) for tracking/lookup
+	 * Use Case: Customer scans → redirects to URL → server looks up data from database
+	 * 
+	 * - auto_generate: bool - Enable auto-generate button (magic icon)
+	 * - auto_generate_source: string|array - Field name(s) to use as source (e.g., 'id' or ['id', 'sku'])
+	 * - auto_generate_separator: string - Separator between multiple sources (default: '-')
+	 * - auto_generate_prefix: string - Prefix for generated value (e.g., 'https://shop.com/p/')
+	 * - auto_generate_format: 'text'|'url' - Output format (default: 'text')
+	 * 
+	 * FORM DATA GENERATION OPTIONS (Complete Data Generator):
+	 * Purpose: Generate QR code from filled form data (multiple fields) for offline access
+	 * Use Case: Staff scans → mobile app gets complete data → works offline
+	 * 
+	 * - form_fields: 'all'|array - Which fields to include (default: 'all')
+	 *   * 'all' = Include all form fields
+	 *   * ['sku', 'name', 'price'] = Include only specified fields
+	 * - form_format: 'json'|'text'|'url' - Output format (default: 'json')
+	 * - form_exclude: array - Fields to exclude (default: ['_token', '_method', 'image', 'file'])
+	 * - form_url_base: string - Base URL for 'url' format (default: current domain)
+	 * 
+	 * REAL-TIME AUTO-UPDATE OPTIONS:
+	 * - auto_update_from_form: bool - Auto-update QR when form fields change (default: false)
+	 * - auto_update_delay: int - Debounce delay in milliseconds (default: 500)
+	 * - auto_clear_empty: bool - Clear QR when all fields are empty (default: false)
+	 * 
+	 * ============================================================================
+	 * KEY DIFFERENCES: auto_generate_source vs form_fields
+	 * ============================================================================
+	 * 
+	 * auto_generate_source (Simple ID Generator):
+	 * - Trigger: Magic button (⚡) or when source fields change
+	 * - Data: 1-3 specific fields only (e.g., ID, SKU)
+	 * - Output: Simple string or URL (e.g., "https://shop.com/p/123-ABC")
+	 * - QR Size: Small, easy to scan
+	 * - Use Case: Product tracking, URL redirects, online lookup
+	 * - Internet: Required (QR contains pointer, not data)
+	 * 
+	 * form_fields (Complete Data Generator):
+	 * - Trigger: "Generate from Form" button (📄) or auto-update on field change
+	 * - Data: Multiple fields from form (e.g., SKU, Name, Price, Stock)
+	 * - Output: Structured JSON or formatted text
+	 * - QR Size: Larger, more complex
+	 * - Use Case: Offline inventory, mobile apps, data sharing
+	 * - Internet: Not required (QR contains actual data)
+	 * 
+	 * ============================================================================
+	 * EXAMPLES
+	 * ============================================================================
+	 * 
+	 * @example
+	 * // Example 1: Basic QR code with scanner
+	 * $form->qrcode('qr_code', [
+	 *     'scanner' => true,
+	 *     'placeholder' => 'Scan or enter QR code'
+	 * ]);
+	 * 
+	 * @example
+	 * // Example 2: Simple URL Generator (for customer tracking)
+	 * // Use Case: Customer scans QR → browser opens URL → shows product page
+	 * $form->qrcode('product_qr', [
+	 *     'auto_generate' => true,
+	 *     'auto_generate_source' => ['id', 'sku'],
+	 *     'auto_generate_format' => 'url',
+	 *     'auto_generate_prefix' => 'https://myshop.com/product/',
+	 *     'auto_generate_separator' => '-'
+	 * ]);
+	 * // Output: https://myshop.com/product/123-CLOTH-001
+	 * 
+	 * @example
+	 * // Example 3: Complete Data Generator (for offline inventory)
+	 * // Use Case: Staff scans QR → mobile app gets data → works without internet
+	 * $form->qrcode('inventory_qr', [
+	 *     'form_fields' => ['sku', 'name', 'location', 'stock'],
+	 *     'form_format' => 'json',
+	 *     'form_exclude' => ['_token', '_method']
+	 * ]);
+	 * // Output: {"Sku":"WH-001","Name":"Chair","Location":"A-5","Stock":"45"}
+	 * 
+	 * @example
+	 * // Example 4: Hybrid Approach (Best of Both!)
+	 * // Provides both URL QR (small) and Data QR (complete)
+	 * $form->qrcode('product_qr', [
+	 *     // Simple URL for customers
+	 *     'auto_generate' => true,
+	 *     'auto_generate_source' => ['id', 'sku'],
+	 *     'auto_generate_format' => 'url',
+	 *     'auto_generate_prefix' => 'https://shop.com/p/',
+	 *     
+	 *     // Complete data for staff
+	 *     'form_fields' => ['sku', 'name', 'selling_price', 'stock'],
+	 *     'form_format' => 'json',
+	 *     
+	 *     // Common options
+	 *     'scanner' => true,
+	 *     'preview_position' => 'top'
+	 * ]);
+	 * 
+	 * @example
+	 * // Example 5: Real-time Auto-Update (for live preview)
+	 * // QR code updates automatically as user types
+	 * $form->qrcode('live_qr', [
+	 *     'auto_update_from_form' => true,
+	 *     'auto_update_delay' => 500,
+	 *     'form_fields' => ['name', 'email', 'phone'],
+	 *     'form_format' => 'json'
+	 * ]);
+	 * 
+	 * @example
+	 * // Example 6: vCard QR Code (for contact sharing)
+	 * $form->qrcode('contact_qr', [
+	 *     'format' => 'vcard',
+	 *     'auto_generate' => true,
+	 *     'auto_generate_source' => ['name', 'phone', 'email']
+	 * ]);
+	 * 
+	 * @example
+	 * // Example 7: WiFi QR Code (for network sharing)
+	 * $form->qrcode('wifi_qr', [
+	 *     'format' => 'wifi',
+	 *     'auto_generate' => true,
+	 *     'auto_generate_source' => ['ssid', 'password']
+	 * ]);
+	 * 
+	 * @example
+	 * // Example 8: Selective Fields (only specific data)
+	 * // Only include essential fields, exclude sensitive data
+	 * $form->qrcode('public_qr', [
+	 *     'form_fields' => ['sku', 'name', 'selling_price'], // Only these 3 fields
+	 *     'form_exclude' => ['_token', '_method', 'purchase_price', 'cost'], // Exclude sensitive
+	 *     'form_format' => 'json'
+	 * ]);
+	 * 
+	 * ============================================================================
+	 * REAL-WORLD SCENARIOS
+	 * ============================================================================
+	 * 
+	 * Scenario 1: E-commerce Product (Customer-facing)
+	 * - Use auto_generate_source for small QR on product label
+	 * - Customer scans → redirects to product page
+	 * - Requires internet connection
+	 * 
+	 * Scenario 2: Warehouse Inventory (Staff-facing)
+	 * - Use form_fields for complete data in QR
+	 * - Staff scans → mobile app shows all info offline
+	 * - No internet required
+	 * 
+	 * Scenario 3: Retail POS (Hybrid)
+	 * - auto_generate_source: URL QR for customers
+	 * - form_fields: Data QR for internal staff
+	 * - Both buttons available, user chooses
+	 * 
+	 * ============================================================================
+	 * BUTTON REFERENCE
+	 * ============================================================================
+	 * 
+	 * 🔍 Scanner Button (if scanner: true)
+	 * - Opens webcam to scan existing QR codes
+	 * - Fills input with scanned data
+	 * 
+	 * ⚡ Magic Button (if auto_generate: true)
+	 * - Generates QR from auto_generate_source fields
+	 * - Creates simple URL or text
+	 * - Small QR code, easy to scan
+	 * 
+	 * 📄 Generate from Form Button (always shown)
+	 * - Generates QR from form_fields configuration
+	 * - Creates JSON or structured data
+	 * - Complete data, larger QR code
+	 * 
+	 * ❓ Help Button (if help: true)
+	 * - Shows modal with usage instructions
+	 * - Explains all features and formats
+	 */
+	public function qrcode(string $name, array $options = [], bool|string|null $label = true): void {
+		// Register qrcode plugin for automatic asset loading
+		$this->element_plugins[$name] = 'qrcode';
+		
+		// Extract label from options if provided
+		if (isset($options['label'])) {
+			$label = $options['label'];
+			unset($options['label']);
+		}
+		
+		// Get value from model if available (for edit mode)
+		$value = null;
+		if (isset($this->model_data->$name)) {
+			$value = $this->model_data->$name;
+		}
+		
+		// Store options in attributes for renderQrcodeInput
+		$attributes = ['qrcode_options' => $options];
+		
+		// Merge ARIA attributes for accessibility
+		$ariaAttributes = $this->getTextAriaAttributes($name, $attributes);
+		$attributes = array_merge($attributes, $ariaAttributes);
+		
+		// Use standard Canvastack pattern: setParams + inputDraw
+		$this->setParams('qrcode', $name, $value, $attributes, $label);
+		$this->inputDraw('qrcode', $name);
+	}
+
 }

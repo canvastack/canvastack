@@ -396,7 +396,7 @@ class Objects {
 		}
 
 		// Check if field has been registered as file type
-		if (isset($this->params[$fieldName]) && $this->params[$fieldName]['function_name'] === 'file') {
+		if (isset($this->params[$fieldName]) && is_array($this->params[$fieldName]) && isset($this->params[$fieldName]['function_name']) && $this->params[$fieldName]['function_name'] === 'file') {
 			return true;
 		}
 
@@ -1900,6 +1900,14 @@ class Objects {
 			return $this->renderRadioInput($name, $value, $attributes);
 		}
 		
+		if ('barcode' === $function_name) {
+			return $this->renderBarcodeInput($name, $value, $attributes);
+		}
+		
+		if ('qrcode' === $function_name) {
+			return $this->renderQrcodeInput($name, $value, $attributes);
+		}
+		
 		if ($this->isDateTimeInput($function_name)) {
 			$function_name = 'text';
 		}
@@ -1983,6 +1991,471 @@ class Objects {
 		$content = $this->drawRadioBox($name, $value, $selected, $attributes);
 		// Security: drawRadioBox already marks output as safe HTML
 		return $this->wrapInInputGroup($content, true);
+	}
+	
+	/**
+	 * Render barcode input element with preview, scanner, and auto-generate
+	 * 
+	 * @param string $name Field name
+	 * @param mixed $value Current barcode value
+	 * @param array $attributes HTML attributes (includes barcode_options)
+	 * @return string HTML output
+	 */
+	private function renderBarcodeInput(string $name, mixed $value, array $attributes): string {
+		// Extract barcode options from attributes
+		$options = $attributes['barcode_options'] ?? [];
+		
+		// Default options
+		$defaults = [
+			'format' => 'CODE128',
+			'formats' => null,
+			'preview' => true,
+			'preview_position' => 'top',
+			'preview_width' => 2,
+			'preview_height' => 60,
+			'scanner' => false,
+			'scanner_button_text' => 'Scan',
+			'auto_generate' => false,
+			'auto_generate_source' => 'id',
+			'auto_generate_separator' => '-',
+			'auto_generate_prefix' => '',
+			'auto_generate_length' => 13,
+			'validate' => false,
+			'help' => true,
+			'help_title' => 'Barcode Input Guide',
+			'help_content' => null,
+			'placeholder' => 'Enter or scan barcode'
+		];
+		
+		$config = array_merge($defaults, $options);
+		
+		// Build data attributes for barcode functionality
+		$dataAttrs = [
+			'data-barcode-field' => 'true',
+			'data-barcode-format' => $config['format'],
+			'data-barcode-preview-position' => $config['preview_position'],
+			'data-barcode-preview-width' => (string)$config['preview_width'],
+			'data-barcode-preview-height' => (string)$config['preview_height']
+		];
+		
+		if ($config['validate']) {
+			$dataAttrs['data-barcode-validate'] = 'true';
+		}
+		
+		if ($config['auto_generate']) {
+			$dataAttrs['data-barcode-auto-generate'] = 'true';
+			
+			if (is_array($config['auto_generate_source'])) {
+				$dataAttrs['data-barcode-auto-source'] = json_encode($config['auto_generate_source']);
+			} else {
+				$dataAttrs['data-barcode-auto-source'] = $config['auto_generate_source'];
+			}
+			
+			$dataAttrs['data-barcode-auto-separator'] = $config['auto_generate_separator'];
+			$dataAttrs['data-barcode-auto-prefix'] = $config['auto_generate_prefix'];
+			$dataAttrs['data-barcode-auto-length'] = (string)$config['auto_generate_length'];
+		}
+		
+		// Build clean attributes for Form::text() - only scalar values allowed
+		$cleanAttributes = [];
+		
+		// Standard HTML attributes that Form::text() expects
+		$allowedAttributes = [
+			'class', 'id', 'style', 'placeholder', 'required', 'disabled', 'readonly',
+			'maxlength', 'minlength', 'pattern', 'title', 'autocomplete', 'autofocus',
+			'aria-label', 'aria-required', 'aria-invalid', 'aria-describedby'
+		];
+		
+		// Copy allowed attributes from original attributes (only if scalar)
+		foreach ($attributes as $key => $val) {
+			// Skip barcode_options (already extracted)
+			if ($key === 'barcode_options') {
+				continue;
+			}
+			
+			// Only include scalar values and data-* attributes
+			if (is_scalar($val) || $val === null) {
+				// Include if it's in allowed list or starts with data-
+				if (in_array($key, $allowedAttributes) || strpos($key, 'data-') === 0) {
+					$cleanAttributes[$key] = $val;
+				}
+			}
+		}
+		
+		// Merge barcode data attributes
+		$cleanAttributes = array_merge($cleanAttributes, $dataAttrs);
+		
+		// Set placeholder
+		$cleanAttributes['placeholder'] = $config['placeholder'];
+		
+		// Build HTML - wrap everything in col-sm-9 for consistent form layout
+		$html = '<div class="col-sm-9">';
+		
+		// Preview (top position)
+		if ($config['preview'] && $config['preview_position'] === 'top') {
+			$html .= '<div class="barcode-preview-container mb-2" ';
+			$html .= 'data-barcode-preview="' . htmlspecialchars($name) . '" ';
+			$html .= 'data-position="top" style="display:none;">';
+			$html .= '<canvas class="barcode-canvas"></canvas>';
+			$html .= '</div>';
+		}
+		
+		// Input group start
+		$html .= '<div class="input-group">';
+		
+		// Format selector (if multiple formats)
+		if (is_array($config['formats']) && count($config['formats']) > 1) {
+			$html .= '<select class="form-select" style="max-width: 150px;" ';
+			$html .= 'data-barcode-format-selector="' . htmlspecialchars($name) . '">';
+			
+			foreach ($config['formats'] as $formatValue => $formatLabel) {
+				$selected = ($formatValue === $config['format']) ? ' selected' : '';
+				$html .= '<option value="' . htmlspecialchars($formatValue) . '"' . $selected . '>';
+				$html .= htmlspecialchars($formatLabel) . '</option>';
+			}
+			
+			$html .= '</select>';
+		}
+		
+		// Input field using Laravel Form facade with cleaned attributes
+		$html .= Form::text($name, $value, $cleanAttributes);
+		
+		// Scanner button
+		if ($config['scanner']) {
+			$html .= '<button type="button" class="btn btn-secondary" ';
+			$html .= 'data-barcode-scanner="' . htmlspecialchars($name) . '" title="Scan with webcam">';
+			$html .= '<i class="bi bi-upc-scan"></i> ' . htmlspecialchars($config['scanner_button_text']);
+			$html .= '</button>';
+		}
+		
+		// Auto-generate button
+		if ($config['auto_generate']) {
+			$html .= '<button type="button" class="btn btn-info" ';
+			$html .= 'data-barcode-generate="' . htmlspecialchars($name) . '" title="Auto-generate barcode">';
+			$html .= '<i class="bi bi-magic"></i>';
+			$html .= '</button>';
+		}
+		
+		// Help button
+		if ($config['help']) {
+			$html .= '<button type="button" class="btn btn-outline-secondary" ';
+			$html .= 'data-bs-toggle="modal" data-bs-target="#barcodeHelpModal_' . htmlspecialchars($name) . '" ';
+			$html .= 'title="' . htmlspecialchars($config['help_title']) . '">';
+			$html .= '<i class="bi bi-question-circle"></i>';
+			$html .= '</button>';
+		}
+		
+		$html .= '</div>'; // Close input-group
+		
+		// Validation error
+		$html .= '<div class="invalid-feedback" data-barcode-error="' . htmlspecialchars($name) . '"></div>';
+		
+		// Preview (bottom position)
+		if ($config['preview'] && $config['preview_position'] === 'bottom') {
+			$html .= '<div class="barcode-preview-container mt-2" ';
+			$html .= 'data-barcode-preview="' . htmlspecialchars($name) . '" ';
+			$html .= 'data-position="bottom" style="display:none;">';
+			$html .= '<canvas class="barcode-canvas"></canvas>';
+			$html .= '</div>';
+		}
+		
+		// Help modal
+		if ($config['help']) {
+			$html .= $this->buildBarcodeHelpModal($name, $config);
+		}
+		
+		$html .= '</div>'; // Close col-sm-9
+		
+		// Assets will be loaded automatically by Canvastack based on element_plugins registration
+		// No need for inline script loading - Canvastack handles this dynamically per template
+		
+		// Return marked HTML string (not SafeHtml object)
+		return SafeHtml::mark($html);
+	}
+	
+	/**
+	 * Build help modal HTML for barcode input
+	 */
+	private function buildBarcodeHelpModal(string $fieldName, array $config): string {
+		$modalId = 'barcodeHelpModal_' . $fieldName;
+		
+		$html = '<div class="modal fade" id="' . htmlspecialchars($modalId) . '" tabindex="-1">';
+		$html .= '<div class="modal-dialog modal-lg"><div class="modal-content">';
+		$html .= '<div class="modal-header">';
+		$html .= '<h5 class="modal-title">' . htmlspecialchars($config['help_title']) . '</h5>';
+		$html .= '<button type="button" class="btn-close" data-bs-dismiss="modal"></button>';
+		$html .= '</div><div class="modal-body">';
+		
+		if ($config['help_content']) {
+			$html .= $config['help_content'];
+		} else {
+			$html .= '<h6>How to Use</h6><ol>';
+			$html .= '<li><strong>Manual Input:</strong> Type the barcode number directly</li>';
+			if ($config['scanner']) {
+				$html .= '<li><strong>Scan:</strong> Click the "Scan" button to use your camera</li>';
+			}
+			if ($config['auto_generate']) {
+				$html .= '<li><strong>Auto-Generate:</strong> Click the magic icon to generate automatically</li>';
+			}
+			$html .= '<li><strong>Preview:</strong> The barcode will be displayed as you type</li>';
+			$html .= '</ol>';
+		}
+		
+		$html .= '</div><div class="modal-footer">';
+		$html .= '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
+		$html .= '</div></div></div></div>';
+		
+		return $html;
+	}
+	
+	/**
+	 * Render QR code input element with preview, scanner, and auto-generate
+	 * 
+	 * @param string $name Field name
+	 * @param mixed $value Current QR code value
+	 * @param array $attributes HTML attributes (includes qrcode_options)
+	 * @return string HTML output
+	 */
+	private function renderQrcodeInput(string $name, mixed $value, array $attributes): string {
+		// Extract QR code options from attributes
+		$options = $attributes['qrcode_options'] ?? [];
+		
+		// Default options
+		$defaults = [
+			'format' => 'text',
+			'size' => 200,
+			'error_correction' => 'M',
+			'preview' => true,
+			'preview_position' => 'top',
+			'scanner' => false,
+			'scanner_button_text' => 'Scan',
+			'auto_generate' => false,
+			'auto_generate_source' => 'id',
+			'auto_generate_separator' => '-',
+			'auto_generate_prefix' => '',
+			'auto_generate_format' => 'text',
+			'auto_update_from_form' => false,
+			'auto_update_delay' => 500,
+			'auto_clear_empty' => false,
+			'form_fields' => 'all',
+			'form_format' => 'json',
+			'form_exclude' => ['_token', '_method', 'image', 'file'],
+			'form_url_base' => '',
+			'validate' => false,
+			'help' => true,
+			'help_title' => 'QR Code Input Guide',
+			'help_content' => null,
+			'placeholder' => 'Enter or scan QR code data'
+		];
+		
+		$config = array_merge($defaults, $options);
+		
+		// Build data attributes for QR code functionality
+		$dataAttrs = [
+			'data-qrcode-field' => 'true',
+			'data-qrcode-format' => $config['format'],
+			'data-qrcode-size' => (string)$config['size'],
+			'data-qrcode-error-correction' => $config['error_correction'],
+			'data-qrcode-preview-position' => $config['preview_position']
+		];
+		
+		if ($config['validate']) {
+			$dataAttrs['data-qrcode-validate'] = 'true';
+		}
+		
+		if ($config['auto_generate']) {
+			$dataAttrs['data-qrcode-auto-generate'] = 'true';
+			
+			if (is_array($config['auto_generate_source'])) {
+				$dataAttrs['data-qrcode-auto-source'] = json_encode($config['auto_generate_source']);
+			} else {
+				$dataAttrs['data-qrcode-auto-source'] = $config['auto_generate_source'];
+			}
+			
+			$dataAttrs['data-qrcode-auto-separator'] = $config['auto_generate_separator'];
+			$dataAttrs['data-qrcode-auto-prefix'] = $config['auto_generate_prefix'];
+			$dataAttrs['data-qrcode-auto-format'] = $config['auto_generate_format'];
+		}
+		
+		// Form fields configuration - always set (used by both auto-update and generate button)
+		// Can be array of field names or string 'all'
+		if (is_array($config['form_fields'])) {
+			$dataAttrs['data-qrcode-form-fields'] = json_encode($config['form_fields']);
+		} elseif ($config['form_fields'] === 'all') {
+			$dataAttrs['data-qrcode-form-fields'] = 'all';
+		}
+		
+		$dataAttrs['data-qrcode-form-format'] = $config['form_format'];
+		
+		if (is_array($config['form_exclude'])) {
+			$dataAttrs['data-qrcode-form-exclude'] = json_encode($config['form_exclude']);
+		}
+		
+		if (!empty($config['form_url_base'])) {
+			$dataAttrs['data-qrcode-form-url-base'] = $config['form_url_base'];
+		}
+		
+		// Auto-update from form attributes
+		if ($config['auto_update_from_form']) {
+			$dataAttrs['data-qrcode-auto-update-form'] = 'true';
+			$dataAttrs['data-qrcode-auto-update-delay'] = (string)$config['auto_update_delay'];
+			
+			if ($config['auto_clear_empty']) {
+				$dataAttrs['data-qrcode-auto-clear-empty'] = 'true';
+			}
+		}
+		
+		// Build clean attributes for Form::text() - only scalar values allowed
+		$cleanAttributes = [];
+		
+		// Standard HTML attributes
+		$allowedAttributes = [
+			'class', 'id', 'style', 'placeholder', 'required', 'disabled', 'readonly',
+			'maxlength', 'minlength', 'pattern', 'title', 'autocomplete', 'autofocus',
+			'aria-label', 'aria-required', 'aria-invalid', 'aria-describedby'
+		];
+		
+		// Copy allowed attributes from original attributes (only if scalar)
+		foreach ($attributes as $key => $val) {
+			if ($key === 'qrcode_options') continue;
+			
+			if (is_scalar($val) || $val === null) {
+				if (in_array($key, $allowedAttributes) || strpos($key, 'data-') === 0) {
+					$cleanAttributes[$key] = $val;
+				}
+			}
+		}
+		
+		// Merge QR code data attributes
+		$cleanAttributes = array_merge($cleanAttributes, $dataAttrs);
+		$cleanAttributes['placeholder'] = $config['placeholder'];
+		
+		// Build HTML - wrap everything in col-sm-9 for consistent form layout
+		$html = '<div class="col-sm-9">';
+		
+		// Preview (top position)
+		if ($config['preview'] && $config['preview_position'] === 'top') {
+			$html .= '<div class="qrcode-preview-container mb-2" ';
+			$html .= 'data-qrcode-preview="' . htmlspecialchars($name) . '" ';
+			$html .= 'data-position="top" style="display:none;">';
+			$html .= '</div>';
+		}
+		
+		// Input group start
+		$html .= '<div class="input-group">';
+		
+		// Input field using Laravel Form facade with cleaned attributes
+		$html .= Form::text($name, $value, $cleanAttributes);
+		
+		// Scanner button
+		if ($config['scanner']) {
+			$html .= '<button type="button" class="btn btn-secondary" ';
+			$html .= 'data-qrcode-scanner="' . htmlspecialchars($name) . '" title="Scan with webcam">';
+			$html .= '<i class="bi bi-qr-code-scan"></i> ' . htmlspecialchars($config['scanner_button_text']);
+			$html .= '</button>';
+		}
+		
+		// Auto-generate button
+		if ($config['auto_generate']) {
+			$html .= '<button type="button" class="btn btn-info" ';
+			$html .= 'data-qrcode-generate="' . htmlspecialchars($name) . '" title="Auto-generate QR code">';
+			$html .= '<i class="bi bi-magic"></i>';
+			$html .= '</button>';
+		}
+		
+		// Generate from form button (always show)
+		$html .= '<button type="button" class="btn btn-success" ';
+		$html .= 'data-qrcode-generate-form="' . htmlspecialchars($name) . '" title="Generate from all form data">';
+		$html .= '<i class="bi bi-file-earmark-text"></i>';
+		$html .= '</button>';
+		
+		// Help button
+		if ($config['help']) {
+			$html .= '<button type="button" class="btn btn-outline-secondary" ';
+			$html .= 'data-bs-toggle="modal" data-bs-target="#qrcodeHelpModal_' . htmlspecialchars($name) . '" ';
+			$html .= 'title="' . htmlspecialchars($config['help_title']) . '">';
+			$html .= '<i class="bi bi-question-circle"></i>';
+			$html .= '</button>';
+		}
+		
+		$html .= '</div>'; // Close input-group
+		
+		// Validation error
+		$html .= '<div class="invalid-feedback" data-qrcode-error="' . htmlspecialchars($name) . '"></div>';
+		
+		// Preview (bottom position)
+		if ($config['preview'] && $config['preview_position'] === 'bottom') {
+			$html .= '<div class="qrcode-preview-container mt-2" ';
+			$html .= 'data-qrcode-preview="' . htmlspecialchars($name) . '" ';
+			$html .= 'data-position="bottom" style="display:none;">';
+			$html .= '</div>';
+		}
+		
+		// Help modal
+		if ($config['help']) {
+			$html .= $this->buildQrcodeHelpModal($name, $config);
+		}
+		
+		$html .= '</div>'; // Close col-sm-9
+		
+		// Assets will be loaded automatically by Canvastack based on element_plugins registration
+		// No need for inline script loading - Canvastack handles this dynamically per template
+		
+		// Return marked HTML string
+		return SafeHtml::mark($html);
+	}
+	
+	/**
+	 * Build help modal HTML for QR code input
+	 */
+	private function buildQrcodeHelpModal(string $fieldName, array $config): string {
+		$modalId = 'qrcodeHelpModal_' . $fieldName;
+		
+		$html = '<div class="modal fade" id="' . htmlspecialchars($modalId) . '" tabindex="-1">';
+		$html .= '<div class="modal-dialog modal-lg"><div class="modal-content">';
+		$html .= '<div class="modal-header">';
+		$html .= '<h5 class="modal-title">' . htmlspecialchars($config['help_title']) . '</h5>';
+		$html .= '<button type="button" class="btn-close" data-bs-dismiss="modal"></button>';
+		$html .= '</div><div class="modal-body">';
+		
+		if ($config['help_content']) {
+			$html .= $config['help_content'];
+		} else {
+			$html .= '<h6>How to Use</h6><ol>';
+			$html .= '<li><strong>Manual Input:</strong> Type the QR code data directly</li>';
+			if ($config['scanner']) {
+				$html .= '<li><strong>Scan:</strong> Click the "Scan" button to use your camera</li>';
+			}
+			if ($config['auto_generate']) {
+				$html .= '<li><strong>Auto-Generate:</strong> Click the magic icon to generate automatically</li>';
+			}
+			$html .= '<li><strong>Generate from Form:</strong> Click the green document icon to generate QR code from all filled form data</li>';
+			$html .= '<li><strong>Preview:</strong> The QR code will be displayed as you type</li>';
+			$html .= '</ol>';
+			
+			$html .= '<h6>Generate from Form Feature</h6>';
+			$html .= '<p>The "Generate from Form" button (green document icon) will:</p>';
+			$html .= '<ul>';
+			$html .= '<li>Collect all filled data from the form (ID, SKU, Name, Category, Price, etc.)</li>';
+			$html .= '<li>Format the data as JSON for easy scanning and parsing</li>';
+			$html .= '<li>Generate a QR code containing all product information</li>';
+			$html .= '<li>Perfect for inventory management and mobile apps</li>';
+			$html .= '</ul>';
+			
+			$html .= '<h6>Supported Formats</h6><ul>';
+			$html .= '<li><strong>Text:</strong> Plain text data</li>';
+			$html .= '<li><strong>URL:</strong> Website links</li>';
+			$html .= '<li><strong>JSON:</strong> Structured data (used by Generate from Form)</li>';
+			$html .= '<li><strong>vCard:</strong> Contact information</li>';
+			$html .= '<li><strong>WiFi:</strong> WiFi credentials</li>';
+			$html .= '</ul>';
+		}
+		
+		$html .= '</div><div class="modal-footer">';
+		$html .= '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
+		$html .= '</div></div></div></div>';
+		
+		return $html;
 	}
 	
 	/**
